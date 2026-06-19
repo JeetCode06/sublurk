@@ -1,6 +1,12 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
   "name": "hivemind-crawl",
+  "permissions": {
+    "redis": true,
+    "http": {
+      "domains": ["generativelanguage.googleapis.com"]
+    }
+  },
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -41,11 +47,21 @@
   "triggers": {
     "onAppInstall": "/internal/triggers/on-app-install"
   },
+  "settings": {
+    "global": {
+      "gemini-api-key": {
+        "type": "string",
+        "label": "Google Gemini API key",
+        "helpText": "Server-side key used to generate dungeon narration.",
+        "isSecret": true
+      }
+    }
+  },
   "scripts": {
     "dev": "vite build --watch",
     "build": "vite build"
   },
   "dev": {
-    "subreddit": "hivemind_crawl"
+    "subreddit": "hivemind_crawl_dev"
   }
 }
