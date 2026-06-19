@@ -1,93 +1,139 @@
 import { Hono } from 'hono';
-import { context, redis, reddit } from '@devvit/web/server';
-import type {
-  DecrementResponse,
-  IncrementResponse,
-  InitResponse,
-} from '../../shared/api';
-
-type ErrorResponse = {
-  status: 'error';
-  message: string;
-};
+import { context, reddit } from '@devvit/web/server';
+import type { ErrorResponse, GameResponse } from '../../shared/api';
+import { loadGame, saveGame } from '../data/games';
+import { createInitialState, startNewRun } from '../game/state';
+import { prepareRoll, applyTurn } from '../game/resolution';
+import { classForSubreddit, themeForSubreddit } from '../game/theming';
+import { SYSTEM_PROMPT, buildTurnPrompt } from '../ai/prompt';
+import { parseResolveResult } from '../ai/parse';
+import { callGemini } from '../ai/gemini';
 
 export const api = new Hono();
 
-api.get('/init', async (c) => {
-  const { postId } = context;
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unexpected server error';
+}
 
+async function currentUsername(): Promise<string> {
+  const username = await reddit.getCurrentUsername();
+  return username ?? 'adventurer';
+}
+
+api.get('/game', async (c) => {
+  const { postId, subredditName } = context;
   if (!postId) {
-    console.error('API Init Error: postId not found in devvit context');
     return c.json<ErrorResponse>(
-      {
-        status: 'error',
-        message: 'postId is required but missing from context',
-      },
+      { status: 'error', message: 'postId is missing from context' },
       400
     );
   }
-
   try {
-    const [count, username] = await Promise.all([
-      redis.get('count'),
-      reddit.getCurrentUsername(),
-    ]);
-
-    return c.json<InitResponse>({
-      type: 'init',
-      postId: postId,
-      count: count ? parseInt(count) : 0,
-      username: username ?? 'anonymous',
+    let state = await loadGame(postId);
+    if (!state) {
+      state = createInitialState({
+        postId,
+        subredditName,
+        classId: classForSubreddit(subredditName),
+        theme: themeForSubreddit(subredditName),
+      });
+      await saveGame(state);
+    }
+    return c.json<GameResponse>({
+      type: 'game',
+      state,
+      username: await currentUsername(),
     });
   } catch (error) {
-    console.error(`API Init Error for post ${postId}:`, error);
-    let errorMessage = 'Unknown error during initialization';
-    if (error instanceof Error) {
-      errorMessage = `Initialization failed: ${error.message}`;
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
+api.post('/action', async (c) => {
+  const { postId } = context;
+  if (!postId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'postId is missing from context' },
+      400
+    );
+  }
+  try {
+    const body = (await c.req.json()) as { action?: unknown };
+    const action = typeof body.action === 'string' ? body.action.trim() : '';
+    if (action.length === 0) {
+      return c.json<ErrorResponse>(
+        { status: 'error', message: 'An action is required' },
+        400
+      );
     }
+
+    const state = await loadGame(postId);
+    if (!state) {
+      return c.json<ErrorResponse>(
+        { status: 'error', message: 'No active game for this post' },
+        404
+      );
+    }
+    if (state.phase === 'dead') {
+      return c.json<GameResponse>({
+        type: 'game',
+        state,
+        username: await currentUsername(),
+      });
+    }
+
+    const roll = prepareRoll(state);
+    const raw = await callGemini(
+      SYSTEM_PROMPT,
+      buildTurnPrompt(state, action, roll)
+    );
+    const nextState = applyTurn(state, parseResolveResult(raw));
+    await saveGame(nextState);
+
+    return c.json<GameResponse>({
+      type: 'game',
+      state: nextState,
+      username: await currentUsername(),
+    });
+  } catch (error) {
     return c.json<ErrorResponse>(
-      { status: 'error', message: errorMessage },
+      { status: 'error', message: errorMessage(error) },
       400
     );
   }
 });
 
-api.post('/increment', async (c) => {
-  const { postId } = context;
+api.post('/restart', async (c) => {
+  const { postId, subredditName } = context;
   if (!postId) {
     return c.json<ErrorResponse>(
-      {
-        status: 'error',
-        message: 'postId is required',
-      },
+      { status: 'error', message: 'postId is missing from context' },
       400
     );
   }
-
-  const count = await redis.incrBy('count', 1);
-  return c.json<IncrementResponse>({
-    count,
-    postId,
-    type: 'increment',
-  });
-});
-
-api.post('/decrement', async (c) => {
-  const { postId } = context;
-  if (!postId) {
+  try {
+    const existing = await loadGame(postId);
+    const state = existing
+      ? startNewRun(existing)
+      : createInitialState({
+          postId,
+          subredditName,
+          classId: classForSubreddit(subredditName),
+          theme: themeForSubreddit(subredditName),
+        });
+    await saveGame(state);
+    return c.json<GameResponse>({
+      type: 'game',
+      state,
+      username: await currentUsername(),
+    });
+  } catch (error) {
     return c.json<ErrorResponse>(
-      {
-        status: 'error',
-        message: 'postId is required',
-      },
+      { status: 'error', message: errorMessage(error) },
       400
     );
   }
-
-  const count = await redis.incrBy('count', -1);
-  return c.json<DecrementResponse>({
-    count,
-    postId,
-    type: 'decrement',
-  });
 });

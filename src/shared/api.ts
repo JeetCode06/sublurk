@@ -1,18 +1,16 @@
-export type InitResponse = {
-  type: 'init';
-  postId: string;
-  count: number;
+import type { GameState } from './game';
+
+export type GameResponse = {
+  type: 'game';
+  state: GameState;
   username: string;
 };
 
-export type IncrementResponse = {
-  type: 'increment';
-  postId: string;
-  count: number;
+export type ActionRequest = {
+  action: string;
 };
 
-export type DecrementResponse = {
-  type: 'decrement';
-  postId: string;
-  count: number;
+export type ErrorResponse = {
+  status: 'error';
+  message: string;
 };
