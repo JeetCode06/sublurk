@@ -9,6 +9,23 @@ const input = {
   theme: 'mossy catacombs',
 };
 
+function deadState(): GameState {
+  const base = createInitialState(input, () => 0);
+  return {
+    ...base,
+    runNumber: 3,
+    phase: 'dead',
+    party: {
+      ...base.party,
+      hp: 0,
+      depth: 12,
+      inventory: ['cursed idol'],
+      statuses: ['poisoned'],
+    },
+    recentEvents: ['the coven fell'],
+  };
+}
+
 describe('createInitialState', () => {
   it('starts run 1 with a full, fresh party', () => {
     const state = createInitialState(input, () => 0);
@@ -37,23 +54,6 @@ describe('createInitialState', () => {
 });
 
 describe('startNewRun', () => {
-  function deadState(): GameState {
-    const base = createInitialState(input, () => 0);
-    return {
-      ...base,
-      runNumber: 3,
-      phase: 'dead',
-      party: {
-        ...base.party,
-        hp: 0,
-        depth: 12,
-        inventory: ['cursed idol'],
-        statuses: ['poisoned'],
-      },
-      recentEvents: ['the coven fell'],
-    };
-  }
-
   it('increments the run number', () => {
     expect(startNewRun(deadState(), () => 0).runNumber).toBe(4);
   });
