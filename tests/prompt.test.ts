@@ -4,6 +4,8 @@ import {
   SYSTEM_PROMPT,
   buildRoomIntroPrompt,
   ROOM_INTRO_SYSTEM_PROMPT,
+  WORLD_BIBLE_SYSTEM_PROMPT,
+  buildWorldBiblePrompt,
 } from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
 import type { DiceRoll } from '../src/server/game/dice';
@@ -73,5 +75,47 @@ describe('buildRoomIntroPrompt', () => {
 
   it('marks the start of the run when there is no history', () => {
     expect(buildRoomIntroPrompt(state)).toContain('start of the run');
+  });
+});
+
+describe('WORLD_BIBLE_SYSTEM_PROMPT', () => {
+  it('specifies the world-bible JSON contract', () => {
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('villain');
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('finalBossConcept');
+  });
+
+  it('forbids referencing Reddit or real people', () => {
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('Reddit');
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('people');
+  });
+});
+
+describe('buildWorldBiblePrompt', () => {
+  const context = {
+    name: 'gardening',
+    description: 'A place to talk about plants and soil.',
+    topPostTitles: ['My tomatoes finally fruited', 'Help, what is this weed?'],
+  };
+
+  it('includes the subreddit name and description', () => {
+    const prompt = buildWorldBiblePrompt(context);
+    expect(prompt).toContain('r/gardening');
+    expect(prompt).toContain('plants and soil');
+  });
+
+  it('lists the top post titles as bullets', () => {
+    const prompt = buildWorldBiblePrompt(context);
+    expect(prompt).toContain('- My tomatoes finally fruited');
+    expect(prompt).toContain('- Help, what is this weed?');
+  });
+
+  it('marks a missing description', () => {
+    const prompt = buildWorldBiblePrompt({ ...context, description: '   ' });
+    expect(prompt).toContain('(none provided)');
+  });
+
+  it('marks the absence of top posts', () => {
+    const prompt = buildWorldBiblePrompt({ ...context, topPostTitles: [] });
+    expect(prompt).toContain('(none available)');
   });
 });

@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   parseResolveResult,
   parseRoomScene,
+  parseWorldBible,
   FALLBACK_SCENE,
 } from '../src/server/ai/parse';
+import { DEFAULT_WORLD_BIBLE } from '../src/server/game/bible';
 
 const valid = JSON.stringify({
   narration: 'The torch flares to life.',
@@ -101,5 +103,46 @@ describe('parseRoomScene', () => {
 
   it('falls back on unparseable replies', () => {
     expect(parseRoomScene('the model said no json')).toBe(FALLBACK_SCENE);
+  });
+});
+
+describe('parseWorldBible', () => {
+  const validBible = JSON.stringify({
+    theme: 'A blighted garden realm where nothing grows but thorns.',
+    villain: { name: 'the Pruner', motive: 'to cut back all wild growth.' },
+    heroFlavor: 'a circle of botanist-mages',
+    motifs: ['thorns', 'spores', 'greenhouses'],
+    itemVocabulary: ['a pair of shears', 'a seed of light'],
+    artStyle: 'overgrown gothic, deep greens',
+    finalBossConcept: 'the Pruner in a cathedral of dead vines.',
+  });
+
+  it('parses a clean world-bible reply', () => {
+    const bible = parseWorldBible(validBible);
+    expect(bible.villain.name).toBe('the Pruner');
+    expect(bible.motifs).toContain('spores');
+    expect(bible.finalBossConcept).toContain('dead vines');
+  });
+
+  it('strips markdown fences and surrounding prose', () => {
+    const messy = 'Here is the world:\n```json\n' + validBible + '\n```';
+    expect(parseWorldBible(messy).villain.name).toBe('the Pruner');
+  });
+
+  it('falls back to the default world on unparseable replies', () => {
+    expect(parseWorldBible('the model refused')).toEqual(DEFAULT_WORLD_BIBLE);
+  });
+
+  it('falls back to the default world on malformed JSON', () => {
+    expect(parseWorldBible('{"theme": "half a worl')).toEqual(
+      DEFAULT_WORLD_BIBLE
+    );
+  });
+
+  it('fills missing fields from the default world', () => {
+    const bible = parseWorldBible('{"theme":"Only a theme survives."}');
+    expect(bible.theme).toBe('Only a theme survives.');
+    expect(bible.villain).toEqual(DEFAULT_WORLD_BIBLE.villain);
+    expect(bible.artStyle).toBe(DEFAULT_WORLD_BIBLE.artStyle);
   });
 });

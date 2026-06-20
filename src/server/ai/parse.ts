@@ -1,4 +1,5 @@
-import type { Outcome, ResolveResult } from '../../shared/game';
+import type { Outcome, ResolveResult, WorldBible } from '../../shared/game';
+import { coerceWorldBible } from '../game/bible';
 
 function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
@@ -96,5 +97,19 @@ export function parseRoomScene(raw: string): string {
       : FALLBACK_SCENE;
   } catch {
     return FALLBACK_SCENE;
+  }
+}
+
+// Parses the world-bible reply and runs it through coerceWorldBible, so a
+// missing, wrong-typed, or unparseable field always degrades to the default
+// world rather than breaking the campaign. coerceWorldBible(null) is the
+// default world, so both failure paths converge on a safe result.
+export function parseWorldBible(raw: string): WorldBible {
+  const json = extractJson(raw);
+  if (json === null) return coerceWorldBible(null);
+  try {
+    return coerceWorldBible(JSON.parse(json));
+  } catch {
+    return coerceWorldBible(null);
   }
 }

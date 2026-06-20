@@ -69,3 +69,51 @@ export function buildRoomIntroPrompt(state: GameState): string {
   ];
   return lines.join('\n');
 }
+
+// The raw material a world-bible is generated from: the host subreddit's own
+// name, description, and a sample of its top post titles.
+export type SubredditContext = {
+  name: string;
+  description: string;
+  topPostTitles: string[];
+};
+
+export const WORLD_BIBLE_SYSTEM_PROMPT = `You are a master worldbuilder creating a one-time "world bible" for a collaborative Reddit dungeon crawler. A whole subreddit will play through this world together, so it should feel tailor-made for that community while standing on its own as an original fantasy setting.
+
+You are given the subreddit's name, its description, and some of its top post titles. Use them ONLY as loose inspiration for mood, motifs, and vocabulary — translate the community's spirit into an original dungeon-fantasy world. Do NOT mention Reddit, the subreddit, moderators, upvotes, or that this is a game, and do NOT reference real or living people.
+
+Design:
+- "theme": the world's setting and what has gone wrong in it, in 1-2 vivid sentences.
+- "villain": a named antagonist driving the threat, with a short "motive".
+- "heroFlavor": what the party is in this world, in one evocative phrase.
+- "motifs": 4-6 short recurring images or vocabulary a dungeon master can reuse.
+- "itemVocabulary": 3-5 flavored names for treasures and tools that fit the world.
+- "artStyle": a short comma-separated visual style for illustrating scenes.
+- "finalBossConcept": what waits at the end of the journey, usually the villain or its avatar.
+
+Keep everything original (no copyrighted characters, settings, or names) and safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
+{
+  "theme": string,
+  "villain": { "name": string, "motive": string },
+  "heroFlavor": string,
+  "motifs": string[],
+  "itemVocabulary": string[],
+  "artStyle": string,
+  "finalBossConcept": string
+}`;
+
+export function buildWorldBiblePrompt(context: SubredditContext): string {
+  const { name, description, topPostTitles } = context;
+  const trimmedDescription = description.trim();
+  const lines = [
+    `Subreddit: r/${name}`,
+    trimmedDescription.length > 0
+      ? `Description: ${trimmedDescription}`
+      : `Description: (none provided)`,
+    topPostTitles.length > 0
+      ? `Top post titles:\n${topPostTitles.map((title) => `- ${title}`).join('\n')}`
+      : `Top post titles: (none available)`,
+    `Invent this community's original fantasy world and return the JSON.`,
+  ];
+  return lines.join('\n');
+}
