@@ -1,4 +1,4 @@
-import { context, reddit } from '@devvit/web/server';
+import { reddit } from '@devvit/web/server';
 import type { GameState, Proposal } from '../shared/game';
 import { prepareRoll, applyTurn } from './game/resolution';
 import { rankProposals, RECAP_MARKER } from './game/voting';
@@ -6,6 +6,12 @@ import { SYSTEM_PROMPT, buildTurnPrompt } from './ai/prompt';
 import { parseResolveResult } from './ai/parse';
 import { callGemini } from './ai/gemini';
 import { loadGame, saveGame } from './data/games';
+import { withDeadline, turnStartedAt } from './schedule';
+
+// A Reddit post fullname (t3_...). GameState stores postId as a plain string
+// to keep the shared contract free of Devvit types, so we re-tag it here at
+// the Reddit API boundary.
+type PostId = `t3_${string}`;
 
 // Runs one turn through the full pipeline: roll, narrate, validate, apply.
 // Does not persist — the caller decides when to save.
@@ -22,19 +28,23 @@ export async function runTurn(
 }
 
 // Reads the post's comments and ranks them into the current candidate actions.
-// The panel shows this list; its first entry is the action that resolves.
-export async function readProposals(): Promise<Proposal[]> {
-  const { postId } = context;
-  if (!postId) return [];
+// Only comments posted since the turn opened count, so old comments don't win
+// every turn. The first entry is the action that resolves.
+export async function readProposals(
+  postId: string,
+  since: number
+): Promise<Proposal[]> {
   const comments = await reddit
-    .getComments({ postId, sort: 'top', limit: 100 })
+    .getComments({ postId: postId as PostId, sort: 'top', limit: 100 })
     .all();
   return rankProposals(
-    comments.map((comment) => ({
-      id: comment.id,
-      body: comment.body,
-      score: comment.score,
-    }))
+    comments
+      .filter((comment) => comment.createdAt.getTime() >= since)
+      .map((comment) => ({
+        id: comment.id,
+        body: comment.body,
+        score: comment.score,
+      }))
   );
 }
 
@@ -47,18 +57,15 @@ export type ResolveOutcome =
 // Resolves the current turn from the post's comments: the top-voted comment
 // becomes the party's action. Posts the dungeon master's recap and persists.
 export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
-  const { postId } = context;
-  if (!postId) return { status: 'no_game' };
-
-  const state = await loadGame(postId);
+  const state = await loadGame();
   if (!state) return { status: 'no_game' };
   if (state.phase === 'dead') return { status: 'dead' };
 
-  const proposals = await readProposals();
+  const proposals = await readProposals(state.postId, turnStartedAt(state));
   const winner = proposals[0] ?? null;
   if (!winner) return { status: 'no_proposals' };
 
-  const nextState = await runTurn(state, winner.body);
+  const nextState = withDeadline(await runTurn(state, winner.body));
   await saveGame(nextState);
 
   // Best-effort recap: a failure to post must not fail the resolved turn.
@@ -66,7 +73,7 @@ export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
     nextState.recentEvents[nextState.recentEvents.length - 1] ?? '';
   try {
     await reddit.submitComment({
-      id: postId,
+      id: state.postId as PostId,
       text: `${RECAP_MARKER} The party chose: "${winner.body}"\n\n${latest}`,
     });
   } catch (error) {

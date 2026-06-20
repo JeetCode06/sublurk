@@ -9,6 +9,7 @@ import { loadGame, saveGame } from '../data/games';
 import { createInitialState, startNewRun } from '../game/state';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
+import { withDeadline, turnStartedAt } from '../schedule';
 
 export const api = new Hono();
 
@@ -31,14 +32,16 @@ api.get('/game', async (c) => {
     );
   }
   try {
-    let state = await loadGame(postId);
+    let state = await loadGame();
     if (!state) {
-      state = createInitialState({
-        postId,
-        subredditName,
-        classId: classForSubreddit(subredditName),
-        theme: themeForSubreddit(subredditName),
-      });
+      state = withDeadline(
+        createInitialState({
+          postId,
+          subredditName,
+          classId: classForSubreddit(subredditName),
+          theme: themeForSubreddit(subredditName),
+        })
+      );
       await saveGame(state);
     }
     return c.json<GameResponse>({
@@ -55,15 +58,16 @@ api.get('/game', async (c) => {
 });
 
 api.get('/proposals', async (c) => {
-  const { postId } = context;
-  if (!postId) {
-    return c.json<ErrorResponse>(
-      { status: 'error', message: 'postId is missing from context' },
-      400
-    );
-  }
   try {
-    const proposals = await readProposals();
+    const state = await loadGame();
+    if (!state) {
+      return c.json<ProposalsResponse>({
+        type: 'proposals',
+        proposals: [],
+        serverNow: Date.now(),
+      });
+    }
+    const proposals = await readProposals(state.postId, turnStartedAt(state));
     return c.json<ProposalsResponse>({
       type: 'proposals',
       proposals,
@@ -78,13 +82,6 @@ api.get('/proposals', async (c) => {
 });
 
 api.post('/action', async (c) => {
-  const { postId } = context;
-  if (!postId) {
-    return c.json<ErrorResponse>(
-      { status: 'error', message: 'postId is missing from context' },
-      400
-    );
-  }
   try {
     const body = (await c.req.json()) as { action?: unknown };
     const action = typeof body.action === 'string' ? body.action.trim() : '';
@@ -95,7 +92,7 @@ api.post('/action', async (c) => {
       );
     }
 
-    const state = await loadGame(postId);
+    const state = await loadGame();
     if (!state) {
       return c.json<ErrorResponse>(
         { status: 'error', message: 'No active game for this post' },
@@ -110,7 +107,7 @@ api.post('/action', async (c) => {
       });
     }
 
-    const nextState = await runTurn(state, action);
+    const nextState = withDeadline(await runTurn(state, action));
     await saveGame(nextState);
 
     return c.json<GameResponse>({
@@ -127,13 +124,6 @@ api.post('/action', async (c) => {
 });
 
 api.post('/resolve', async (c) => {
-  const { postId } = context;
-  if (!postId) {
-    return c.json<ErrorResponse>(
-      { status: 'error', message: 'postId is missing from context' },
-      400
-    );
-  }
   try {
     const outcome = await resolveTurnFromComments();
     const username = await currentUsername();
@@ -144,7 +134,7 @@ api.post('/resolve', async (c) => {
         username,
       });
     }
-    const state = await loadGame(postId);
+    const state = await loadGame();
     if (!state) {
       return c.json<ErrorResponse>(
         { status: 'error', message: 'No active game for this post' },
@@ -179,15 +169,17 @@ api.post('/restart', async (c) => {
     );
   }
   try {
-    const existing = await loadGame(postId);
-    const state = existing
-      ? startNewRun(existing)
-      : createInitialState({
-          postId,
-          subredditName,
-          classId: classForSubreddit(subredditName),
-          theme: themeForSubreddit(subredditName),
-        });
+    const existing = await loadGame();
+    const state = withDeadline(
+      existing
+        ? startNewRun(existing)
+        : createInitialState({
+            postId,
+            subredditName,
+            classId: classForSubreddit(subredditName),
+            theme: themeForSubreddit(subredditName),
+          })
+    );
     await saveGame(state);
     return c.json<GameResponse>({
       type: 'game',
