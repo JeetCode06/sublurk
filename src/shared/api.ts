@@ -11,6 +11,7 @@ export type ProposalsResponse = {
   type: 'proposals';
   proposals: Proposal[];
   serverNow: number;
+  state: GameState | null;
 };
 
 export type ActionRequest = {

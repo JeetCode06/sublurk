@@ -73,6 +73,7 @@ api.get('/proposals', async (c) => {
         type: 'proposals',
         proposals: [],
         serverNow: Date.now(),
+        state: null,
       });
     }
     const proposals = await readProposals(state.postId, turnStartedAt(state));
@@ -80,6 +81,7 @@ api.get('/proposals', async (c) => {
       type: 'proposals',
       proposals,
       serverNow: Date.now(),
+      state,
     });
   } catch (error) {
     return c.json<ErrorResponse>(

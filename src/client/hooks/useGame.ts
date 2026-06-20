@@ -50,6 +50,8 @@ async function fetchLeaderboard(): Promise<LeaderboardEntry[] | null> {
 export const useGame = () => {
   const [state, setState] = useState<GameHookState>(INITIAL);
 
+  // Initial load: create the game if needed and read the player's name. The
+  // poll below keeps the game fresh after this.
   useEffect(() => {
     const load = async () => {
       try {
@@ -70,31 +72,35 @@ export const useGame = () => {
           error: 'The dungeon is sealed. Reload to try again.',
         }));
       }
-      const entries = await fetchLeaderboard();
-      if (entries) {
-        setState((prev) => ({ ...prev, leaderboard: entries }));
-      }
     };
     void load();
   }, []);
 
-  // Poll the live candidate actions: the comment votes change outside our app,
-  // and Devvit has no websockets, so we re-fetch on an interval.
+  // Poll for live state. Votes change outside our app and the scheduler resolves
+  // turns on its own, so we re-read the game, proposals, and leaderboard on an
+  // interval (Devvit has no websockets).
   useEffect(() => {
     let cancelled = false;
     const poll = async () => {
       try {
         const res = await fetch('/api/proposals');
-        if (!res.ok) return;
-        const data = (await res.json()) as ProposalsResponse | ErrorResponse;
-        if (cancelled || !('type' in data)) return;
-        setState((prev) => ({
-          ...prev,
-          proposals: data.proposals,
-          serverOffset: data.serverNow - Date.now(),
-        }));
+        if (res.ok) {
+          const data = (await res.json()) as ProposalsResponse | ErrorResponse;
+          if (!cancelled && 'type' in data) {
+            setState((prev) => ({
+              ...prev,
+              proposals: data.proposals,
+              serverOffset: data.serverNow - Date.now(),
+              game: data.state ?? prev.game,
+            }));
+          }
+        }
       } catch {
-        // A failed poll keeps the last known proposals rather than blanking them.
+        // A failed poll keeps the last known state rather than blanking it.
+      }
+      const entries = await fetchLeaderboard();
+      if (!cancelled && entries) {
+        setState((prev) => ({ ...prev, leaderboard: entries }));
       }
     };
     void poll();
@@ -127,11 +133,6 @@ export const useGame = () => {
         error: null,
         note: data.note ?? null,
       }));
-      // A resolved turn may have ended a run or started a new one; refresh.
-      const entries = await fetchLeaderboard();
-      if (entries) {
-        setState((prev) => ({ ...prev, leaderboard: entries }));
-      }
     } catch {
       setState((prev) => ({ ...prev, resolving: false, error: GENERIC_ERROR }));
     }
