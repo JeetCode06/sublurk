@@ -1,4 +1,4 @@
-import type { GameState, Proposal } from './game';
+import type { GameState, LeaderboardEntry, Proposal } from './game';
 
 export type GameResponse = {
   type: 'game';
@@ -20,4 +20,9 @@ export type ActionRequest = {
 export type ErrorResponse = {
   status: 'error';
   message: string;
+};
+
+export type LeaderboardResponse = {
+  type: 'leaderboard';
+  entries: LeaderboardEntry[];
 };

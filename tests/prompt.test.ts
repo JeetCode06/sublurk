@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildTurnPrompt, SYSTEM_PROMPT } from '../src/server/ai/prompt';
+import {
+  buildTurnPrompt,
+  SYSTEM_PROMPT,
+  buildRoomIntroPrompt,
+  ROOM_INTRO_SYSTEM_PROMPT,
+} from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
 import type { DiceRoll } from '../src/server/game/dice';
 
@@ -49,5 +54,24 @@ describe('buildTurnPrompt', () => {
 
   it('marks the first move when there is no history', () => {
     expect(buildTurnPrompt(state, 'attack', roll)).toContain('first move');
+  });
+});
+
+describe('ROOM_INTRO_SYSTEM_PROMPT', () => {
+  it('asks for the scene JSON contract', () => {
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('scene');
+  });
+});
+
+describe('buildRoomIntroPrompt', () => {
+  it('includes the room type, theme, and class', () => {
+    const prompt = buildRoomIntroPrompt(state);
+    expect(prompt).toContain('mossy catacombs');
+    expect(prompt).toContain('witch');
+    expect(prompt).toContain(state.room.type);
+  });
+
+  it('marks the start of the run when there is no history', () => {
+    expect(buildRoomIntroPrompt(state)).toContain('start of the run');
   });
 });

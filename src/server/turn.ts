@@ -7,6 +7,8 @@ import { parseResolveResult } from './ai/parse';
 import { callGemini } from './ai/gemini';
 import { loadGame, saveGame } from './data/games';
 import { withDeadline, turnStartedAt } from './schedule';
+import { withRoomIntro } from './scene';
+import { recordRun } from './data/leaderboard';
 
 // A Reddit post fullname (t3_...). GameState stores postId as a plain string
 // to keep the shared contract free of Devvit types, so we re-tag it here at
@@ -65,8 +67,14 @@ export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
   const winner = proposals[0] ?? null;
   if (!winner) return { status: 'no_proposals' };
 
-  const nextState = withDeadline(await runTurn(state, winner.body));
+  const nextState = withDeadline(
+    await withRoomIntro(await runTurn(state, winner.body))
+  );
   await saveGame(nextState);
+
+  if (nextState.party.depth > state.party.depth) {
+    await recordRun(nextState);
+  }
 
   // Best-effort recap: a failure to post must not fail the resolved turn.
   const latest = nextState.recentEvents.at(-1) ?? '';

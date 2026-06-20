@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { GameState, Proposal } from '../../shared/game';
+import type { GameState, LeaderboardEntry, Proposal } from '../../shared/game';
 import type {
   ErrorResponse,
   GameResponse,
+  LeaderboardResponse,
   ProposalsResponse,
 } from '../../shared/api';
 
@@ -15,6 +16,7 @@ type GameHookState = {
   note: string | null;
   proposals: Proposal[];
   serverOffset: number | null;
+  leaderboard: LeaderboardEntry[];
 };
 
 const INITIAL: GameHookState = {
@@ -26,10 +28,24 @@ const INITIAL: GameHookState = {
   note: null,
   proposals: [],
   serverOffset: null,
+  leaderboard: [],
 };
 
 const GENERIC_ERROR = 'The dungeon did not respond. Try again.';
 const POLL_INTERVAL_MS = 5000;
+
+// Fetches the leaderboard without touching React state, so callers decide when
+// to apply it. This keeps setState out of an effect body directly.
+async function fetchLeaderboard(): Promise<LeaderboardEntry[] | null> {
+  try {
+    const res = await fetch('/api/leaderboard');
+    if (!res.ok) return null;
+    const data = (await res.json()) as LeaderboardResponse | ErrorResponse;
+    return 'type' in data ? data.entries : null;
+  } catch {
+    return null;
+  }
+}
 
 export const useGame = () => {
   const [state, setState] = useState<GameHookState>(INITIAL);
@@ -53,6 +69,10 @@ export const useGame = () => {
           loading: false,
           error: 'The dungeon is sealed. Reload to try again.',
         }));
+      }
+      const entries = await fetchLeaderboard();
+      if (entries) {
+        setState((prev) => ({ ...prev, leaderboard: entries }));
       }
     };
     void load();
@@ -107,6 +127,11 @@ export const useGame = () => {
         error: null,
         note: data.note ?? null,
       }));
+      // A resolved turn may have ended a run or started a new one; refresh.
+      const entries = await fetchLeaderboard();
+      if (entries) {
+        setState((prev) => ({ ...prev, leaderboard: entries }));
+      }
     } catch {
       setState((prev) => ({ ...prev, resolving: false, error: GENERIC_ERROR }));
     }

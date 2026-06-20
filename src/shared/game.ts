@@ -78,3 +78,9 @@ export type Proposal = {
   body: string;
   score: number;
 };
+
+// A run's standing on the leaderboard: how deep it reached. One entry per run.
+export type LeaderboardEntry = {
+  runNumber: number;
+  depth: number;
+};

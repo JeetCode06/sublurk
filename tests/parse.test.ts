@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { parseResolveResult } from '../src/server/ai/parse';
+import {
+  parseResolveResult,
+  parseRoomScene,
+  FALLBACK_SCENE,
+} from '../src/server/ai/parse';
 
 const valid = JSON.stringify({
   narration: 'The torch flares to life.',
@@ -79,5 +83,23 @@ describe('parseResolveResult', () => {
     const result = parseResolveResult('{"hpDelta": 3, ');
     expect(result.roomResolved).toBe(false);
     expect(result.hpDelta).toBe(0);
+  });
+});
+
+describe('parseRoomScene', () => {
+  it('parses a clean scene reply', () => {
+    const raw = JSON.stringify({ scene: 'A vaulted hall drips with cold.' });
+    expect(parseRoomScene(raw)).toBe('A vaulted hall drips with cold.');
+  });
+
+  it('falls back when the scene is missing or empty', () => {
+    expect(parseRoomScene('{}')).toBe(FALLBACK_SCENE);
+    expect(parseRoomScene(JSON.stringify({ scene: '   ' }))).toBe(
+      FALLBACK_SCENE
+    );
+  });
+
+  it('falls back on unparseable replies', () => {
+    expect(parseRoomScene('the model said no json')).toBe(FALLBACK_SCENE);
   });
 });

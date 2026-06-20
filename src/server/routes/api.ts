@@ -3,13 +3,16 @@ import { context, reddit } from '@devvit/web/server';
 import type {
   ErrorResponse,
   GameResponse,
+  LeaderboardResponse,
   ProposalsResponse,
 } from '../../shared/api';
 import { loadGame, saveGame } from '../data/games';
+import { recordRun, topRuns } from '../data/leaderboard';
 import { createInitialState, startNewRun } from '../game/state';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
 import { withDeadline, turnStartedAt } from '../schedule';
+import { withRoomIntro } from '../scene';
 
 export const api = new Hono();
 
@@ -42,11 +45,16 @@ api.get('/game', async (c) => {
           theme: themeForSubreddit(subredditName),
         })
       );
-      await saveGame(state);
+    }
+    // Fill the room's intro if missing, without re-stamping the deadline, so
+    // opening the webview never delays a turn.
+    const described = await withRoomIntro(state);
+    if (described !== state) {
+      await saveGame(described);
     }
     return c.json<GameResponse>({
       type: 'game',
-      state,
+      state: described,
       username: await currentUsername(),
     });
   } catch (error) {
@@ -81,6 +89,18 @@ api.get('/proposals', async (c) => {
   }
 });
 
+api.get('/leaderboard', async (c) => {
+  try {
+    const entries = await topRuns(10);
+    return c.json<LeaderboardResponse>({ type: 'leaderboard', entries });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
 api.post('/action', async (c) => {
   try {
     const body = await c.req.json<{ action?: unknown }>();
@@ -107,8 +127,14 @@ api.post('/action', async (c) => {
       });
     }
 
-    const nextState = withDeadline(await runTurn(state, action));
+    const nextState = withDeadline(
+      await withRoomIntro(await runTurn(state, action))
+    );
     await saveGame(nextState);
+
+    if (nextState.party.depth > state.party.depth) {
+      await recordRun(nextState);
+    }
 
     return c.json<GameResponse>({
       type: 'game',
@@ -170,16 +196,15 @@ api.post('/restart', async (c) => {
   }
   try {
     const existing = await loadGame();
-    const state = withDeadline(
-      existing
-        ? startNewRun(existing)
-        : createInitialState({
-            postId,
-            subredditName,
-            classId: classForSubreddit(subredditName),
-            theme: themeForSubreddit(subredditName),
-          })
-    );
+    const base = existing
+      ? startNewRun(existing)
+      : createInitialState({
+          postId,
+          subredditName,
+          classId: classForSubreddit(subredditName),
+          theme: themeForSubreddit(subredditName),
+        });
+    const state = withDeadline(await withRoomIntro(base));
     await saveGame(state);
     return c.json<GameResponse>({
       type: 'game',

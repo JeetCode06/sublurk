@@ -78,3 +78,23 @@ export function parseResolveResult(raw: string): ResolveResult {
     death: asBoolean(value.death, false),
   };
 }
+
+// Used when a room intro can't be generated, so a room is never left blank.
+export const FALLBACK_SCENE =
+  'The chamber waits in restless shadow, its purpose not yet clear. The party steadies their torches and presses on.';
+
+// Parses the room-intro reply ({ "scene": string }), falling back to neutral
+// prose when the AI is unavailable or the reply can't be read.
+export function parseRoomScene(raw: string): string {
+  const json = extractJson(raw);
+  if (json === null) return FALLBACK_SCENE;
+  try {
+    const value = JSON.parse(json) as Record<string, unknown>;
+    const scene = value.scene;
+    return typeof scene === 'string' && scene.trim().length > 0
+      ? scene.trim()
+      : FALLBACK_SCENE;
+  } catch {
+    return FALLBACK_SCENE;
+  }
+}

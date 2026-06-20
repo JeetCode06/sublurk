@@ -2,7 +2,7 @@ import './index.css';
 
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { GameState, Proposal } from '../shared/game';
+import type { GameState, LeaderboardEntry, Proposal } from '../shared/game';
 import { useGame } from './hooks/useGame';
 
 function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
@@ -175,6 +175,42 @@ function CandidateActions({
   );
 }
 
+function Leaderboard({
+  entries,
+  currentRun,
+}: {
+  entries: LeaderboardEntry[];
+  currentRun: number;
+}) {
+  if (entries.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+        Deepest runs
+      </h2>
+      <ol className="flex flex-col gap-1">
+        {entries.map((entry, index) => {
+          const current = entry.runNumber === currentRun;
+          return (
+            <li
+              key={entry.runNumber}
+              className={`flex items-baseline justify-between gap-3 rounded px-3 py-1.5 font-mono text-sm ${
+                current ? 'bg-[#2a211b] text-[#f0a050]' : 'text-[#a89880]'
+              }`}
+            >
+              <span>
+                {index + 1}. Run {entry.runNumber}
+                {current && ' · this run'}
+              </span>
+              <span className="tabular-nums">depth {entry.depth}</span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
 function Board({
   game,
   resolving,
@@ -182,6 +218,7 @@ function Board({
   note,
   proposals,
   serverOffset,
+  leaderboard,
   onAct,
   onResolveVotes,
   onRestart,
@@ -192,15 +229,21 @@ function Board({
   note: string | null;
   proposals: Proposal[];
   serverOffset: number | null;
+  leaderboard: LeaderboardEntry[];
   onAct: (action: string) => void;
   onResolveVotes: () => void;
   onRestart: () => void;
 }) {
   const [draft, setDraft] = useState('');
   const events = game.recentEvents;
-  const latest = events.at(-1) ?? null;
-  const earlier = events.slice(0, -1).reverse();
   const dead = game.phase === 'dead';
+  const scene = dead
+    ? (events.at(-1) ??
+      'The party has fallen. The dungeon falls silent around them.')
+    : game.room.description ||
+      'The party presses into the dark. The dungeon master is setting the scene…';
+  const log = (dead ? events.slice(0, -1) : events.slice()).reverse();
+  const record = leaderboard[0]?.depth ?? null;
 
   const submit = () => {
     const action = draft.trim();
@@ -237,6 +280,7 @@ function Board({
                 {game.party.statuses.join(', ')}
               </span>
             )}
+            {record !== null && <span>🏆 record depth {record}</span>}
           </div>
         </header>
 
@@ -247,13 +291,10 @@ function Board({
                 ? 'The run ends'
                 : `${game.room.type} · depth ${game.party.depth}`}
             </p>
-            <p className="text-lg leading-relaxed text-[#e8ddc8]">
-              {latest ??
-                'The party stands at the threshold, torchlight trembling. The dungeon waits for their first move.'}
-            </p>
-            {earlier.length > 0 && (
+            <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
+            {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
-                {earlier.map((event, i) => (
+                {log.map((event, i) => (
                   <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
                     {event}
                   </p>
@@ -277,6 +318,10 @@ function Board({
                 onResolveVotes={onResolveVotes}
               />
             </>
+          )}
+
+          {dead && (
+            <Leaderboard entries={leaderboard} currentRun={game.runNumber} />
           )}
         </main>
 
@@ -332,6 +377,7 @@ export const App = () => {
     note,
     proposals,
     serverOffset,
+    leaderboard,
     submitAction,
     resolveVotes,
     restart,
@@ -361,6 +407,7 @@ export const App = () => {
       note={note}
       proposals={proposals}
       serverOffset={serverOffset}
+      leaderboard={leaderboard}
       onAct={submitAction}
       onResolveVotes={resolveVotes}
       onRestart={restart}
