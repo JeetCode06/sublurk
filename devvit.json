@@ -54,6 +54,14 @@
   "triggers": {
     "onAppInstall": "/internal/triggers/on-app-install"
   },
+  "scheduler": {
+    "tasks": {
+      "resolve-turn": {
+        "endpoint": "/internal/scheduler/resolve-turn",
+        "cron": "* * * * *"
+      }
+    }
+  },
   "settings": {
     "global": {
       "gemini-api-key": {

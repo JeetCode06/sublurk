@@ -83,7 +83,7 @@ api.get('/proposals', async (c) => {
 
 api.post('/action', async (c) => {
   try {
-    const body = (await c.req.json()) as { action?: unknown };
+    const body = await c.req.json<{ action?: unknown }>();
     const action = typeof body.action === 'string' ? body.action.trim() : '';
     if (action.length === 0) {
       return c.json<ErrorResponse>(

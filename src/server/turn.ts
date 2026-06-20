@@ -69,8 +69,7 @@ export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
   await saveGame(nextState);
 
   // Best-effort recap: a failure to post must not fail the resolved turn.
-  const latest =
-    nextState.recentEvents[nextState.recentEvents.length - 1] ?? '';
+  const latest = nextState.recentEvents.at(-1) ?? '';
   try {
     await reddit.submitComment({
       id: state.postId as PostId,
