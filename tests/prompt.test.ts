@@ -9,6 +9,7 @@ import {
 } from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
 import type { DiceRoll } from '../src/server/game/dice';
+import type { WorldBible } from '../src/shared/game';
 
 const state = createInitialState({
   postId: 't3_abc',
@@ -25,6 +26,16 @@ const roll: DiceRoll = {
   outcome: 'success',
 };
 
+const bible: WorldBible = {
+  theme: 'a sunken cathedral of brine and bone',
+  villain: { name: 'the Tidemother', motive: 'to drown the last dry land' },
+  heroFlavor: 'a covenant of lantern-bearers',
+  motifs: ['salt', 'drowned bells', 'phosphor glow'],
+  itemVocabulary: ['a brine-lamp'],
+  artStyle: 'sunken gothic',
+  finalBossConcept: 'the Tidemother in her flooded nave',
+};
+
 describe('SYSTEM_PROMPT', () => {
   it('specifies the JSON output contract', () => {
     expect(SYSTEM_PROMPT).toContain('narration');
@@ -34,28 +45,36 @@ describe('SYSTEM_PROMPT', () => {
 
 describe('buildTurnPrompt', () => {
   it('includes the chosen action', () => {
-    expect(buildTurnPrompt(state, 'light a torch', roll)).toContain(
+    expect(buildTurnPrompt(state, 'light a torch', roll, bible)).toContain(
       'light a torch'
     );
   });
 
   it('tells the AI the dice outcome so it narrates consistently', () => {
-    expect(buildTurnPrompt(state, 'attack', roll)).toContain('success');
+    expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain('success');
   });
 
-  it('includes the party hp, class, and theme', () => {
-    const prompt = buildTurnPrompt(state, 'attack', roll);
-    expect(prompt).toContain('mossy catacombs');
+  it('includes the party hp, class, and world', () => {
+    const prompt = buildTurnPrompt(state, 'attack', roll, bible);
+    expect(prompt).toContain('sunken cathedral');
     expect(prompt).toContain('witch');
     expect(prompt).toContain('50/50');
   });
 
+  it('injects the world villain and motifs so the campaign stays continuous', () => {
+    const prompt = buildTurnPrompt(state, 'attack', roll, bible);
+    expect(prompt).toContain('the Tidemother');
+    expect(prompt).toContain('phosphor glow');
+  });
+
   it('handles an empty inventory gracefully', () => {
-    expect(buildTurnPrompt(state, 'attack', roll)).toContain('empty');
+    expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain('empty');
   });
 
   it('marks the first move when there is no history', () => {
-    expect(buildTurnPrompt(state, 'attack', roll)).toContain('first move');
+    expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain(
+      'first move'
+    );
   });
 });
 
@@ -66,15 +85,16 @@ describe('ROOM_INTRO_SYSTEM_PROMPT', () => {
 });
 
 describe('buildRoomIntroPrompt', () => {
-  it('includes the room type, theme, and class', () => {
-    const prompt = buildRoomIntroPrompt(state);
-    expect(prompt).toContain('mossy catacombs');
+  it('includes the room type, world, villain, and class', () => {
+    const prompt = buildRoomIntroPrompt(state, bible);
+    expect(prompt).toContain('sunken cathedral');
+    expect(prompt).toContain('the Tidemother');
     expect(prompt).toContain('witch');
     expect(prompt).toContain(state.room.type);
   });
 
   it('marks the start of the run when there is no history', () => {
-    expect(buildRoomIntroPrompt(state)).toContain('start of the run');
+    expect(buildRoomIntroPrompt(state, bible)).toContain('start of the run');
   });
 });
 

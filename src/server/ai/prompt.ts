@@ -1,4 +1,4 @@
-import type { GameState } from '../../shared/game';
+import type { GameState, WorldBible } from '../../shared/game';
 import type { DiceRoll } from '../game/dice';
 
 export const SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler. A whole community controls one party by voting on actions in the comments.
@@ -8,7 +8,7 @@ Narrate the outcome of the party's chosen action in 2-4 vivid sentences, then re
 Rules:
 - The dice have already decided how well the action goes. Honor the given outcome: "success", "partial" (it works, but at a cost), or "fail".
 - Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with the party's current HP, gold, and the room.
-- Keep it tense and fun, match the dungeon's theme, and keep content safe for a general audience.
+- Keep it tense and fun, match the world and weave in its villain and motifs when it fits, and keep content safe for a general audience.
 - Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
   "narration": string,
@@ -24,14 +24,27 @@ Rules:
   "death": boolean
 }`;
 
+// The shared world context injected into every prompt so each turn reflects the
+// subreddit's own campaign — its setting, its named villain, and its motifs —
+// rather than generic dungeon text.
+function worldContextLines(bible: WorldBible): string[] {
+  return [
+    `World: ${bible.theme}`,
+    `Looming threat: ${bible.villain.name}, who seeks ${bible.villain.motive}`,
+    `The party: ${bible.heroFlavor}`,
+    `Motifs to weave in: ${bible.motifs.join(', ')}`,
+  ];
+}
+
 export function buildTurnPrompt(
   state: GameState,
   action: string,
-  roll: DiceRoll
+  roll: DiceRoll,
+  bible: WorldBible
 ): string {
-  const { party, room, theme, recentEvents } = state;
+  const { party, room, recentEvents } = state;
   const lines = [
-    `Dungeon theme: ${theme}`,
+    ...worldContextLines(bible),
     `Party: ${party.name} (class: ${party.classId})`,
     `HP: ${party.hp}/${party.maxHp} | Gold: ${party.gold} | Depth: ${party.depth}`,
     `Inventory: ${party.inventory.length > 0 ? party.inventory.join(', ') : 'empty'}`,
@@ -51,14 +64,17 @@ export const ROOM_INTRO_SYSTEM_PROMPT = `You are the Dungeon Master for a collab
 
 Describe what the party sees in 2-3 vivid, atmospheric sentences. Set the mood and hint at the room's danger or promise, but do NOT resolve anything, invent specific numbers, or decide what the party does next — the community will choose that.
 
-Match the dungeon's theme and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
+Match the world and let its villain loom when fitting, and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 { "scene": string }`;
 
-export function buildRoomIntroPrompt(state: GameState): string {
-  const { party, room, theme, recentEvents } = state;
+export function buildRoomIntroPrompt(
+  state: GameState,
+  bible: WorldBible
+): string {
+  const { party, room, recentEvents } = state;
   const lastEvent = recentEvents.at(-1);
   const lines = [
-    `Dungeon theme: ${theme}`,
+    ...worldContextLines(bible),
     `Party: ${party.name} (class: ${party.classId})`,
     `Depth: ${party.depth} | HP: ${party.hp}/${party.maxHp}`,
     `They have just entered a ${room.type} room.`,

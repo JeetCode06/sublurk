@@ -1,5 +1,5 @@
 import { reddit } from '@devvit/web/server';
-import type { GameState, Proposal } from '../shared/game';
+import type { GameState, Proposal, WorldBible } from '../shared/game';
 import { prepareRoll, applyTurn } from './game/resolution';
 import { rankProposals, RECAP_MARKER } from './game/voting';
 import { SYSTEM_PROMPT, buildTurnPrompt } from './ai/prompt';
@@ -9,6 +9,7 @@ import { loadGame, saveGame } from './data/games';
 import { withDeadline, turnStartedAt } from './schedule';
 import { withRoomIntro } from './scene';
 import { recordRun } from './data/leaderboard';
+import { ensureWorldBible } from './worldbible';
 
 // A Reddit post fullname (t3_...). GameState stores postId as a plain string
 // to keep the shared contract free of Devvit types, so we re-tag it here at
@@ -19,12 +20,13 @@ type PostId = `t3_${string}`;
 // Does not persist — the caller decides when to save.
 export async function runTurn(
   state: GameState,
-  action: string
+  action: string,
+  bible: WorldBible
 ): Promise<GameState> {
   const roll = prepareRoll(state);
   const raw = await callGemini(
     SYSTEM_PROMPT,
-    buildTurnPrompt(state, action, roll)
+    buildTurnPrompt(state, action, roll, bible)
   );
   return applyTurn(state, parseResolveResult(raw));
 }
@@ -67,8 +69,9 @@ export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
   const winner = proposals[0] ?? null;
   if (!winner) return { status: 'no_proposals' };
 
+  const bible = await ensureWorldBible();
   const nextState = withDeadline(
-    await withRoomIntro(await runTurn(state, winner.body))
+    await withRoomIntro(await runTurn(state, winner.body, bible), bible)
   );
   await saveGame(nextState);
 

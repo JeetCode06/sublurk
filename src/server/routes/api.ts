@@ -13,6 +13,7 @@ import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
 import { withDeadline, turnStartedAt } from '../schedule';
 import { withRoomIntro } from '../scene';
+import { ensureWorldBible } from '../worldbible';
 
 export const api = new Hono();
 
@@ -47,8 +48,10 @@ api.get('/game', async (c) => {
       );
     }
     // Fill the room's intro if missing, without re-stamping the deadline, so
-    // opening the webview never delays a turn.
-    const described = await withRoomIntro(state);
+    // opening the webview never delays a turn. Ensuring the world here also
+    // generates it on the first open of a sub's game.
+    const bible = await ensureWorldBible();
+    const described = await withRoomIntro(state, bible);
     if (described !== state) {
       await saveGame(described);
     }
@@ -129,8 +132,9 @@ api.post('/action', async (c) => {
       });
     }
 
+    const bible = await ensureWorldBible();
     const nextState = withDeadline(
-      await withRoomIntro(await runTurn(state, action))
+      await withRoomIntro(await runTurn(state, action, bible), bible)
     );
     await saveGame(nextState);
 
@@ -206,7 +210,8 @@ api.post('/restart', async (c) => {
           classId: classForSubreddit(subredditName),
           theme: themeForSubreddit(subredditName),
         });
-    const state = withDeadline(await withRoomIntro(base));
+    const bible = await ensureWorldBible();
+    const state = withDeadline(await withRoomIntro(base, bible));
     await saveGame(state);
     return c.json<GameResponse>({
       type: 'game',
