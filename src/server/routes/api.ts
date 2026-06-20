@@ -1,17 +1,19 @@
 import { Hono } from 'hono';
 import { context, reddit } from '@devvit/web/server';
-import type { ErrorResponse, GameResponse } from '../../shared/api';
+import type {
+  ErrorResponse,
+  GameResponse,
+  ProposalsResponse,
+} from '../../shared/api';
 import { loadGame, saveGame } from '../data/games';
 import { createInitialState, startNewRun } from '../game/state';
-import { prepareRoll, applyTurn } from '../game/resolution';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
-import { SYSTEM_PROMPT, buildTurnPrompt } from '../ai/prompt';
-import { parseResolveResult } from '../ai/parse';
-import { callGemini } from '../ai/gemini';
+import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
 
 export const api = new Hono();
 
 function errorMessage(error: unknown): string {
+  console.error(error);
   return error instanceof Error ? error.message : 'Unexpected server error';
 }
 
@@ -43,6 +45,29 @@ api.get('/game', async (c) => {
       type: 'game',
       state,
       username: await currentUsername(),
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
+api.get('/proposals', async (c) => {
+  const { postId } = context;
+  if (!postId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'postId is missing from context' },
+      400
+    );
+  }
+  try {
+    const proposals = await readProposals();
+    return c.json<ProposalsResponse>({
+      type: 'proposals',
+      proposals,
+      serverNow: Date.now(),
     });
   } catch (error) {
     return c.json<ErrorResponse>(
@@ -85,18 +110,57 @@ api.post('/action', async (c) => {
       });
     }
 
-    const roll = prepareRoll(state);
-    const raw = await callGemini(
-      SYSTEM_PROMPT,
-      buildTurnPrompt(state, action, roll)
-    );
-    const nextState = applyTurn(state, parseResolveResult(raw));
+    const nextState = await runTurn(state, action);
     await saveGame(nextState);
 
     return c.json<GameResponse>({
       type: 'game',
       state: nextState,
       username: await currentUsername(),
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
+api.post('/resolve', async (c) => {
+  const { postId } = context;
+  if (!postId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'postId is missing from context' },
+      400
+    );
+  }
+  try {
+    const outcome = await resolveTurnFromComments();
+    const username = await currentUsername();
+    if (outcome.status === 'resolved') {
+      return c.json<GameResponse>({
+        type: 'game',
+        state: outcome.state,
+        username,
+      });
+    }
+    const state = await loadGame(postId);
+    if (!state) {
+      return c.json<ErrorResponse>(
+        { status: 'error', message: 'No active game for this post' },
+        404
+      );
+    }
+    const notes: Record<'no_game' | 'dead' | 'no_proposals', string> = {
+      no_game: 'No active game for this post.',
+      dead: 'The party has fallen — start a new run.',
+      no_proposals: 'No actions proposed yet. Comment one, then resolve.',
+    };
+    return c.json<GameResponse>({
+      type: 'game',
+      state,
+      username,
+      note: notes[outcome.status],
     });
   } catch (error) {
     return c.json<ErrorResponse>(

@@ -12,20 +12,35 @@ export async function callGemini(
 ): Promise<string> {
   const apiKey = await settings.get('gemini-api-key');
   if (typeof apiKey !== 'string' || apiKey.length === 0) {
+    console.error('Gemini API key is not set');
     return '';
   }
 
-  const response = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify(buildGeminiRequest(systemPrompt, userPrompt)),
-  });
+  try {
+    const response = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(buildGeminiRequest(systemPrompt, userPrompt)),
+    });
 
-  if (!response.ok) return '';
+    if (!response.ok) {
+      console.error(`Gemini returned HTTP ${response.status}`);
+      return '';
+    }
 
-  const data: unknown = await response.json();
-  return readGeminiText(data);
+    const data: unknown = await response.json();
+    const text = readGeminiText(data);
+    if (text.length === 0) {
+      console.error(
+        `Gemini returned no usable text: ${JSON.stringify(data).slice(0, 600)}`
+      );
+    }
+    return text;
+  } catch (error) {
+    console.error(`Gemini request failed: ${error}`);
+    return '';
+  }
 }

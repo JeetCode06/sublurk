@@ -38,6 +38,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/example-form"
+      },
+      {
+        "label": "Resolve the turn",
+        "description": "Resolve the top-voted action now",
+        "location": "post",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/resolve-turn"
       }
     ]
   },

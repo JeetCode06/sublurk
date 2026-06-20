@@ -70,3 +70,11 @@ export type ResolveResult = {
   nextRoomHint: string | null;
   death: boolean;
 };
+
+// A candidate action the community has proposed: one comment on the post,
+// carried with its live upvote score. The panel lists these; the top one resolves.
+export type Proposal = {
+  id: string;
+  body: string;
+  score: number;
+};

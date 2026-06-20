@@ -12,7 +12,11 @@ export function buildGeminiRequest(systemPrompt: string, userPrompt: string) {
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
     generationConfig: {
       responseMimeType: 'application/json',
-      maxOutputTokens: 2048,
+      maxOutputTokens: 4096,
+      // gemini-2.5-flash enables "thinking" by default and counts those tokens
+      // against the output budget, which can starve the actual reply. We don't
+      // need reasoning for short narration, so turn it off.
+      thinkingConfig: { thinkingBudget: 0 },
     },
   };
 }

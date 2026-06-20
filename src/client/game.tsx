@@ -25,17 +25,59 @@ function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
   );
 }
 
+function RestartButton({
+  resolving,
+  onRestart,
+}: {
+  resolving: boolean;
+  onRestart: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  if (confirming) {
+    return (
+      <span className="flex items-center gap-2 font-mono text-xs">
+        <span className="text-[#8a7d72]">abandon run?</span>
+        <button
+          onClick={onRestart}
+          disabled={resolving}
+          className="text-[#c0392b] hover:underline disabled:opacity-50"
+        >
+          yes
+        </button>
+        <button
+          onClick={() => setConfirming(false)}
+          className="text-[#8a7d72] hover:underline"
+        >
+          no
+        </button>
+      </span>
+    );
+  }
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="font-mono text-xs text-[#8a7d72] transition-colors hover:text-[#e8893f]"
+    >
+      ↻ new run
+    </button>
+  );
+}
+
 function Board({
   game,
   resolving,
   error,
+  note,
   onAct,
+  onResolveVotes,
   onRestart,
 }: {
   game: GameState;
   resolving: boolean;
   error: string | null;
+  note: string | null;
   onAct: (action: string) => void;
+  onResolveVotes: () => void;
   onRestart: () => void;
 }) {
   const [draft, setDraft] = useState('');
@@ -59,9 +101,14 @@ function Board({
             <h1 className="text-xl font-semibold tracking-wide text-[#f0a050]">
               {game.party.name}
             </h1>
-            <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
-              Run {game.runNumber} · Depth {game.party.depth}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
+                Run {game.runNumber} · Depth {game.party.depth}
+              </span>
+              {!dead && (
+                <RestartButton resolving={resolving} onRestart={onRestart} />
+              )}
+            </div>
           </div>
           <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
           <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-[#8a7d72]">
@@ -98,8 +145,9 @@ function Board({
           )}
         </main>
 
-        <footer className="flex flex-col gap-2 border-t border-[#3a302b] pt-4">
+        <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
           {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+          {note && <p className="text-sm text-[#e8893f]">{note}</p>}
           {dead ? (
             <button
               onClick={onRestart}
@@ -132,6 +180,13 @@ function Board({
                   {resolving ? '…' : 'Act'}
                 </button>
               </div>
+              <button
+                onClick={onResolveVotes}
+                disabled={resolving}
+                className="self-start rounded border border-[#3a302b] px-4 py-2 font-mono text-xs uppercase tracking-widest text-[#8a7d72] transition-colors hover:border-[#e8893f] hover:text-[#e8893f] disabled:opacity-40"
+              >
+                {resolving ? 'resolving…' : '🎲 resolve top-voted comment'}
+              </button>
             </>
           )}
         </footer>
@@ -141,7 +196,16 @@ function Board({
 }
 
 export const App = () => {
-  const { game, loading, resolving, error, submitAction, restart } = useGame();
+  const {
+    game,
+    loading,
+    resolving,
+    error,
+    note,
+    submitAction,
+    resolveVotes,
+    restart,
+  } = useGame();
 
   if (loading) {
     return (
@@ -164,7 +228,9 @@ export const App = () => {
       game={game}
       resolving={resolving}
       error={error}
+      note={note}
       onAct={submitAction}
+      onResolveVotes={resolveVotes}
       onRestart={restart}
     />
   );
