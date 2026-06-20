@@ -36,10 +36,27 @@ export type Party = {
   name: string;
 };
 
+export type EntityKind = 'foe' | 'npc' | 'object';
+
+// One thing present in the current scene — a foe, an NPC, or an object — shown
+// as a card on the board. Foes may carry a threat level and remaining hp so the
+// UI can draw a bar; non-combat entities leave those unset.
+export type SceneEntity = {
+  kind: EntityKind;
+  name: string;
+  blurb: string;
+  threat?: number;
+  hp?: number;
+};
+
 export type Room = {
   type: RoomType;
   description: string;
   difficulty: number;
+  // What currently fills the scene (foes, NPCs, objects) and the active dangers
+  // in it, both rendered on the board. Empty until the AI populates a new scene.
+  entities: SceneEntity[];
+  threats: string[];
   // Per-room server-only state, e.g. a monster's remaining hp. Shape varies by room type.
   situation: Record<string, unknown>;
 };

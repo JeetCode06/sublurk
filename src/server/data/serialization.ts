@@ -14,7 +14,19 @@ export function deserializeGame(raw: string): GameState | null {
       value.party != null &&
       value.room != null
     ) {
-      return value as GameState;
+      const state = value as GameState;
+      // Backfill scene fields added after some runs were already saved, so an
+      // older record keeps working instead of being discarded.
+      return {
+        ...state,
+        room: {
+          ...state.room,
+          entities: Array.isArray(state.room.entities)
+            ? state.room.entities
+            : [],
+          threats: Array.isArray(state.room.threats) ? state.room.threats : [],
+        },
+      };
     }
     return null;
   } catch {

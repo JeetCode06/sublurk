@@ -41,6 +41,8 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
       type: 'boss',
       description: '',
       difficulty: scaleDifficulty(14, depth),
+      entities: [],
+      threats: [],
       situation: {},
     };
   }
@@ -50,6 +52,8 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
     type: archetype.type,
     description: '',
     difficulty: scaleDifficulty(archetype.baseDifficulty, depth),
+    entities: [],
+    threats: [],
     situation: {},
   };
 }

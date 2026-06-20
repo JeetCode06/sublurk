@@ -28,4 +28,20 @@ describe('serialization', () => {
   it('returns null for an empty string', () => {
     expect(deserializeGame('')).toBeNull();
   });
+
+  it('backfills scene fields missing from an older saved game', () => {
+    const legacy = JSON.stringify({
+      ...sample,
+      room: {
+        type: sample.room.type,
+        description: 'an old room',
+        difficulty: sample.room.difficulty,
+        situation: {},
+      },
+    });
+    const restored = deserializeGame(legacy);
+    expect(restored?.room.entities).toEqual([]);
+    expect(restored?.room.threats).toEqual([]);
+    expect(restored?.room.description).toBe('an old room');
+  });
 });
