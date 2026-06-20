@@ -84,3 +84,25 @@ export type LeaderboardEntry = {
   runNumber: number;
   depth: number;
 };
+
+// --- v2: campaign world ---
+
+// The villain at the heart of a subreddit's campaign: a named antagonist with a
+// motive the AI can reference and escalate across runs.
+export type Villain = {
+  name: string;
+  motive: string;
+};
+
+// A one-time, AI-authored description of a subreddit's world, generated at the
+// start of a campaign from the subreddit itself and injected into later prompts
+// so every scene stays coherent. Treated as untrusted until coerced server-side.
+export type WorldBible = {
+  theme: string;
+  villain: Villain;
+  heroFlavor: string;
+  motifs: string[];
+  itemVocabulary: string[];
+  artStyle: string;
+  finalBossConcept: string;
+};

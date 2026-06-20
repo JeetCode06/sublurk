@@ -1,0 +1,94 @@
+import type { WorldBible } from '../../shared/game';
+
+// Caps keep AI-authored lists from bloating prompts and storage; a world only
+// needs a handful of recurring motifs and item names to feel coherent.
+const MAX_MOTIFS = 8;
+const MAX_ITEMS = 12;
+
+// A safe, generic fantasy world used whenever a bible can't be generated or the
+// AI reply can't be read, so a campaign always has a coherent backdrop to run on.
+export const DEFAULT_WORLD_BIBLE: WorldBible = {
+  theme:
+    'A crumbling underground realm of forgotten halls, where torchlight is the only law and something older stirs in the deep.',
+  villain: {
+    name: 'the Hollow King',
+    motive: 'to drag every living thing down into his silent, endless dark.',
+  },
+  heroFlavor:
+    'a band of unlikely delvers bound by one shared fate, descending together or not at all.',
+  motifs: ['guttering torches', 'cold stone', 'distant echoes', 'old bones'],
+  itemVocabulary: ['a rusted key', 'a healing draught', 'a cracked relic'],
+  artStyle:
+    'moody painterly fantasy, deep shadow, warm torchlight, muted earthy palette',
+  finalBossConcept:
+    'the Hollow King upon his throne of fused bone, where the deepest hall ends.',
+};
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function cleanString(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+
+// Keeps only non-empty, de-duplicated strings, capped to a maximum; an empty
+// result falls back so a flavor list is never left blank.
+function cleanStringList(
+  value: unknown,
+  fallback: string[],
+  cap: number
+): string[] {
+  if (!Array.isArray(value)) return fallback;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= cap) break;
+  }
+  return out.length > 0 ? out : fallback;
+}
+
+function cleanVillain(value: unknown): WorldBible['villain'] {
+  const source = asRecord(value);
+  return {
+    name: cleanString(source.name, DEFAULT_WORLD_BIBLE.villain.name),
+    motive: cleanString(source.motive, DEFAULT_WORLD_BIBLE.villain.motive),
+  };
+}
+
+// Forces a parsed-but-untrusted bible into a complete, sane WorldBible: every
+// field is filled (falling back to the default), strings are trimmed, and the
+// flavor lists are de-duplicated and capped. The AI proposes the world; the
+// server guarantees it is usable.
+export function coerceWorldBible(raw: unknown): WorldBible {
+  const source = asRecord(raw);
+  return {
+    theme: cleanString(source.theme, DEFAULT_WORLD_BIBLE.theme),
+    villain: cleanVillain(source.villain),
+    heroFlavor: cleanString(source.heroFlavor, DEFAULT_WORLD_BIBLE.heroFlavor),
+    motifs: cleanStringList(
+      source.motifs,
+      DEFAULT_WORLD_BIBLE.motifs,
+      MAX_MOTIFS
+    ),
+    itemVocabulary: cleanStringList(
+      source.itemVocabulary,
+      DEFAULT_WORLD_BIBLE.itemVocabulary,
+      MAX_ITEMS
+    ),
+    artStyle: cleanString(source.artStyle, DEFAULT_WORLD_BIBLE.artStyle),
+    finalBossConcept: cleanString(
+      source.finalBossConcept,
+      DEFAULT_WORLD_BIBLE.finalBossConcept
+    ),
+  };
+}
