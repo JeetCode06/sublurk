@@ -2,7 +2,7 @@ import './index.css';
 
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { GameState } from '../shared/game';
+import type { GameState, Proposal } from '../shared/game';
 import { useGame } from './hooks/useGame';
 
 function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
@@ -38,7 +38,10 @@ function RestartButton({
       <span className="flex items-center gap-2 font-mono text-xs">
         <span className="text-[#8a7d72]">abandon run?</span>
         <button
-          onClick={onRestart}
+          onClick={() => {
+            onRestart();
+            setConfirming(false);
+          }}
           disabled={resolving}
           className="text-[#c0392b] hover:underline disabled:opacity-50"
         >
@@ -63,11 +66,84 @@ function RestartButton({
   );
 }
 
+function CandidateActions({
+  proposals,
+  resolving,
+  onResolveVotes,
+}: {
+  proposals: Proposal[];
+  resolving: boolean;
+  onResolveVotes: () => void;
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+          Candidate actions
+        </h2>
+        <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
+          the comments are the controls
+        </span>
+      </div>
+
+      {proposals.length === 0 ? (
+        <p className="rounded border border-dashed border-[#3a302b] px-4 py-6 text-center text-sm text-[#8a7d72]">
+          No actions proposed yet. Reply to this post with what the party should
+          do — it appears here for the hive to vote on.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {proposals.map((proposal, index) => {
+            const leading = index === 0;
+            return (
+              <li
+                key={proposal.id}
+                className={`flex items-start gap-3 rounded border px-3 py-2.5 ${
+                  leading
+                    ? 'border-[#e8893f] bg-[#2a211b]'
+                    : 'border-[#3a302b] bg-[#241d1a]'
+                }`}
+              >
+                <span
+                  className={`flex min-w-[2.75rem] flex-col items-center font-mono leading-tight ${
+                    leading ? 'text-[#f0a050]' : 'text-[#8a7d72]'
+                  }`}
+                >
+                  <span className="text-sm tabular-nums">
+                    ▲ {proposal.score}
+                  </span>
+                  {leading && (
+                    <span className="text-[0.6rem] uppercase tracking-wide">
+                      leading
+                    </span>
+                  )}
+                </span>
+                <span className="line-clamp-3 flex-1 text-sm leading-relaxed text-[#e8ddc8]">
+                  {proposal.body}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <button
+        onClick={onResolveVotes}
+        disabled={resolving || proposals.length === 0}
+        className="self-start rounded border border-[#3a302b] px-4 py-2 font-mono text-xs uppercase tracking-widest text-[#8a7d72] transition-colors hover:border-[#e8893f] hover:text-[#e8893f] disabled:opacity-40"
+      >
+        {resolving ? 'resolving…' : '🎲 resolve top-voted action'}
+      </button>
+    </section>
+  );
+}
+
 function Board({
   game,
   resolving,
   error,
   note,
+  proposals,
   onAct,
   onResolveVotes,
   onRestart,
@@ -76,6 +152,7 @@ function Board({
   resolving: boolean;
   error: string | null;
   note: string | null;
+  proposals: Proposal[];
   onAct: (action: string) => void;
   onResolveVotes: () => void;
   onRestart: () => void;
@@ -124,24 +201,41 @@ function Board({
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col gap-4">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-            {dead
-              ? 'The run ends'
-              : `${game.room.type} · depth ${game.party.depth}`}
-          </p>
-          <p className="text-lg leading-relaxed text-[#e8ddc8]">
-            {latest ??
-              'The party stands at the threshold, torchlight trembling. The dungeon waits for their first move.'}
-          </p>
-          {earlier.length > 0 && (
-            <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
-              {earlier.map((event, i) => (
-                <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
-                  {event}
-                </p>
-              ))}
-            </div>
+        <main className="flex flex-1 flex-col gap-5">
+          <section className="flex flex-col gap-3">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+              {dead
+                ? 'The run ends'
+                : `${game.room.type} · depth ${game.party.depth}`}
+            </p>
+            <p className="text-lg leading-relaxed text-[#e8ddc8]">
+              {latest ??
+                'The party stands at the threshold, torchlight trembling. The dungeon waits for their first move.'}
+            </p>
+            {earlier.length > 0 && (
+              <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
+                {earlier.map((event, i) => (
+                  <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
+                    {event}
+                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {!dead && (
+            <>
+              <p className="text-sm leading-relaxed text-[#a89880]">
+                Reply to this post with what the party should do, or upvote an
+                action below. When the turn resolves, the top-voted action is
+                the one the party takes.
+              </p>
+              <CandidateActions
+                proposals={proposals}
+                resolving={resolving}
+                onResolveVotes={onResolveVotes}
+              />
+            </>
           )}
         </main>
 
@@ -157,9 +251,9 @@ function Board({
               {resolving ? 'Raising a new party…' : 'Begin a new run'}
             </button>
           ) : (
-            <>
-              <label className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
-                What does the party do?
+            <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
+              <label className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
+                Playing solo? Take a single action directly
               </label>
               <div className="flex gap-2">
                 <input
@@ -180,14 +274,7 @@ function Board({
                   {resolving ? '…' : 'Act'}
                 </button>
               </div>
-              <button
-                onClick={onResolveVotes}
-                disabled={resolving}
-                className="self-start rounded border border-[#3a302b] px-4 py-2 font-mono text-xs uppercase tracking-widest text-[#8a7d72] transition-colors hover:border-[#e8893f] hover:text-[#e8893f] disabled:opacity-40"
-              >
-                {resolving ? 'resolving…' : '🎲 resolve top-voted comment'}
-              </button>
-            </>
+            </div>
           )}
         </footer>
       </div>
@@ -202,6 +289,7 @@ export const App = () => {
     resolving,
     error,
     note,
+    proposals,
     submitAction,
     resolveVotes,
     restart,
@@ -229,6 +317,7 @@ export const App = () => {
       resolving={resolving}
       error={error}
       note={note}
+      proposals={proposals}
       onAct={submitAction}
       onResolveVotes={resolveVotes}
       onRestart={restart}
