@@ -14,6 +14,7 @@ type GameHookState = {
   error: string | null;
   note: string | null;
   proposals: Proposal[];
+  serverOffset: number | null;
 };
 
 const INITIAL: GameHookState = {
@@ -24,6 +25,7 @@ const INITIAL: GameHookState = {
   error: null,
   note: null,
   proposals: [],
+  serverOffset: null,
 };
 
 const GENERIC_ERROR = 'The dungeon did not respond. Try again.';
@@ -66,7 +68,11 @@ export const useGame = () => {
         if (!res.ok) return;
         const data = (await res.json()) as ProposalsResponse | ErrorResponse;
         if (cancelled || !('type' in data)) return;
-        setState((prev) => ({ ...prev, proposals: data.proposals }));
+        setState((prev) => ({
+          ...prev,
+          proposals: data.proposals,
+          serverOffset: data.serverNow - Date.now(),
+        }));
       } catch {
         // A failed poll keeps the last known proposals rather than blanking them.
       }

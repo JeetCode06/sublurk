@@ -1,6 +1,6 @@
 import './index.css';
 
-import { StrictMode, useState } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { GameState, Proposal } from '../shared/game';
 import { useGame } from './hooks/useGame';
@@ -66,13 +66,52 @@ function RestartButton({
   );
 }
 
+function Countdown({
+  deadline,
+  serverOffset,
+}: {
+  deadline: number;
+  serverOffset: number | null;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // No deadline yet, or no server-clock reading to correct for drift.
+  if (deadline <= 0 || serverOffset === null) return null;
+
+  const remainingMs = deadline - (now + serverOffset);
+  if (remainingMs <= 0) {
+    return (
+      <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#e8893f]">
+        resolving soon…
+      </span>
+    );
+  }
+
+  const totalSeconds = Math.ceil(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return (
+    <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#8a7d72]">
+      resolves in {minutes}:{seconds}
+    </span>
+  );
+}
+
 function CandidateActions({
   proposals,
   resolving,
+  deadline,
+  serverOffset,
   onResolveVotes,
 }: {
   proposals: Proposal[];
   resolving: boolean;
+  deadline: number;
+  serverOffset: number | null;
   onResolveVotes: () => void;
 }) {
   return (
@@ -81,9 +120,7 @@ function CandidateActions({
         <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
           Candidate actions
         </h2>
-        <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
-          the comments are the controls
-        </span>
+        <Countdown deadline={deadline} serverOffset={serverOffset} />
       </div>
 
       {proposals.length === 0 ? (
@@ -144,6 +181,7 @@ function Board({
   error,
   note,
   proposals,
+  serverOffset,
   onAct,
   onResolveVotes,
   onRestart,
@@ -153,13 +191,14 @@ function Board({
   error: string | null;
   note: string | null;
   proposals: Proposal[];
+  serverOffset: number | null;
   onAct: (action: string) => void;
   onResolveVotes: () => void;
   onRestart: () => void;
 }) {
   const [draft, setDraft] = useState('');
   const events = game.recentEvents;
-  const latest = events.length > 0 ? events[events.length - 1] : null;
+  const latest = events.at(-1) ?? null;
   const earlier = events.slice(0, -1).reverse();
   const dead = game.phase === 'dead';
 
@@ -233,6 +272,8 @@ function Board({
               <CandidateActions
                 proposals={proposals}
                 resolving={resolving}
+                deadline={game.nextResolveAt}
+                serverOffset={serverOffset}
                 onResolveVotes={onResolveVotes}
               />
             </>
@@ -290,6 +331,7 @@ export const App = () => {
     error,
     note,
     proposals,
+    serverOffset,
     submitAction,
     resolveVotes,
     restart,
@@ -318,6 +360,7 @@ export const App = () => {
       error={error}
       note={note}
       proposals={proposals}
+      serverOffset={serverOffset}
       onAct={submitAction}
       onResolveVotes={resolveVotes}
       onRestart={restart}
