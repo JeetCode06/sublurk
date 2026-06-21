@@ -22,7 +22,18 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       type: 'combat',
       description: 'a damp stone room',
       difficulty: 12,
+      entities: [],
+      threats: [],
       situation: {},
+    },
+    map: {
+      nodes: [
+        { id: 'n1', name: 'One', themeTag: 'first', cleared: false },
+        { id: 'n2', name: 'Two', themeTag: 'second', cleared: false },
+        { id: 'n3', name: 'Three', themeTag: 'third', cleared: false },
+      ],
+      currentNodeIndex: 0,
+      finalBoss: { name: 'Boss', defeated: false },
     },
     recentEvents: [],
     nextResolveAt: 0,

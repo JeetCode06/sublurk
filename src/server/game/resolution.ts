@@ -3,6 +3,7 @@ import type { DiceRoll, RandFn } from './dice';
 import { rollAction } from './dice';
 import { classRollModifier } from './classes';
 import { createRoom } from './rooms';
+import { advanceMapForDepth } from './map';
 import { applyResolveResult } from './validation';
 
 const RECENT_EVENTS_LIMIT = 6;
@@ -39,6 +40,7 @@ export function applyTurn(
       ...state,
       party: { ...applied.party, depth },
       room: createRoom(depth, rand),
+      map: advanceMapForDepth(state.map, depth),
       phase: 'awaiting_actions',
       recentEvents,
     };

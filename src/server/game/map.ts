@@ -114,3 +114,23 @@ export function freshMap(template: MapState): MapState {
     finalBoss: { name: template.finalBoss.name, defeated: false },
   };
 }
+
+// How many rooms the party clears within a location before moving to the next.
+const ROOMS_PER_NODE = 3;
+
+// Advances the party along the map as rooms are cleared. The journey is linear:
+// every ROOMS_PER_NODE rooms completes one location. Locations the party has
+// passed are marked cleared; the party holds at the final location (until the
+// boss is faced there). Pure and derived only from depth, so it can't drift out
+// of step with the run.
+export function advanceMapForDepth(map: MapState, depth: number): MapState {
+  const reached = Math.min(
+    Math.floor(depth / ROOMS_PER_NODE),
+    map.nodes.length - 1
+  );
+  return {
+    ...map,
+    currentNodeIndex: reached,
+    nodes: map.nodes.map((node, i) => ({ ...node, cleared: i < reached })),
+  };
+}

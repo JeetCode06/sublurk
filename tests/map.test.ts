@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_MAP, coerceMap, freshMap } from '../src/server/game/map';
+import {
+  DEFAULT_MAP,
+  coerceMap,
+  freshMap,
+  advanceMapForDepth,
+} from '../src/server/game/map';
 import type { MapState } from '../src/shared/game';
 
 function makeMap(overrides: Partial<MapState> = {}): MapState {
@@ -127,5 +132,39 @@ describe('freshMap', () => {
     const fresh = freshMap(template);
     fresh.nodes[0]!.cleared = true;
     expect(template.nodes[0]?.cleared).toBe(false);
+  });
+});
+
+describe('advanceMapForDepth', () => {
+  it('keeps the party at the first node within the opening rooms', () => {
+    expect(advanceMapForDepth(makeMap(), 0).currentNodeIndex).toBe(0);
+    expect(advanceMapForDepth(makeMap(), 2).currentNodeIndex).toBe(0);
+  });
+
+  it('advances a node every few rooms, marking passed nodes cleared', () => {
+    const map = advanceMapForDepth(makeMap(), 3);
+    expect(map.currentNodeIndex).toBe(1);
+    expect(map.nodes[0]?.cleared).toBe(true);
+    expect(map.nodes[1]?.cleared).toBe(false);
+  });
+
+  it('holds at the final node once reached, clearing all earlier nodes', () => {
+    const map = advanceMapForDepth(makeMap(), 99);
+    expect(map.currentNodeIndex).toBe(2);
+    expect(map.nodes.map((n) => n.cleared)).toEqual([true, true, false]);
+  });
+
+  it('recomputes cleared flags from depth rather than trusting the input', () => {
+    // makeMap() starts with node 0 cleared; at depth 0 nothing is cleared yet.
+    expect(
+      advanceMapForDepth(makeMap(), 0).nodes.every((n) => !n.cleared)
+    ).toBe(true);
+  });
+
+  it('preserves the final boss', () => {
+    expect(advanceMapForDepth(makeMap(), 3).finalBoss).toEqual({
+      name: 'the Pruner',
+      defeated: false,
+    });
   });
 });
