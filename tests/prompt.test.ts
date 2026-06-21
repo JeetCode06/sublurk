@@ -10,8 +10,7 @@ import {
   buildMapPrompt,
 } from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
-import type { DiceRoll } from '../src/server/game/dice';
-import type { WorldBible } from '../src/shared/game';
+import type { AbilityCheck, WorldBible } from '../src/shared/game';
 
 const state = createInitialState({
   postId: 't3_abc',
@@ -20,7 +19,10 @@ const state = createInitialState({
   theme: 'mossy catacombs',
 });
 
-const roll: DiceRoll = {
+const roll: AbilityCheck = {
+  ability: 'str',
+  advantage: 'advantage',
+  rolls: [9, 14],
   die: 14,
   modifier: 3,
   total: 17,
@@ -54,6 +56,12 @@ describe('buildTurnPrompt', () => {
 
   it('tells the AI the dice outcome so it narrates consistently', () => {
     expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain('success');
+  });
+
+  it('describes the ability check and its advantage', () => {
+    const prompt = buildTurnPrompt(state, 'attack', roll, bible);
+    expect(prompt).toContain('Strength check');
+    expect(prompt).toContain('with advantage');
   });
 
   it('includes the party hp, class, and world', () => {

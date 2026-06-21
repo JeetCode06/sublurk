@@ -3,6 +3,9 @@ import './index.css';
 import { Fragment, StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type {
+  Abilities,
+  AbilityCheck,
+  AbilityId,
   EntityKind,
   GameState,
   LeaderboardEntry,
@@ -367,6 +370,63 @@ function CampaignMap({ map }: { map: MapState }) {
   );
 }
 
+const ABILITY_ORDER: AbilityId[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+const ABILITY_SHORT: Record<AbilityId, string> = {
+  str: 'STR',
+  dex: 'DEX',
+  con: 'CON',
+  int: 'INT',
+  wis: 'WIS',
+  cha: 'CHA',
+};
+
+function abilityMod(score: number): number {
+  return Math.floor((score - 10) / 2);
+}
+
+function signed(n: number): string {
+  return n >= 0 ? `+${n}` : `${n}`;
+}
+
+function StatBlock({ abilities }: { abilities: Abilities }) {
+  return (
+    <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs">
+      {ABILITY_ORDER.map((id) => (
+        <span key={id}>
+          <span className="text-[#8a7d72]">{ABILITY_SHORT[id]}</span>{' '}
+          <span className="text-[#e8ddc8]">{abilities[id]}</span>{' '}
+          <span className="text-[#6f6359]">
+            {signed(abilityMod(abilities[id]))}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function LastCheck({ check }: { check: AbilityCheck }) {
+  const advantage =
+    check.advantage === 'advantage'
+      ? ' · advantage'
+      : check.advantage === 'disadvantage'
+        ? ' · disadvantage'
+        : '';
+  const tone =
+    check.outcome === 'success'
+      ? 'text-[#7fb069]'
+      : check.outcome === 'partial'
+        ? 'text-[#e8c050]'
+        : 'text-[#c0705a]';
+  return (
+    <p className="font-mono text-xs text-[#6f6359]">
+      {ABILITY_SHORT[check.ability]} check{advantage} · rolled {check.die},
+      total {check.total} vs {check.difficulty} ·{' '}
+      <span className={tone}>{check.outcome}</span>
+    </p>
+  );
+}
+
 function Board({
   game,
   resolving,
@@ -425,7 +485,7 @@ function Board({
               <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
                 Run {game.runNumber} · Depth {game.party.depth}
               </span>
-              {!dead && (
+              {!over && (
                 <RestartButton resolving={resolving} onRestart={onRestart} />
               )}
             </div>
@@ -443,6 +503,7 @@ function Board({
             )}
             {record !== null && <span>🏆 record depth {record}</span>}
           </div>
+          <StatBlock abilities={game.party.abilities} />
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
@@ -456,6 +517,7 @@ function Board({
                   : `${game.room.type} · depth ${game.party.depth}`}
             </p>
             <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
+            {game.lastCheck && <LastCheck check={game.lastCheck} />}
             {won && (
               <p className="text-base font-semibold text-[#f0c050]">
                 🏆 The hive has defeated {game.map.finalBoss.name}. This

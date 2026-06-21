@@ -28,7 +28,7 @@ export async function runTurn(
     SYSTEM_PROMPT,
     buildTurnPrompt(state, action, roll, bible)
   );
-  return applyTurn(state, parseResolveResult(raw));
+  return { ...applyTurn(state, parseResolveResult(raw)), lastCheck: roll };
 }
 
 // Reads the post's comments and ranks them into the current candidate actions.

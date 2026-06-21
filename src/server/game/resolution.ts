@@ -1,7 +1,8 @@
-import type { GameState, ResolveResult } from '../../shared/game';
-import type { DiceRoll, RandFn } from './dice';
-import { rollAction } from './dice';
-import { classRollModifier } from './classes';
+import type { AbilityCheck, GameState, ResolveResult } from '../../shared/game';
+import type { RandFn } from './dice';
+import { rollCheck } from './dice';
+import { abilityForRoomType } from './abilities';
+import { classAdvantage } from './classes';
 import { createRoom, createFinalBossRoom } from './rooms';
 import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
@@ -13,9 +14,11 @@ const RECENT_EVENTS_LIMIT = 6;
 export function prepareRoll(
   state: GameState,
   rand: RandFn = Math.random
-): DiceRoll {
-  const modifier = classRollModifier(state.party.classId, state.room.type);
-  return rollAction(state.room.difficulty, modifier, rand);
+): AbilityCheck {
+  const ability = abilityForRoomType(state.room.type);
+  const score = state.party.abilities[ability];
+  const advantage = classAdvantage(state.party.classId, state.room.type);
+  return rollCheck(ability, score, state.room.difficulty, advantage, rand);
 }
 
 // Runs after the AI: validates its result, then advances the run by continuing

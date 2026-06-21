@@ -66,15 +66,14 @@ function withClass(classId: GameState['party']['classId']): GameState {
 }
 
 describe('prepareRoll', () => {
-  it('folds the class affinity into the roll', () => {
-    // die forced to 10, difficulty 12. Adventurer (+0) -> 10 -> partial.
-    expect(prepareRoll(withClass('adventurer'), () => 0.45).outcome).toBe(
-      'partial'
-    );
-    // Warrior in a combat room (+3) -> 13 -> success on the same die.
-    expect(prepareRoll(withClass('warrior'), () => 0.45).outcome).toBe(
-      'success'
-    );
+  it('rolls the room ability using the party score and class advantage', () => {
+    const adventurer = prepareRoll(withClass('adventurer'), () => 0.45);
+    expect(adventurer.ability).toBe('str'); // a combat room tests strength
+    expect(adventurer.modifier).toBe(1); // score 12 -> +1
+    expect(adventurer.advantage).toBe('normal');
+
+    const warrior = prepareRoll(withClass('warrior'), () => 0.45);
+    expect(warrior.advantage).toBe('advantage'); // strong in combat
   });
 });
 

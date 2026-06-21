@@ -121,6 +121,7 @@ export type GameState = {
   recentEvents: string[];
   nextResolveAt: number; // unix ms
   voteThreshold: number;
+  lastCheck?: AbilityCheck;
 };
 
 // Produced by the AI each turn, then validated and clamped server-side before it is applied.

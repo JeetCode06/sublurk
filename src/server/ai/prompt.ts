@@ -1,5 +1,10 @@
-import type { GameState, WorldBible } from '../../shared/game';
-import type { DiceRoll } from '../game/dice';
+import type {
+  AbilityCheck,
+  Advantage,
+  GameState,
+  WorldBible,
+} from '../../shared/game';
+import { ABILITY_LABELS } from '../game/abilities';
 
 export const SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler. A whole community controls one party by voting on actions in the comments.
 
@@ -46,10 +51,16 @@ function locationLine(state: GameState): string {
     : `Current location: deep in the dungeon.`;
 }
 
+function advantagePhrase(advantage: Advantage): string {
+  if (advantage === 'advantage') return ' with advantage';
+  if (advantage === 'disadvantage') return ' with disadvantage';
+  return '';
+}
+
 export function buildTurnPrompt(
   state: GameState,
   action: string,
-  roll: DiceRoll,
+  check: AbilityCheck,
   bible: WorldBible
 ): string {
   const { party, room, recentEvents } = state;
@@ -65,7 +76,7 @@ export function buildTurnPrompt(
       ? `Recently: ${recentEvents.join(' ')}`
       : `This is the party's first move.`,
     `The community chose: "${action}"`,
-    `The dice rolled a ${roll.outcome} (total ${roll.total} vs difficulty ${roll.difficulty}).`,
+    `The party made a ${ABILITY_LABELS[check.ability]} check${advantagePhrase(check.advantage)} and rolled a ${check.outcome} (rolled ${check.die}, total ${check.total} vs difficulty ${check.difficulty}).`,
     `Narrate this outcome and return the JSON.`,
   ];
   return lines.join('\n');
