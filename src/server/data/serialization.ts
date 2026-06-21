@@ -1,5 +1,7 @@
 import type { GameState } from '../../shared/game';
 import { coerceMap } from '../game/map';
+import { CLASSES } from '../game/classes';
+import { coerceAbilities } from '../game/abilities';
 
 export function serializeGame(state: GameState): string {
   return JSON.stringify(state);
@@ -22,6 +24,13 @@ export function deserializeGame(raw: string): GameState | null {
       return {
         ...state,
         map: coerceMap(state.map),
+        party: {
+          ...state.party,
+          abilities: coerceAbilities(
+            state.party.abilities,
+            CLASSES[state.party.classId].abilities
+          ),
+        },
         room: {
           ...state.room,
           entities: Array.isArray(state.room.entities)

@@ -17,6 +17,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       statuses: [],
       classId: 'adventurer',
       name: 'Test Party',
+      abilities: { str: 12, dex: 12, con: 12, int: 12, wis: 12, cha: 12 },
     },
     room: {
       type: 'combat',

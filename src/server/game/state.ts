@@ -25,6 +25,7 @@ function freshParty(classId: ClassId, name: string): Party {
     statuses: [],
     classId,
     name,
+    abilities: { ...CLASSES[classId].abilities },
   };
 }
 

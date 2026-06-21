@@ -26,6 +26,13 @@ export type GamePhase =
 
 export type Outcome = 'success' | 'partial' | 'fail';
 
+// The six classic tabletop abilities. Ability checks roll a d20 plus the
+// relevant ability's modifier against a difficulty.
+export type AbilityId = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+
+// A party's ability scores (roughly 8-16), one per ability.
+export type Abilities = Record<AbilityId, number>;
+
 export type Party = {
   hp: number;
   maxHp: number;
@@ -35,6 +42,7 @@ export type Party = {
   statuses: string[];
   classId: ClassId;
   name: string;
+  abilities: Abilities;
 };
 
 export type EntityKind = 'foe' | 'npc' | 'object';
