@@ -3,6 +3,7 @@ import {
   ABILITY_IDS,
   DEFAULT_ABILITIES,
   abilityModifier,
+  abilityForRoomType,
   coerceAbilities,
 } from '../src/server/game/abilities';
 import { CLASSES } from '../src/server/game/classes';
@@ -45,5 +46,17 @@ describe('class ability data', () => {
         expect(typeof CLASSES[id].abilities[ability]).toBe('number');
       }
     }
+  });
+});
+
+describe('abilityForRoomType', () => {
+  it('maps each room type to the ability it tests', () => {
+    expect(abilityForRoomType('combat')).toBe('str');
+    expect(abilityForRoomType('boss')).toBe('str');
+    expect(abilityForRoomType('puzzle')).toBe('int');
+    expect(abilityForRoomType('trap')).toBe('dex');
+    expect(abilityForRoomType('treasure')).toBe('wis');
+    expect(abilityForRoomType('npc')).toBe('cha');
+    expect(abilityForRoomType('rest')).toBe('con');
   });
 });

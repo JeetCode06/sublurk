@@ -1,4 +1,9 @@
-import type { Abilities, ClassId, RoomType } from '../../shared/game';
+import type {
+  Abilities,
+  Advantage,
+  ClassId,
+  RoomType,
+} from '../../shared/game';
 
 export type ClassDefinition = {
   id: ClassId;
@@ -54,4 +59,16 @@ export function classRollModifier(
   roomType: RoomType
 ): number {
   return CLASSES[classId].affinities[roomType] ?? 0;
+}
+
+// Recasts a class's room affinity as tabletop advantage: a strength grants
+// advantage, a weakness imposes disadvantage, and everything else rolls normally.
+export function classAdvantage(
+  classId: ClassId,
+  roomType: RoomType
+): Advantage {
+  const affinity = CLASSES[classId].affinities[roomType] ?? 0;
+  if (affinity > 0) return 'advantage';
+  if (affinity < 0) return 'disadvantage';
+  return 'normal';
 }

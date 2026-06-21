@@ -33,6 +33,24 @@ export type AbilityId = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 // A party's ability scores (roughly 8-16), one per ability.
 export type Abilities = Record<AbilityId, number>;
 
+// Whether a check rolls one die, or two keeping the better (advantage) or worse
+// (disadvantage) — the tabletop way a class's strengths and weaknesses bend the
+// odds without changing the target number.
+export type Advantage = 'normal' | 'advantage' | 'disadvantage';
+
+// The full record of a resolved ability check, kept rich enough to narrate and
+// to show the player exactly what was rolled.
+export type AbilityCheck = {
+  ability: AbilityId;
+  advantage: Advantage;
+  rolls: number[];
+  die: number;
+  modifier: number;
+  total: number;
+  difficulty: number;
+  outcome: Outcome;
+};
+
 export type Party = {
   hp: number;
   maxHp: number;

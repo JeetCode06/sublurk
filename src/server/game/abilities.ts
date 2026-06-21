@@ -1,4 +1,21 @@
-import type { Abilities, AbilityId } from '../../shared/game';
+import type { Abilities, AbilityId, RoomType } from '../../shared/game';
+
+// Which ability a room's challenge tests — combat is muscle, puzzles are
+// intellect, traps are reflexes, social rooms are presence.
+const ROOM_ABILITY: Record<RoomType, AbilityId> = {
+  combat: 'str',
+  boss: 'str',
+  puzzle: 'int',
+  trap: 'dex',
+  treasure: 'wis',
+  npc: 'cha',
+  shop: 'cha',
+  rest: 'con',
+};
+
+export function abilityForRoomType(roomType: RoomType): AbilityId {
+  return ROOM_ABILITY[roomType];
+}
 
 export const ABILITY_IDS: AbilityId[] = [
   'str',

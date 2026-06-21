@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { CLASSES, classRollModifier } from '../src/server/game/classes';
+import {
+  CLASSES,
+  classRollModifier,
+  classAdvantage,
+} from '../src/server/game/classes';
 import type { ClassId } from '../src/shared/game';
 
 describe('classRollModifier', () => {
@@ -34,5 +38,22 @@ describe('CLASSES', () => {
     for (const id of ids) {
       expect(CLASSES[id].id).toBe(id);
     }
+  });
+});
+
+describe('classAdvantage', () => {
+  it('grants advantage on a strength and disadvantage on a weakness', () => {
+    expect(classAdvantage('warrior', 'combat')).toBe('advantage');
+    expect(classAdvantage('warrior', 'puzzle')).toBe('disadvantage');
+  });
+
+  it('rolls normally for the balanced class', () => {
+    expect(classAdvantage('adventurer', 'combat')).toBe('normal');
+    expect(classAdvantage('adventurer', 'trap')).toBe('normal');
+  });
+
+  it('grants the witch advantage on puzzles and traps', () => {
+    expect(classAdvantage('witch', 'puzzle')).toBe('advantage');
+    expect(classAdvantage('witch', 'trap')).toBe('advantage');
   });
 });
