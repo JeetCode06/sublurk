@@ -134,3 +134,18 @@ export function advanceMapForDepth(map: MapState, depth: number): MapState {
     nodes: map.nodes.map((node, i) => ({ ...node, cleared: i < reached })),
   };
 }
+
+// True once the party stands at the final location — the boss's domain. The
+// room there is the final boss, so resolving it wins the run.
+export function atFinalBoss(map: MapState): boolean {
+  return map.currentNodeIndex >= map.nodes.length - 1;
+}
+
+// Marks the campaign won: the boss is down and the whole journey is complete.
+export function markBossDefeated(map: MapState): MapState {
+  return {
+    ...map,
+    finalBoss: { ...map.finalBoss, defeated: true },
+    nodes: map.nodes.map((node) => ({ ...node, cleared: true })),
+  };
+}

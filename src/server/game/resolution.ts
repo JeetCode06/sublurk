@@ -2,8 +2,8 @@ import type { GameState, ResolveResult } from '../../shared/game';
 import type { DiceRoll, RandFn } from './dice';
 import { rollAction } from './dice';
 import { classRollModifier } from './classes';
-import { createRoom } from './rooms';
-import { advanceMapForDepth } from './map';
+import { createRoom, createFinalBossRoom } from './rooms';
+import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
 
 const RECENT_EVENTS_LIMIT = 6;
@@ -36,11 +36,30 @@ export function applyTurn(
 
   if (result.roomResolved) {
     const depth = state.party.depth + 1;
+
+    // Resolving the room at the final location is the campaign's climax —
+    // defeating the boss wins the run.
+    if (atFinalBoss(state.map)) {
+      return {
+        ...state,
+        party: { ...applied.party, depth },
+        map: markBossDefeated(state.map),
+        phase: 'won',
+        recentEvents,
+      };
+    }
+
+    // Otherwise advance: reaching the final location spawns the boss; before
+    // that, generate the next ordinary room.
+    const map = advanceMapForDepth(state.map, depth);
+    const room = atFinalBoss(map)
+      ? createFinalBossRoom(depth)
+      : createRoom(depth, rand);
     return {
       ...state,
       party: { ...applied.party, depth },
-      room: createRoom(depth, rand),
-      map: advanceMapForDepth(state.map, depth),
+      room,
+      map,
       phase: 'awaiting_actions',
       recentEvents,
     };

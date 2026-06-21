@@ -1,11 +1,12 @@
 import './index.css';
 
-import { StrictMode, useEffect, useState } from 'react';
+import { Fragment, StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type {
   EntityKind,
   GameState,
   LeaderboardEntry,
+  MapState,
   Proposal,
   SceneEntity,
 } from '../shared/game';
@@ -307,6 +308,65 @@ function ThreatStrip({ threats }: { threats: string[] }) {
   );
 }
 
+function mapMarkerClass(
+  cleared: boolean,
+  isCurrent: boolean,
+  isBoss: boolean
+): string {
+  const base = 'h-3 w-3 shrink-0 rounded-full border-2';
+  if (isCurrent) return `${base} border-[#f0a050] bg-[#e8893f]`;
+  if (cleared) return `${base} border-[#6b4a2f] bg-[#6b4a2f]`;
+  if (isBoss) return `${base} border-[#8a4a3f] bg-transparent`;
+  return `${base} border-[#3a302b] bg-transparent`;
+}
+
+function CampaignMap({ map }: { map: MapState }) {
+  const lastIndex = map.nodes.length - 1;
+  const current = map.nodes[map.currentNodeIndex];
+  const boss = map.finalBoss;
+  return (
+    <section className="flex flex-col gap-2">
+      <p className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
+        The campaign
+      </p>
+      <div className="flex items-center">
+        {map.nodes.map((node, i) => (
+          <Fragment key={node.id}>
+            {i > 0 && (
+              <div
+                className={`h-px flex-1 ${
+                  map.nodes[i - 1]?.cleared ? 'bg-[#6b4a2f]' : 'bg-[#3a302b]'
+                }`}
+              />
+            )}
+            <span
+              title={node.name}
+              className={mapMarkerClass(
+                node.cleared,
+                i === map.currentNodeIndex,
+                i === lastIndex
+              )}
+            />
+          </Fragment>
+        ))}
+      </div>
+      <p className="text-xs text-[#a89880]">
+        {boss.defeated ? (
+          <>Campaign complete — {boss.name} has fallen.</>
+        ) : (
+          <>
+            <span className="text-[#e8ddc8]">
+              {current?.name ?? 'The journey'}
+            </span>
+            {' · the road leads to '}
+            <span className="text-[#c0705a]">{boss.name}</span>
+          </>
+        )}
+      </p>
+    </section>
+  );
+}
+
 function Board({
   game,
   resolving,
@@ -333,12 +393,17 @@ function Board({
   const [draft, setDraft] = useState('');
   const events = game.recentEvents;
   const dead = game.phase === 'dead';
-  const scene = dead
+  const won = game.phase === 'won';
+  const over = dead || won;
+  const scene = won
     ? (events.at(-1) ??
-      'The party has fallen. The dungeon falls silent around them.')
-    : game.room.description ||
-      'The party presses into the dark. The dungeon master is setting the scene…';
-  const log = (dead ? events.slice(0, -1) : events.slice()).reverse();
+      'The last foe falls, and the long dark finally lifts from the realm.')
+    : dead
+      ? (events.at(-1) ??
+        'The party has fallen. The dungeon falls silent around them.')
+      : game.room.description ||
+        'The party presses into the dark. The dungeon master is setting the scene…';
+  const log = (over ? events.slice(0, -1) : events.slice()).reverse();
   const record = leaderboard[0]?.depth ?? null;
 
   const submit = () => {
@@ -381,15 +446,24 @@ function Board({
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
+          <CampaignMap map={game.map} />
           <section className="flex flex-col gap-3">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-              {dead
-                ? 'The run ends'
-                : `${game.room.type} · depth ${game.party.depth}`}
+              {won
+                ? 'Victory'
+                : dead
+                  ? 'The run ends'
+                  : `${game.room.type} · depth ${game.party.depth}`}
             </p>
             <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
-            {!dead && <SceneEntities entities={game.room.entities} />}
-            {!dead && <ThreatStrip threats={game.room.threats} />}
+            {won && (
+              <p className="text-base font-semibold text-[#f0c050]">
+                🏆 The hive has defeated {game.map.finalBoss.name}. This
+                subreddit&apos;s campaign is won.
+              </p>
+            )}
+            {!over && <SceneEntities entities={game.room.entities} />}
+            {!over && <ThreatStrip threats={game.room.threats} />}
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
                 {log.map((event, i) => (
@@ -401,7 +475,7 @@ function Board({
             )}
           </section>
 
-          {!dead && (
+          {!over && (
             <>
               <p className="text-sm leading-relaxed text-[#a89880]">
                 Reply to this post with what the party should do, or upvote an
@@ -418,7 +492,7 @@ function Board({
             </>
           )}
 
-          {dead && (
+          {over && (
             <Leaderboard entries={leaderboard} currentRun={game.runNumber} />
           )}
         </main>
@@ -426,13 +500,17 @@ function Board({
         <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
           {error && <p className="text-sm text-[#c0392b]">{error}</p>}
           {note && <p className="text-sm text-[#e8893f]">{note}</p>}
-          {dead ? (
+          {over ? (
             <button
               onClick={onRestart}
               disabled={resolving}
               className="self-start rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-50"
             >
-              {resolving ? 'Raising a new party…' : 'Begin a new run'}
+              {resolving
+                ? 'Raising a new party…'
+                : won
+                  ? 'Begin a new campaign'
+                  : 'Begin a new run'}
             </button>
           ) : (
             <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">

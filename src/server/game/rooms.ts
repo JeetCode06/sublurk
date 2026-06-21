@@ -57,3 +57,16 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
     situation: {},
   };
 }
+
+// The campaign's climactic encounter at the final location. Tougher than the
+// minor bosses sprinkled through the run; resolving it wins the campaign.
+export function createFinalBossRoom(depth: number): Room {
+  return {
+    type: 'boss',
+    description: '',
+    difficulty: scaleDifficulty(18, depth),
+    entities: [],
+    threats: [],
+    situation: {},
+  };
+}

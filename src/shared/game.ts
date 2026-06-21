@@ -21,6 +21,7 @@ export type GamePhase =
   | 'awaiting_actions'
   | 'resolving'
   | 'dead'
+  | 'won'
   | 'intermission';
 
 export type Outcome = 'success' | 'partial' | 'fail';

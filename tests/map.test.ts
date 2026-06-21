@@ -4,6 +4,8 @@ import {
   coerceMap,
   freshMap,
   advanceMapForDepth,
+  atFinalBoss,
+  markBossDefeated,
 } from '../src/server/game/map';
 import type { MapState } from '../src/shared/game';
 
@@ -166,5 +168,24 @@ describe('advanceMapForDepth', () => {
       name: 'the Pruner',
       defeated: false,
     });
+  });
+});
+
+describe('atFinalBoss', () => {
+  it('is false before the final location', () => {
+    expect(atFinalBoss(makeMap({ currentNodeIndex: 0 }))).toBe(false);
+    expect(atFinalBoss(makeMap({ currentNodeIndex: 1 }))).toBe(false);
+  });
+
+  it('is true at the final location', () => {
+    expect(atFinalBoss(makeMap({ currentNodeIndex: 2 }))).toBe(true);
+  });
+});
+
+describe('markBossDefeated', () => {
+  it('marks the boss defeated and every node cleared', () => {
+    const map = markBossDefeated(makeMap());
+    expect(map.finalBoss.defeated).toBe(true);
+    expect(map.nodes.every((n) => n.cleared)).toBe(true);
   });
 });

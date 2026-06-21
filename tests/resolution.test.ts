@@ -122,4 +122,40 @@ describe('applyTurn', () => {
     applyTurn(start, makeResult({ hpDelta: -10 }));
     expect(start.party.hp).toBe(50);
   });
+
+  it('wins the run when the final boss is resolved', () => {
+    const state = makeState({
+      map: {
+        nodes: [
+          { id: 'n1', name: 'One', themeTag: 'first', cleared: true },
+          { id: 'n2', name: 'Two', themeTag: 'second', cleared: true },
+          { id: 'n3', name: 'Three', themeTag: 'third', cleared: false },
+        ],
+        currentNodeIndex: 2,
+        finalBoss: { name: 'Boss', defeated: false },
+      },
+    });
+    const next = applyTurn(state, makeResult({ roomResolved: true }), () => 0);
+    expect(next.phase).toBe('won');
+    expect(next.map.finalBoss.defeated).toBe(true);
+  });
+
+  it('spawns the final boss room on reaching the last location', () => {
+    const base = makeState({
+      map: {
+        nodes: [
+          { id: 'n1', name: 'One', themeTag: 'first', cleared: true },
+          { id: 'n2', name: 'Two', themeTag: 'second', cleared: false },
+          { id: 'n3', name: 'Three', themeTag: 'third', cleared: false },
+        ],
+        currentNodeIndex: 1,
+        finalBoss: { name: 'Boss', defeated: false },
+      },
+    });
+    const state = { ...base, party: { ...base.party, depth: 5 } };
+    const next = applyTurn(state, makeResult({ roomResolved: true }), () => 0);
+    expect(next.phase).toBe('awaiting_actions');
+    expect(next.room.type).toBe('boss');
+    expect(next.map.currentNodeIndex).toBe(2);
+  });
 });
