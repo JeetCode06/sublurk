@@ -36,6 +36,16 @@ function worldContextLines(bible: WorldBible): string[] {
   ];
 }
 
+// The party's current stop on the campaign map. Its theme tag is the spatial
+// "rail" — it keeps scenes consistent with where the party actually is, so a
+// marsh location yields marsh scenes rather than wandering off-world.
+function locationLine(state: GameState): string {
+  const node = state.map.nodes[state.map.currentNodeIndex];
+  return node
+    ? `Current location: ${node.name} — ${node.themeTag}.`
+    : `Current location: deep in the dungeon.`;
+}
+
 export function buildTurnPrompt(
   state: GameState,
   action: string,
@@ -45,6 +55,7 @@ export function buildTurnPrompt(
   const { party, room, recentEvents } = state;
   const lines = [
     ...worldContextLines(bible),
+    locationLine(state),
     `Party: ${party.name} (class: ${party.classId})`,
     `HP: ${party.hp}/${party.maxHp} | Gold: ${party.gold} | Depth: ${party.depth}`,
     `Inventory: ${party.inventory.length > 0 ? party.inventory.join(', ') : 'empty'}`,
@@ -83,6 +94,7 @@ export function buildRoomIntroPrompt(
   const lastEvent = recentEvents.at(-1);
   const lines = [
     ...worldContextLines(bible),
+    locationLine(state),
     `Party: ${party.name} (class: ${party.classId})`,
     `Depth: ${party.depth} | HP: ${party.hp}/${party.maxHp}`,
     `They have just entered a ${room.type} room.`,

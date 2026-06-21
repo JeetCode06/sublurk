@@ -9,11 +9,13 @@ import type {
 import { loadGame, saveGame } from '../data/games';
 import { recordRun, topRuns } from '../data/leaderboard';
 import { createInitialState, startNewRun } from '../game/state';
+import { freshMap } from '../game/map';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
 import { withDeadline, turnStartedAt } from '../schedule';
 import { withRoomIntro } from '../scene';
 import { ensureWorldBible } from '../worldbible';
+import { ensureMap } from '../worldmap';
 
 export const api = new Hono();
 
@@ -37,20 +39,22 @@ api.get('/game', async (c) => {
   }
   try {
     let state = await loadGame();
+    const bible = await ensureWorldBible();
     if (!state) {
-      state = withDeadline(
-        createInitialState({
+      const map = await ensureMap(bible);
+      state = withDeadline({
+        ...createInitialState({
           postId,
           subredditName,
           classId: classForSubreddit(subredditName),
           theme: themeForSubreddit(subredditName),
-        })
-      );
+        }),
+        map: freshMap(map),
+      });
     }
     // Fill the room's intro if missing, without re-stamping the deadline, so
-    // opening the webview never delays a turn. Ensuring the world here also
-    // generates it on the first open of a sub's game.
-    const bible = await ensureWorldBible();
+    // opening the webview never delays a turn. The world and map are ensured
+    // here too, generating them on the first open of a sub's game.
     const described = await withRoomIntro(state, bible);
     if (described !== state) {
       await saveGame(described);
@@ -202,6 +206,8 @@ api.post('/restart', async (c) => {
   }
   try {
     const existing = await loadGame();
+    const bible = await ensureWorldBible();
+    const map = await ensureMap(bible);
     const base = existing
       ? startNewRun(existing)
       : createInitialState({
@@ -210,8 +216,11 @@ api.post('/restart', async (c) => {
           classId: classForSubreddit(subredditName),
           theme: themeForSubreddit(subredditName),
         });
-    const bible = await ensureWorldBible();
-    const state = withDeadline(await withRoomIntro(base, bible));
+    // A new run always begins on the subreddit's canonical campaign map, so a
+    // restart also adopts a map that was generated since the run started.
+    const state = withDeadline(
+      await withRoomIntro({ ...base, map: freshMap(map) }, bible)
+    );
     await saveGame(state);
     return c.json<GameResponse>({
       type: 'game',

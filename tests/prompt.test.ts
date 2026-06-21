@@ -69,6 +69,11 @@ describe('buildTurnPrompt', () => {
     expect(prompt).toContain('phosphor glow');
   });
 
+  it('injects the current map location as the scene rail', () => {
+    const prompt = buildTurnPrompt(state, 'attack', roll, bible);
+    expect(prompt).toContain('The Threshold');
+  });
+
   it('handles an empty inventory gracefully', () => {
     expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain('empty');
   });
@@ -95,6 +100,10 @@ describe('buildRoomIntroPrompt', () => {
     expect(prompt).toContain('the Tidemother');
     expect(prompt).toContain('witch');
     expect(prompt).toContain(state.room.type);
+  });
+
+  it('injects the current map location as the scene rail', () => {
+    expect(buildRoomIntroPrompt(state, bible)).toContain('The Threshold');
   });
 
   it('marks the start of the run when there is no history', () => {
