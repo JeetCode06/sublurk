@@ -1,4 +1,5 @@
 import type { GameState } from '../../shared/game';
+import { coerceMap } from '../game/map';
 
 export function serializeGame(state: GameState): string {
   return JSON.stringify(state);
@@ -16,9 +17,11 @@ export function deserializeGame(raw: string): GameState | null {
     ) {
       const state = value as GameState;
       // Backfill scene fields added after some runs were already saved, so an
-      // older record keeps working instead of being discarded.
+      // older record keeps working instead of being discarded. The map is run
+      // through coerceMap, which fills it for older saves and repairs partials.
       return {
         ...state,
+        map: coerceMap(state.map),
         room: {
           ...state.room,
           entities: Array.isArray(state.room.entities)

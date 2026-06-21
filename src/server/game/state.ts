@@ -2,6 +2,7 @@ import type { ClassId, GameState, Party } from '../../shared/game';
 import type { RandFn } from './dice';
 import { CLASSES } from './classes';
 import { createRoom } from './rooms';
+import { DEFAULT_MAP, freshMap } from './map';
 
 const STARTING_HP = 50;
 const STARTING_GOLD = 0;
@@ -39,6 +40,7 @@ export function createInitialState(
     theme: input.theme,
     party: freshParty(input.classId, name),
     room: createRoom(0, rand),
+    map: freshMap(DEFAULT_MAP),
     recentEvents: [],
     nextResolveAt: 0,
     voteThreshold: DEFAULT_VOTE_THRESHOLD,
@@ -56,6 +58,7 @@ export function startNewRun(
     phase: 'awaiting_actions',
     party: freshParty(state.party.classId, state.party.name),
     room: createRoom(0, rand),
+    map: freshMap(state.map),
     recentEvents: [],
     nextResolveAt: 0,
   };

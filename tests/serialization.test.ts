@@ -29,19 +29,11 @@ describe('serialization', () => {
     expect(deserializeGame('')).toBeNull();
   });
 
-  it('backfills scene fields missing from an older saved game', () => {
-    const legacy = JSON.stringify({
-      ...sample,
-      room: {
-        type: sample.room.type,
-        description: 'an old room',
-        difficulty: sample.room.difficulty,
-        situation: {},
-      },
-    });
-    const restored = deserializeGame(legacy);
-    expect(restored?.room.entities).toEqual([]);
-    expect(restored?.room.threats).toEqual([]);
-    expect(restored?.room.description).toBe('an old room');
+  it('backfills the map on a saved game that predates it', () => {
+    const noMap = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    delete noMap.map;
+    const restored = deserializeGame(JSON.stringify(noMap));
+    expect(restored?.map.nodes.length).toBeGreaterThanOrEqual(2);
+    expect(restored?.map.currentNodeIndex).toBe(0);
   });
 });

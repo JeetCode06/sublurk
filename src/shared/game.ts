@@ -65,6 +65,24 @@ export type Room = {
 // what fills the board. Merged into the room when the party enters it.
 export type Scene = Pick<Room, 'description' | 'entities' | 'threats'>;
 
+// One location on the campaign map — a themed biome the party passes through on
+// the way to the final boss. Its themeTag constrains the scenes generated while
+// the party is here (the spatial "rail" that keeps a forest node forest-like).
+export type MapNode = {
+  id: string;
+  name: string;
+  themeTag: string;
+  cleared: boolean;
+};
+
+// The campaign's journey: an ordered list of locations toward one fixed final
+// boss. currentNodeIndex is where the party stands in the current run.
+export type MapState = {
+  nodes: MapNode[];
+  currentNodeIndex: number;
+  finalBoss: { name: string; defeated: boolean };
+};
+
 export type GameState = {
   runNumber: number;
   phase: GamePhase;
@@ -72,6 +90,7 @@ export type GameState = {
   theme: string;
   party: Party;
   room: Room;
+  map: MapState;
   recentEvents: string[];
   nextResolveAt: number; // unix ms
   voteThreshold: number;
