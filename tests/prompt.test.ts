@@ -79,8 +79,10 @@ describe('buildTurnPrompt', () => {
 });
 
 describe('ROOM_INTRO_SYSTEM_PROMPT', () => {
-  it('asks for the scene JSON contract', () => {
-    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('scene');
+  it('asks for the structured scene JSON contract', () => {
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('description');
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('entities');
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('threats');
   });
 });
 

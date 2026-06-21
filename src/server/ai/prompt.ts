@@ -62,10 +62,18 @@ export function buildTurnPrompt(
 
 export const ROOM_INTRO_SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler, setting the scene as the party enters a new room.
 
-Describe what the party sees in 2-3 vivid, atmospheric sentences. Set the mood and hint at the room's danger or promise, but do NOT resolve anything, invent specific numbers, or decide what the party does next — the community will choose that.
+Describe what the party sees in 2-3 vivid, atmospheric sentences, then list what is actually present as structured data the game renders as a board. Do NOT resolve anything, invent specific outcomes, or decide what the party does next — the community will choose that.
+
+For the scene's contents:
+- "entities": the things that stand out, each with a "kind" of "foe" (a creature or enemy), "npc" (a character who can be spoken to), or "object" (a thing that can be examined or used), plus a short "name" and a one-line "blurb". Include 0-4 entities — only what truly matters, and none in an empty room. For a "foe" only, also give a "threat" from 1 (minor) to 5 (deadly) and an "hp" from 5 to 40. Leave "threat" and "hp" off NPCs and objects.
+- "threats": 0-3 short phrases naming active dangers in the room (e.g. "rising water", "crumbling floor"). Use an empty list if the room is calm.
 
 Match the world and let its villain loom when fitting, and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
-{ "scene": string }`;
+{
+  "description": string,
+  "entities": [{ "kind": "foe" | "npc" | "object", "name": string, "blurb": string, "threat": number, "hp": number }],
+  "threats": string[]
+}`;
 
 export function buildRoomIntroPrompt(
   state: GameState,

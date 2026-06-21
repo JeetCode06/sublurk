@@ -61,6 +61,10 @@ export type Room = {
   situation: Record<string, unknown>;
 };
 
+// The narrative slice of a room the AI authors for a new scene: the prose plus
+// what fills the board. Merged into the room when the party enters it.
+export type Scene = Pick<Room, 'description' | 'entities' | 'threats'>;
+
 export type GameState = {
   runNumber: number;
   phase: GamePhase;

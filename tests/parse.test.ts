@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseResolveResult,
-  parseRoomScene,
+  parseScene,
   parseWorldBible,
   FALLBACK_SCENE,
 } from '../src/server/ai/parse';
@@ -88,21 +88,97 @@ describe('parseResolveResult', () => {
   });
 });
 
-describe('parseRoomScene', () => {
-  it('parses a clean scene reply', () => {
-    const raw = JSON.stringify({ scene: 'A vaulted hall drips with cold.' });
-    expect(parseRoomScene(raw)).toBe('A vaulted hall drips with cold.');
+describe('parseScene', () => {
+  it('parses a clean structured scene', () => {
+    const raw = JSON.stringify({
+      description: 'A vaulted hall drips with cold.',
+      entities: [
+        {
+          kind: 'foe',
+          name: 'Cave Lurker',
+          blurb: 'eyes in the dark',
+          threat: 3,
+          hp: 18,
+        },
+        { kind: 'object', name: 'Iron Chest', blurb: 'rusted shut' },
+      ],
+      threats: ['dripping ceiling'],
+    });
+    const scene = parseScene(raw);
+    expect(scene.description).toBe('A vaulted hall drips with cold.');
+    expect(scene.entities).toHaveLength(2);
+    expect(scene.entities[0]).toEqual({
+      kind: 'foe',
+      name: 'Cave Lurker',
+      blurb: 'eyes in the dark',
+      threat: 3,
+      hp: 18,
+    });
+    expect(scene.threats).toEqual(['dripping ceiling']);
   });
 
-  it('falls back when the scene is missing or empty', () => {
-    expect(parseRoomScene('{}')).toBe(FALLBACK_SCENE);
-    expect(parseRoomScene(JSON.stringify({ scene: '   ' }))).toBe(
-      FALLBACK_SCENE
-    );
+  it('drops entities with an invalid kind or empty name', () => {
+    const raw = JSON.stringify({
+      description: 'A room.',
+      entities: [
+        { kind: 'dragon', name: 'Wyrm' },
+        { kind: 'npc', name: '   ' },
+        { kind: 'npc', name: 'Hooded Stranger', blurb: 'waits quietly' },
+      ],
+      threats: [],
+    });
+    const scene = parseScene(raw);
+    expect(scene.entities).toHaveLength(1);
+    expect(scene.entities[0]?.name).toBe('Hooded Stranger');
   });
 
-  it('falls back on unparseable replies', () => {
-    expect(parseRoomScene('the model said no json')).toBe(FALLBACK_SCENE);
+  it('keeps threat and hp only for foes and clamps them', () => {
+    const raw = JSON.stringify({
+      description: 'A lair.',
+      entities: [
+        { kind: 'foe', name: 'Titan', threat: 99, hp: 9999 },
+        { kind: 'object', name: 'Lever', threat: 4, hp: 10 },
+      ],
+      threats: [],
+    });
+    const scene = parseScene(raw);
+    expect(scene.entities[0]).toEqual({
+      kind: 'foe',
+      name: 'Titan',
+      blurb: '',
+      threat: 5,
+      hp: 40,
+    });
+    expect(scene.entities[1]).toEqual({
+      kind: 'object',
+      name: 'Lever',
+      blurb: '',
+    });
+  });
+
+  it('caps entities and threats, de-duplicating threats', () => {
+    const raw = JSON.stringify({
+      description: 'A swarm.',
+      entities: Array.from({ length: 9 }, (_, i) => ({
+        kind: 'foe',
+        name: `Rat ${i}`,
+      })),
+      threats: ['smoke', 'smoke', 'fire', 'flood', 'chasm'],
+    });
+    const scene = parseScene(raw);
+    expect(scene.entities).toHaveLength(4);
+    expect(scene.threats).toEqual(['smoke', 'fire', 'flood']);
+  });
+
+  it('falls back to a calm scene when the description is missing', () => {
+    const scene = parseScene(JSON.stringify({ entities: [], threats: [] }));
+    expect(scene.description).toBe(FALLBACK_SCENE.description);
+    expect(scene.entities).toEqual([]);
+  });
+
+  it('falls back entirely on unparseable replies', () => {
+    expect(parseScene('the model said no json')).toEqual(FALLBACK_SCENE);
+    expect(parseScene('{"description": "half')).toEqual(FALLBACK_SCENE);
   });
 });
 

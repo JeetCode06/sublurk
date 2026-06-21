@@ -2,7 +2,13 @@ import './index.css';
 
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { GameState, LeaderboardEntry, Proposal } from '../shared/game';
+import type {
+  EntityKind,
+  GameState,
+  LeaderboardEntry,
+  Proposal,
+  SceneEntity,
+} from '../shared/game';
 import { useGame } from './hooks/useGame';
 
 function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
@@ -211,6 +217,96 @@ function Leaderboard({
   );
 }
 
+const ENTITY_GLYPH: Record<EntityKind, { icon: string; tone: string }> = {
+  foe: { icon: '☠', tone: 'text-[#d98a80]' },
+  npc: { icon: '☻', tone: 'text-[#e8c070]' },
+  object: { icon: '◇', tone: 'text-[#9fb0c0]' },
+};
+
+function ThreatPips({ threat }: { threat: number }) {
+  return (
+    <span className="flex gap-0.5" title={`threat ${threat} of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span
+          key={n}
+          className={n <= threat ? 'text-[#c0392b]' : 'text-[#3a302b]'}
+        >
+          ●
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function EntityCard({ entity }: { entity: SceneEntity }) {
+  const glyph = ENTITY_GLYPH[entity.kind];
+  const showStats =
+    entity.kind === 'foe' &&
+    (entity.threat !== undefined || entity.hp !== undefined);
+  return (
+    <div className="flex flex-col gap-1.5 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5">
+      <div className="flex items-baseline gap-2">
+        <span className={`text-sm ${glyph.tone}`}>{glyph.icon}</span>
+        <span className="flex-1 text-sm font-semibold text-[#e8ddc8]">
+          {entity.name}
+        </span>
+        <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
+          {entity.kind}
+        </span>
+      </div>
+      {entity.blurb && (
+        <p className="text-xs leading-relaxed text-[#8a7d72]">{entity.blurb}</p>
+      )}
+      {showStats && (
+        <div className="flex items-center gap-3 font-mono text-[0.65rem] text-[#8a7d72]">
+          {entity.threat !== undefined && <ThreatPips threat={entity.threat} />}
+          {entity.hp !== undefined && (
+            <span className="tabular-nums">{entity.hp} hp</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SceneEntities({ entities }: { entities: SceneEntity[] }) {
+  if (entities.length === 0) return null;
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+        In the room
+      </h2>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {entities.map((entity, i) => (
+          <EntityCard
+            key={`${entity.kind}-${entity.name}-${i}`}
+            entity={entity}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ThreatStrip({ threats }: { threats: string[] }) {
+  if (threats.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#c0392b]">
+        ⚠ dangers
+      </span>
+      {threats.map((threat, i) => (
+        <span
+          key={i}
+          className="rounded-full border border-[#5a2a25] bg-[#271a18] px-2.5 py-0.5 text-xs text-[#d98a80]"
+        >
+          {threat}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Board({
   game,
   resolving,
@@ -292,6 +388,8 @@ function Board({
                 : `${game.room.type} · depth ${game.party.depth}`}
             </p>
             <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
+            {!dead && <SceneEntities entities={game.room.entities} />}
+            {!dead && <ThreatStrip threats={game.room.threats} />}
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
                 {log.map((event, i) => (

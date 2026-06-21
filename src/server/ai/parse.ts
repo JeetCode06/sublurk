@@ -1,4 +1,11 @@
-import type { Outcome, ResolveResult, WorldBible } from '../../shared/game';
+import type {
+  EntityKind,
+  Outcome,
+  ResolveResult,
+  Scene,
+  SceneEntity,
+  WorldBible,
+} from '../../shared/game';
 import { coerceWorldBible } from '../game/bible';
 
 function asString(value: unknown, fallback: string): string {
@@ -80,21 +87,104 @@ export function parseResolveResult(raw: string): ResolveResult {
   };
 }
 
-// Used when a room intro can't be generated, so a room is never left blank.
-export const FALLBACK_SCENE =
+// Caps and bounds for AI-authored scene contents: a board only needs a few
+// entities and dangers, and a foe's stats must stay in playable ranges.
+const MAX_ENTITIES = 4;
+const MAX_THREATS = 3;
+const MIN_FOE_THREAT = 1;
+const MAX_FOE_THREAT = 5;
+const MIN_FOE_HP = 1;
+const MAX_FOE_HP = 40;
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function asEntityKind(value: unknown): EntityKind | null {
+  return value === 'foe' || value === 'npc' || value === 'object'
+    ? value
+    : null;
+}
+
+// Coerces one untrusted entry into a valid SceneEntity, or null if it lacks a
+// usable kind and name. Threat and hp are kept only for foes and clamped to
+// playable ranges; the AI can't push a foe to 9999 hp.
+function asEntity(value: unknown): SceneEntity | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const source = value as Record<string, unknown>;
+  const kind = asEntityKind(source.kind);
+  const name = typeof source.name === 'string' ? source.name.trim() : '';
+  if (kind === null || name.length === 0) return null;
+
+  const entity: SceneEntity = {
+    kind,
+    name,
+    blurb: typeof source.blurb === 'string' ? source.blurb.trim() : '',
+  };
+  if (kind === 'foe') {
+    const threat = asNumber(source.threat, 0);
+    const hp = asNumber(source.hp, 0);
+    if (threat > 0)
+      entity.threat = clampInt(threat, MIN_FOE_THREAT, MAX_FOE_THREAT);
+    if (hp > 0) entity.hp = clampInt(hp, MIN_FOE_HP, MAX_FOE_HP);
+  }
+  return entity;
+}
+
+function asEntities(value: unknown): SceneEntity[] {
+  if (!Array.isArray(value)) return [];
+  const out: SceneEntity[] = [];
+  for (const item of value) {
+    const entity = asEntity(item);
+    if (entity !== null) out.push(entity);
+    if (out.length >= MAX_ENTITIES) break;
+  }
+  return out;
+}
+
+function asThreats(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= MAX_THREATS) break;
+  }
+  return out;
+}
+
+// Used when a scene can't be generated, so a room is never left blank.
+const FALLBACK_DESCRIPTION =
   'The chamber waits in restless shadow, its purpose not yet clear. The party steadies their torches and presses on.';
 
-// Parses the room-intro reply ({ "scene": string }), falling back to neutral
-// prose when the AI is unavailable or the reply can't be read.
-export function parseRoomScene(raw: string): string {
+export const FALLBACK_SCENE: Scene = {
+  description: FALLBACK_DESCRIPTION,
+  entities: [],
+  threats: [],
+};
+
+// Parses the structured scene reply, coercing the AI's entity and threat lists
+// into safe, capped, well-formed data. A missing or unreadable reply falls back
+// to a calm, empty scene so the board always has something valid to render.
+export function parseScene(raw: string): Scene {
   const json = extractJson(raw);
   if (json === null) return FALLBACK_SCENE;
   try {
     const value = JSON.parse(json) as Record<string, unknown>;
-    const scene = value.scene;
-    return typeof scene === 'string' && scene.trim().length > 0
-      ? scene.trim()
-      : FALLBACK_SCENE;
+    const description =
+      typeof value.description === 'string' &&
+      value.description.trim().length > 0
+        ? value.description.trim()
+        : FALLBACK_DESCRIPTION;
+    return {
+      description,
+      entities: asEntities(value.entities),
+      threats: asThreats(value.threats),
+    };
   } catch {
     return FALLBACK_SCENE;
   }
