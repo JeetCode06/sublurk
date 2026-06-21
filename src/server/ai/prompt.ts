@@ -141,3 +141,28 @@ export function buildWorldBiblePrompt(context: SubredditContext): string {
   ];
   return lines.join('\n');
 }
+
+export const MAP_SYSTEM_PROMPT = `You are designing the journey for a collaborative Reddit dungeon crawler. Given a world, lay out the path the party travels from the start to the final confrontation: a sequence of distinct, themed locations that builds tension toward the end.
+
+Design 4-6 locations in order, each a different biome or place in this world, escalating toward the final boss's domain — the last location is where the boss waits. For each location give:
+- "name": an evocative place name (e.g. "The Withered Orchard").
+- "themeTag": a short scene-setting phrase for the place, which the dungeon master will reuse to keep every scene there consistent (e.g. "a frostbitten orchard of blackened, clawing trees").
+
+Also name the "finalBoss" — usually the world's villain or its avatar.
+
+Keep everything original, coherent with the world, and safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
+{
+  "nodes": [{ "name": string, "themeTag": string }],
+  "finalBoss": { "name": string }
+}`;
+
+export function buildMapPrompt(bible: WorldBible): string {
+  const lines = [
+    `World: ${bible.theme}`,
+    `Villain: ${bible.villain.name}, who seeks ${bible.villain.motive}`,
+    `The final confrontation: ${bible.finalBossConcept}`,
+    `Motifs to draw on: ${bible.motifs.join(', ')}`,
+    `Design the party's journey through this world and return the JSON.`,
+  ];
+  return lines.join('\n');
+}

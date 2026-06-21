@@ -3,9 +3,11 @@ import {
   parseResolveResult,
   parseScene,
   parseWorldBible,
+  parseMap,
   FALLBACK_SCENE,
 } from '../src/server/ai/parse';
 import { DEFAULT_WORLD_BIBLE } from '../src/server/game/bible';
+import { DEFAULT_MAP } from '../src/server/game/map';
 
 const valid = JSON.stringify({
   narration: 'The torch flares to life.',
@@ -220,5 +222,49 @@ describe('parseWorldBible', () => {
     expect(bible.theme).toBe('Only a theme survives.');
     expect(bible.villain).toEqual(DEFAULT_WORLD_BIBLE.villain);
     expect(bible.artStyle).toBe(DEFAULT_WORLD_BIBLE.artStyle);
+  });
+});
+
+describe('parseMap', () => {
+  const validMap = JSON.stringify({
+    nodes: [
+      { name: 'Thornfen Marsh', themeTag: 'a fetid, thorn-choked marsh' },
+      {
+        name: 'The Withered Orchard',
+        themeTag: 'rows of blackened dead trees',
+      },
+      {
+        name: "The Pruner's Greenhouse",
+        themeTag: 'a vast glass greenhouse of carnivorous vines',
+      },
+    ],
+    finalBoss: { name: 'the Pruner' },
+  });
+
+  it('parses a clean map and defaults ids, cleared, and index', () => {
+    const map = parseMap(validMap);
+    expect(map.nodes).toHaveLength(3);
+    expect(map.nodes[0]?.name).toBe('Thornfen Marsh');
+    expect(map.nodes[0]?.id).toBe('node-1');
+    expect(map.nodes[0]?.cleared).toBe(false);
+    expect(map.currentNodeIndex).toBe(0);
+    expect(map.finalBoss).toEqual({ name: 'the Pruner', defeated: false });
+  });
+
+  it('strips markdown fences', () => {
+    const messy = '```json\n' + validMap + '\n```';
+    expect(parseMap(messy).finalBoss.name).toBe('the Pruner');
+  });
+
+  it('falls back to the default journey on unparseable replies', () => {
+    expect(parseMap('the model refused')).toEqual(DEFAULT_MAP);
+  });
+
+  it('falls back to the default journey when too few nodes are usable', () => {
+    const tooFew = JSON.stringify({
+      nodes: [{ name: 'Only One', themeTag: 'a single room' }],
+      finalBoss: { name: 'Boss' },
+    });
+    expect(parseMap(tooFew)).toEqual(DEFAULT_MAP);
   });
 });

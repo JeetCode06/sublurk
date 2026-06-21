@@ -1,5 +1,6 @@
 import type {
   EntityKind,
+  MapState,
   Outcome,
   ResolveResult,
   Scene,
@@ -7,6 +8,7 @@ import type {
   WorldBible,
 } from '../../shared/game';
 import { coerceWorldBible } from '../game/bible';
+import { coerceMap } from '../game/map';
 
 function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
@@ -201,5 +203,18 @@ export function parseWorldBible(raw: string): WorldBible {
     return coerceWorldBible(JSON.parse(json));
   } catch {
     return coerceWorldBible(null);
+  }
+}
+
+// Parses the map reply and runs it through coerceMap, so a missing or malformed
+// journey always degrades to the default map. coerceMap(null) is the default
+// journey, so both failure paths converge on a safe, complete map.
+export function parseMap(raw: string): MapState {
+  const json = extractJson(raw);
+  if (json === null) return coerceMap(null);
+  try {
+    return coerceMap(JSON.parse(json));
+  } catch {
+    return coerceMap(null);
   }
 }

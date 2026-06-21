@@ -6,6 +6,8 @@ import {
   ROOM_INTRO_SYSTEM_PROMPT,
   WORLD_BIBLE_SYSTEM_PROMPT,
   buildWorldBiblePrompt,
+  MAP_SYSTEM_PROMPT,
+  buildMapPrompt,
 } from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
 import type { DiceRoll } from '../src/server/game/dice';
@@ -139,5 +141,26 @@ describe('buildWorldBiblePrompt', () => {
   it('marks the absence of top posts', () => {
     const prompt = buildWorldBiblePrompt({ ...context, topPostTitles: [] });
     expect(prompt).toContain('(none available)');
+  });
+});
+
+describe('MAP_SYSTEM_PROMPT', () => {
+  it('specifies the map JSON contract', () => {
+    expect(MAP_SYSTEM_PROMPT).toContain('nodes');
+    expect(MAP_SYSTEM_PROMPT).toContain('themeTag');
+    expect(MAP_SYSTEM_PROMPT).toContain('finalBoss');
+  });
+});
+
+describe('buildMapPrompt', () => {
+  it('includes the world, villain, and final confrontation', () => {
+    const prompt = buildMapPrompt(bible);
+    expect(prompt).toContain('sunken cathedral');
+    expect(prompt).toContain('the Tidemother');
+    expect(prompt).toContain('flooded nave');
+  });
+
+  it('includes the motifs to draw on', () => {
+    expect(buildMapPrompt(bible)).toContain('drowned bells');
   });
 });
