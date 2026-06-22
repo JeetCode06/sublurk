@@ -54,13 +54,6 @@ export const CLASSES: Record<ClassId, ClassDefinition> = {
   },
 };
 
-export function classRollModifier(
-  classId: ClassId,
-  roomType: RoomType
-): number {
-  return CLASSES[classId].affinities[roomType] ?? 0;
-}
-
 // Recasts a class's room affinity as tabletop advantage: a strength grants
 // advantage, a weakness imposes disadvantage, and everything else rolls normally.
 export function classAdvantage(
