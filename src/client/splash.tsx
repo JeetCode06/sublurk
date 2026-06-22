@@ -1,58 +1,38 @@
 import './index.css';
 
-import { navigateTo } from '@devvit/web/client';
-import { context, requestExpandedMode } from '@devvit/web/client';
+import { navigateTo, requestExpandedMode } from '@devvit/web/client';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 export const Splash = () => {
   return (
-    <div className="flex relative flex-col justify-center items-center min-h-screen gap-4 bg-white dark:bg-gray-900">
-      <img
-        className="object-contain w-1/2 max-w-[250px] mx-auto"
-        src="/snoo.png"
-        alt="Snoo"
-      />
-      <div className="flex flex-col items-center gap-2">
-        <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-          Hey {context.username ?? 'user'} 👋
+    <div className="flex relative flex-col justify-center items-center min-h-screen gap-6 bg-[#1a1614] px-6 text-center">
+      <div className="flex flex-col items-center gap-3">
+        <h1 className="text-4xl font-bold tracking-wide text-[#e8893f]">
+          Hivemind Crawl
         </h1>
-        <p className="text-base text-center text-gray-600 dark:text-gray-300">
-          Edit{' '}
-          <span className="bg-[#e5ebee] dark:bg-gray-700 px-1 py-0.5 rounded">
-            src/client/splash.tsx
-          </span>{' '}
-          to get started.
+        <p className="max-w-sm text-base leading-relaxed text-[#8a7d72]">
+          A subreddit plays one D&amp;D party. Propose a move, vote in the
+          comments, and survive the dungeon together.
         </p>
       </div>
-      <div className="flex items-center justify-center mt-5">
+
+      <button
+        className="flex items-center justify-center h-11 px-6 rounded-full font-semibold text-[#1a1614] bg-[#e8893f] cursor-pointer transition-colors hover:bg-[#f0a25c]"
+        onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
+      >
+        Enter the Dungeon
+      </button>
+
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[0.72em] text-[#6b6058]">
+        <span>Mechanics from the D&amp;D SRD 5.1 · </span>
         <button
-          className="flex items-center justify-center bg-[#d93900] dark:bg-orange-600 text-white w-auto h-10 rounded-full cursor-pointer transition-colors px-4 hover:bg-[#c23300] dark:hover:bg-orange-700"
-          onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
+          className="cursor-pointer underline hover:text-[#8a7d72] transition-colors"
+          onClick={() =>
+            navigateTo('https://creativecommons.org/licenses/by/4.0/legalcode')
+          }
         >
-          Tap to Start
-        </button>
-      </div>
-      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 text-[0.8em] text-gray-600 dark:text-gray-400">
-        <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
-          onClick={() => navigateTo('https://developers.reddit.com/docs')}
-        >
-          Docs
-        </button>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
-          onClick={() => navigateTo('https://www.reddit.com/r/Devvit')}
-        >
-          r/Devvit
-        </button>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <button
-          className="cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
-          onClick={() => navigateTo('https://discord.com/invite/R7yu2wh9Qz')}
-        >
-          Discord
+          CC BY 4.0
         </button>
       </footer>
     </div>
