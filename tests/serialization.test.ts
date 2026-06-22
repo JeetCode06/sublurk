@@ -38,6 +38,15 @@ describe('serialization', () => {
     expect(restored?.map.currentNodeIndex).toBe(0);
   });
 
+  it('migrates an older save that used free-text statuses', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    const party = legacy.party as Record<string, unknown>;
+    delete party.conditions;
+    party.statuses = ['poisoned', 'blessed'];
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.party.conditions).toEqual(['poisoned']); // migrated, unknown dropped
+  });
+
   it('backfills party abilities from the class on an older save', () => {
     const parsed = JSON.parse(serializeGame(sample)) as {
       party: Record<string, unknown>;

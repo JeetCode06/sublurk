@@ -1,4 +1,5 @@
 import type { Party, ResolveResult } from '../../shared/game';
+import { applyConditions } from './conditions';
 
 export type AppliedResult = {
   party: Party;
@@ -42,21 +43,6 @@ function applyInventory(
   return { items, notes };
 }
 
-function applyStatuses(
-  current: string[],
-  add: string[],
-  remove: string[]
-): string[] {
-  const set = new Set(current);
-  for (const status of remove) {
-    set.delete(status);
-  }
-  for (const status of add) {
-    set.add(status);
-  }
-  return [...set];
-}
-
 // Forces the AI's proposed outcome into legal bounds before it is applied.
 // The AI proposes; the server decides. Death is derived from HP, never taken from the AI.
 export function applyResolveResult(
@@ -85,14 +71,14 @@ export function applyResolveResult(
   );
   adjustments.push(...inv.notes);
 
-  const statuses = applyStatuses(
-    party.statuses,
+  const conditions = applyConditions(
+    party.conditions,
     result.statusAdd,
     result.statusRemove
   );
 
   return {
-    party: { ...party, hp, gold, inventory: inv.items, statuses },
+    party: { ...party, hp, gold, inventory: inv.items, conditions },
     died: hp <= 0,
     adjustments,
   };

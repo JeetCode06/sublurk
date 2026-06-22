@@ -1,8 +1,14 @@
-import type { AbilityCheck, GameState, ResolveResult } from '../../shared/game';
+import type {
+  AbilityCheck,
+  Advantage,
+  GameState,
+  ResolveResult,
+} from '../../shared/game';
 import type { RandFn } from './dice';
-import { rollCheck } from './dice';
+import { rollCheck, combineAdvantage } from './dice';
 import { abilityForRoomType } from './abilities';
 import { classAdvantage } from './classes';
+import { checkDisadvantageFrom } from './conditions';
 import { createRoom, createFinalBossRoom } from './rooms';
 import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
@@ -17,7 +23,13 @@ export function prepareRoll(
 ): AbilityCheck {
   const ability = abilityForRoomType(state.room.type);
   const score = state.party.abilities[ability];
-  const advantage = classAdvantage(state.party.classId, state.room.type);
+  const fromClass = classAdvantage(state.party.classId, state.room.type);
+  const fromConditions: Advantage = checkDisadvantageFrom(
+    state.party.conditions
+  )
+    ? 'disadvantage'
+    : 'normal';
+  const advantage = combineAdvantage(fromClass, fromConditions);
   return rollCheck(ability, score, state.room.difficulty, advantage, rand);
 }
 

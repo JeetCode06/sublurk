@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { GameState } from '../src/shared/game';
+import { DEFAULT_ABILITIES } from '../src/server/game/abilities';
 import {
   TURN_CADENCE_MS,
   withDeadline,
@@ -18,11 +19,24 @@ const base: GameState = {
     gold: 0,
     depth: 0,
     inventory: [],
-    statuses: [],
+    conditions: [],
     classId: 'adventurer',
     name: 'The test Guild',
+    abilities: DEFAULT_ABILITIES,
   },
-  room: { type: 'combat', description: '', difficulty: 11, situation: {} },
+  room: {
+    type: 'combat',
+    description: '',
+    difficulty: 11,
+    entities: [],
+    threats: [],
+    situation: {},
+  },
+  map: {
+    nodes: [{ id: 'n0', name: 'Start', themeTag: 'start', cleared: false }],
+    currentNodeIndex: 0,
+    finalBoss: { name: 'The Test Boss', defeated: false },
+  },
   recentEvents: [],
   nextResolveAt: 0,
   voteThreshold: 20,

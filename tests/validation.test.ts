@@ -9,7 +9,7 @@ function makeParty(overrides: Partial<Party> = {}): Party {
     gold: 100,
     depth: 0,
     inventory: [],
-    statuses: [],
+    conditions: [],
     classId: 'adventurer',
     name: 'Test Party',
     abilities: { str: 12, dex: 12, con: 12, int: 12, wis: 12, cha: 12 },
@@ -102,20 +102,20 @@ describe('applyResolveResult', () => {
     expect(adjustments.some((a) => a.includes('excalibur'))).toBe(true);
   });
 
-  it('deduplicates statuses on add', () => {
+  it('keeps only known conditions when adding, ignoring duplicates', () => {
     const { party } = applyResolveResult(
-      makeParty({ statuses: ['poisoned'] }),
+      makeParty({ conditions: ['poisoned'] }),
       makeResult({ statusAdd: ['poisoned', 'blessed'] })
     );
-    expect(party.statuses).toEqual(['poisoned', 'blessed']);
+    expect(party.conditions).toEqual(['poisoned']); // dupe ignored, 'blessed' dropped
   });
 
-  it('removes a status', () => {
+  it('removes a condition', () => {
     const { party } = applyResolveResult(
-      makeParty({ statuses: ['poisoned', 'blessed'] }),
+      makeParty({ conditions: ['poisoned', 'frightened'] }),
       makeResult({ statusRemove: ['poisoned'] })
     );
-    expect(party.statuses).toEqual(['blessed']);
+    expect(party.conditions).toEqual(['frightened']);
   });
 
   it('ignores a false death claim from the AI when hp survives', () => {

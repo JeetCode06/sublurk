@@ -22,7 +22,7 @@ function freshParty(classId: ClassId, name: string): Party {
     gold: STARTING_GOLD,
     depth: 0,
     inventory: [],
-    statuses: [],
+    conditions: [],
     classId,
     name,
     abilities: { ...CLASSES[classId].abilities },

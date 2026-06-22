@@ -33,6 +33,16 @@ export type AbilityId = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 // A party's ability scores (roughly 8-16), one per ability.
 export type Abilities = Record<AbilityId, number>;
 
+// The subset of SRD conditions the party can carry. Each makes the party's
+// ability checks harder (disadvantage); they're applied and lifted in play.
+export type ConditionId =
+  | 'poisoned'
+  | 'frightened'
+  | 'blinded'
+  | 'restrained'
+  | 'exhausted'
+  | 'charmed';
+
 // Whether a check rolls one die, or two keeping the better (advantage) or worse
 // (disadvantage) — the tabletop way a class's strengths and weaknesses bend the
 // odds without changing the target number.
@@ -57,7 +67,7 @@ export type Party = {
   gold: number;
   depth: number;
   inventory: string[];
-  statuses: string[];
+  conditions: ConditionId[];
   classId: ClassId;
   name: string;
   abilities: Abilities;

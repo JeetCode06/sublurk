@@ -2,6 +2,7 @@ import type { GameState } from '../../shared/game';
 import { coerceMap } from '../game/map';
 import { CLASSES } from '../game/classes';
 import { coerceAbilities } from '../game/abilities';
+import { coerceConditions } from '../game/conditions';
 
 export function serializeGame(state: GameState): string {
   return JSON.stringify(state);
@@ -29,6 +30,15 @@ export function deserializeGame(raw: string): GameState | null {
           abilities: coerceAbilities(
             state.party.abilities,
             CLASSES[state.party.classId].abilities
+          ),
+          conditions: coerceConditions(
+            (
+              state.party as unknown as {
+                conditions?: unknown;
+                statuses?: unknown;
+              }
+            ).conditions ??
+              (state.party as unknown as { statuses?: unknown }).statuses
           ),
         },
         room: {

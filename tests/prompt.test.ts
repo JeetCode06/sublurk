@@ -45,6 +45,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toContain('narration');
     expect(SYSTEM_PROMPT).toContain('hpDelta');
   });
+
+  it('lists the valid condition vocabulary', () => {
+    expect(SYSTEM_PROMPT).toContain('poisoned');
+  });
 });
 
 describe('buildTurnPrompt', () => {
@@ -56,6 +60,17 @@ describe('buildTurnPrompt', () => {
 
   it('tells the AI the dice outcome so it narrates consistently', () => {
     expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain('success');
+  });
+
+  it('lists the party conditions, or none', () => {
+    expect(buildTurnPrompt(state, 'wait', roll, bible)).toContain(
+      'Conditions: none'
+    );
+    const sick: typeof state = {
+      ...state,
+      party: { ...state.party, conditions: ['poisoned'] },
+    };
+    expect(buildTurnPrompt(sick, 'wait', roll, bible)).toContain('Poisoned');
   });
 
   it('describes the ability check and its advantage', () => {
@@ -112,6 +127,11 @@ describe('buildRoomIntroPrompt', () => {
 
   it('injects the current map location as the scene rail', () => {
     expect(buildRoomIntroPrompt(state, bible)).toContain('The Threshold');
+  });
+
+  it('states the room difficulty band', () => {
+    const hard = { ...state, room: { ...state.room, difficulty: 20 } };
+    expect(buildRoomIntroPrompt(hard, bible)).toContain('Hard (DC 20)');
   });
 
   it('marks the start of the run when there is no history', () => {

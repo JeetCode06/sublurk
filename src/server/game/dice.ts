@@ -34,6 +34,17 @@ function rollDie(rand: RandFn): number {
   return 1 + Math.floor(rand() * DIE_SIDES);
 }
 
+// Combines two advantage sources by the tabletop rule: any advantage with any
+// disadvantage cancels to a normal roll, regardless of how many of each.
+export function combineAdvantage(a: Advantage, b: Advantage): Advantage {
+  const hasAdvantage = a === 'advantage' || b === 'advantage';
+  const hasDisadvantage = a === 'disadvantage' || b === 'disadvantage';
+  if (hasAdvantage && hasDisadvantage) return 'normal';
+  if (hasAdvantage) return 'advantage';
+  if (hasDisadvantage) return 'disadvantage';
+  return 'normal';
+}
+
 export function rollAction(
   difficulty: number,
   modifier: number,

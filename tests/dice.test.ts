@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { rollAction, rollCheck } from '../src/server/game/dice';
+import {
+  rollAction,
+  rollCheck,
+  combineAdvantage,
+} from '../src/server/game/dice';
 
 function seq(values: number[]): () => number {
   let i = 0;
-  return () => values[i++ % values.length]!;
+  return () => values[i++ % values.length] ?? 0;
 }
 
 describe('rollAction', () => {
@@ -80,5 +84,24 @@ describe('rollCheck', () => {
     const lose = rollCheck('str', 18, 1, 'disadvantage', seq([0, 0.999]));
     expect(lose.die).toBe(1);
     expect(lose.outcome).toBe('fail');
+  });
+});
+
+describe('combineAdvantage', () => {
+  it('cancels advantage and disadvantage to a normal roll', () => {
+    expect(combineAdvantage('advantage', 'disadvantage')).toBe('normal');
+    expect(combineAdvantage('disadvantage', 'advantage')).toBe('normal');
+  });
+
+  it('keeps advantage when only advantage is present', () => {
+    expect(combineAdvantage('advantage', 'normal')).toBe('advantage');
+  });
+
+  it('keeps disadvantage when only disadvantage is present', () => {
+    expect(combineAdvantage('normal', 'disadvantage')).toBe('disadvantage');
+  });
+
+  it('is normal when neither side has an edge', () => {
+    expect(combineAdvantage('normal', 'normal')).toBe('normal');
   });
 });

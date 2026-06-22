@@ -20,7 +20,7 @@ function deadState(): GameState {
       hp: 0,
       depth: 12,
       inventory: ['cursed idol'],
-      statuses: ['poisoned'],
+      conditions: ['poisoned'],
     },
     recentEvents: ['the coven fell'],
   };
@@ -63,7 +63,7 @@ describe('startNewRun', () => {
     expect(next.party.hp).toBe(next.party.maxHp);
     expect(next.party.depth).toBe(0);
     expect(next.party.inventory).toEqual([]);
-    expect(next.party.statuses).toEqual([]);
+    expect(next.party.conditions).toEqual([]);
   });
 
   it('keeps the subreddit identity across runs', () => {

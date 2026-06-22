@@ -7,9 +7,13 @@ import {
 describe('buildGeminiRequest', () => {
   it('nests the system and user prompts in the Gemini shape', () => {
     const req = buildGeminiRequest('SYSTEM', 'USER');
-    expect(req.systemInstruction.parts[0].text).toBe('SYSTEM');
-    expect(req.contents[0].parts[0].text).toBe('USER');
-    expect(req.contents[0].role).toBe('user');
+    expect(req.systemInstruction).toMatchObject({
+      parts: [{ text: 'SYSTEM' }],
+    });
+    expect(req.contents[0]).toMatchObject({
+      role: 'user',
+      parts: [{ text: 'USER' }],
+    });
   });
 
   it('requests JSON output', () => {

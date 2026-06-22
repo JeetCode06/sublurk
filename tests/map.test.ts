@@ -132,7 +132,9 @@ describe('freshMap', () => {
       ],
     });
     const fresh = freshMap(template);
-    fresh.nodes[0]!.cleared = true;
+    fresh.nodes.forEach((node) => {
+      node.cleared = true;
+    });
     expect(template.nodes[0]?.cleared).toBe(false);
   });
 });
