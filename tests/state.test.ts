@@ -94,3 +94,14 @@ describe('startNewRun', () => {
     expect(dead.party.hp).toBe(0);
   });
 });
+
+describe('roomFailures', () => {
+  it('starts at zero', () => {
+    expect(createInitialState(input, () => 0).roomFailures).toBe(0);
+  });
+
+  it('resets on a new run', () => {
+    const prior = { ...deadState(), roomFailures: 3 };
+    expect(startNewRun(prior, () => 0).roomFailures).toBe(0);
+  });
+});

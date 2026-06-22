@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { prepareRoll, applyTurn } from '../src/server/game/resolution';
+import {
+  prepareRoll,
+  applyTurn,
+  STUCK_LIMIT,
+} from '../src/server/game/resolution';
 import type { GameState, ResolveResult } from '../src/shared/game';
 
 function makeState(overrides: Partial<GameState> = {}): GameState {
@@ -41,6 +45,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     recentEvents: [],
     nextResolveAt: 0,
     voteThreshold: 20,
+    roomFailures: 0,
     ...overrides,
   };
 }
@@ -170,5 +175,30 @@ describe('applyTurn suggestions', () => {
       makeResult({ roomResolved: false, suggestions: ['Flee', 'Fight'] })
     );
     expect(next.room.suggestions).toEqual(['Flee', 'Fight']);
+  });
+});
+
+describe('applyTurn stuck handling', () => {
+  it('counts consecutive failures and resets them on a non-failure', () => {
+    const failed = applyTurn(
+      makeState({ roomFailures: 1 }),
+      makeResult({ outcome: 'fail', roomResolved: false })
+    );
+    expect(failed.roomFailures).toBe(2);
+
+    const recovered = applyTurn(
+      makeState({ roomFailures: 3 }),
+      makeResult({ outcome: 'success', roomResolved: false })
+    );
+    expect(recovered.roomFailures).toBe(0);
+  });
+
+  it('forces the party onward after too many failures', () => {
+    const next = applyTurn(
+      makeState({ roomFailures: STUCK_LIMIT - 1 }),
+      makeResult({ outcome: 'fail', roomResolved: false })
+    );
+    expect(next.party.depth).toBe(1);
+    expect(next.roomFailures).toBe(0);
   });
 });

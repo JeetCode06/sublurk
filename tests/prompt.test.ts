@@ -12,6 +12,7 @@ import {
   buildMapPrompt,
 } from '../src/server/ai/prompt';
 import { createInitialState } from '../src/server/game/state';
+import { STUCK_LIMIT } from '../src/server/game/resolution';
 import type { AbilityCheck, WorldBible } from '../src/shared/game';
 
 const state = createInitialState({
@@ -223,5 +224,14 @@ describe('suggestions in prompts', () => {
   it('asks both the scene and turn prompts for suggestions', () => {
     expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('suggestions');
     expect(SYSTEM_PROMPT).toContain('suggestions');
+  });
+});
+
+describe('stuck escalation', () => {
+  it('tells the AI to force a way onward when the party keeps failing', () => {
+    const stuck: typeof state = { ...state, roomFailures: STUCK_LIMIT - 1 };
+    expect(buildTurnPrompt(stuck, 'wait', roll, bible)).toContain(
+      'force a way onward'
+    );
   });
 });

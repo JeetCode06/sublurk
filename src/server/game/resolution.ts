@@ -15,6 +15,10 @@ import { applyResolveResult } from './validation';
 
 const RECENT_EVENTS_LIMIT = 6;
 
+// After this many consecutive failed turns in one room, the party is forced
+// onward no matter the roll, so a room can never trap them in an endless loop.
+export const STUCK_LIMIT = 4;
+
 // Rolls for the current room: its difficulty against the party class's affinity.
 // Runs before the AI, so the AI can narrate consistently with the result.
 export function prepareRoll(
@@ -49,7 +53,12 @@ export function applyTurn(
     return { ...state, party: applied.party, phase: 'dead', recentEvents };
   }
 
-  if (result.roomResolved) {
+  // Track consecutive failures in this room. Once they hit the limit the party
+  // is forced onward even on a failed roll, so the room cannot loop forever.
+  const failures = result.outcome === 'fail' ? state.roomFailures + 1 : 0;
+  const resolved = result.roomResolved || failures >= STUCK_LIMIT;
+
+  if (resolved) {
     const depth = state.party.depth + 1;
 
     // Resolving the room at the final location is the campaign's climax —
@@ -61,6 +70,7 @@ export function applyTurn(
         map: markBossDefeated(state.map),
         phase: 'won',
         recentEvents,
+        roomFailures: 0,
       };
     }
 
@@ -77,6 +87,7 @@ export function applyTurn(
       map,
       phase: 'awaiting_actions',
       recentEvents,
+      roomFailures: 0,
     };
   }
 
@@ -86,5 +97,6 @@ export function applyTurn(
     room: { ...state.room, suggestions: result.suggestions },
     phase: 'awaiting_actions',
     recentEvents,
+    roomFailures: failures,
   };
 }

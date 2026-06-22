@@ -5,6 +5,7 @@ import {
   coerceConditions,
   applyConditions,
   checkDisadvantageFrom,
+  conditionHpTick,
 } from '../src/server/game/conditions';
 
 describe('CONDITIONS data', () => {
@@ -58,5 +59,17 @@ describe('checkDisadvantageFrom', () => {
 
   it('is false with no conditions', () => {
     expect(checkDisadvantageFrom([])).toBe(false);
+  });
+});
+
+describe('conditionHpTick', () => {
+  it('sums the per-turn drain of active conditions', () => {
+    expect(conditionHpTick(['poisoned'])).toBe(2);
+    expect(conditionHpTick(['poisoned', 'exhausted'])).toBe(5);
+  });
+
+  it('is zero for conditions that do not drain health', () => {
+    expect(conditionHpTick(['frightened', 'blinded'])).toBe(0);
+    expect(conditionHpTick([])).toBe(0);
   });
 });

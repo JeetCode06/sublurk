@@ -13,12 +13,18 @@ export const CONDITION_IDS: ConditionId[] = [
 // summaries double as tooltip text and as the vocabulary handed to the AI.
 export const CONDITIONS: Record<
   ConditionId,
-  { name: string; summary: string; disadvantageOnChecks: boolean }
+  {
+    name: string;
+    summary: string;
+    disadvantageOnChecks: boolean;
+    hpTickPerTurn?: number;
+  }
 > = {
   poisoned: {
     name: 'Poisoned',
-    summary: 'Sickened — disadvantage on checks.',
+    summary: 'Sickened — disadvantage on checks, and it saps health each turn.',
     disadvantageOnChecks: true,
+    hpTickPerTurn: 2,
   },
   frightened: {
     name: 'Frightened',
@@ -37,8 +43,10 @@ export const CONDITIONS: Record<
   },
   exhausted: {
     name: 'Exhausted',
-    summary: 'Worn down — disadvantage on checks.',
+    summary:
+      'Worn down — disadvantage on checks, and it wears health away each turn.',
     disadvantageOnChecks: true,
+    hpTickPerTurn: 3,
   },
   charmed: {
     name: 'Charmed',
@@ -80,4 +88,13 @@ export function applyConditions(
 // True if any active condition makes the party's ability checks harder.
 export function checkDisadvantageFrom(conditions: ConditionId[]): boolean {
   return conditions.some((id) => CONDITIONS[id].disadvantageOnChecks);
+}
+
+// Total health lost per turn to lingering conditions — the clock that turns a
+// persistent bad state into a clean death rather than an endless nag.
+export function conditionHpTick(conditions: ConditionId[]): number {
+  return conditions.reduce(
+    (sum, id) => sum + (CONDITIONS[id].hpTickPerTurn ?? 0),
+    0
+  );
 }

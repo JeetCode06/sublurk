@@ -138,6 +138,9 @@ export type GameState = {
   recentEvents: string[];
   nextResolveAt: number; // unix ms
   voteThreshold: number;
+  // Consecutive failed turns in the current room. Drives escalation and a hard
+  // forced exit so a room can never become an infinite loop.
+  roomFailures: number;
   lastCheck?: AbilityCheck;
 };
 

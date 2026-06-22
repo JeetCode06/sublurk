@@ -7,6 +7,7 @@ import type {
 import { ABILITY_LABELS } from '../game/abilities';
 import { BAND_LABELS, bandForDC } from '../game/difficulty';
 import { CONDITIONS, CONDITION_IDS } from '../game/conditions';
+import { STUCK_LIMIT } from '../game/resolution';
 
 export const SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler. A whole community controls one party by voting on actions in the comments.
 
@@ -17,6 +18,7 @@ Rules:
 - Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with the party's current HP, gold, and the room.
 - Keep it tense and fun, match the world and weave in its villain and motifs when it fits, and keep content safe for a general audience.
 - The only conditions you may put in statusAdd or statusRemove are: ${CONDITION_IDS.join(', ')}. Each makes the party's ability checks harder. Apply one when the fiction earns it and lift it when they recover; any other word is ignored.
+- The party automatically loses a little health each turn to lingering conditions like poison or exhaustion. Do not also deduct for those ongoing effects in hpDelta — use hpDelta only for the direct result of this action.
 - "suggestions": 2-3 short, concrete actions the party could try next given how this turn went, each a brief imperative phrase (e.g. "Press the attack", "Bind the wound", "Search the wreckage"). Options for the community to weigh, not commands.
 - Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
@@ -82,9 +84,14 @@ export function buildTurnPrompt(
       : `This is the party's first move.`,
     `The community chose: "${action}"`,
     `The party made a ${ABILITY_LABELS[check.ability]} check${advantagePhrase(check.advantage)} and rolled a ${check.outcome} (rolled ${check.die}, total ${check.total} vs difficulty ${check.difficulty}).`,
+    state.roomFailures >= STUCK_LIMIT - 1
+      ? `The party has already failed here ${state.roomFailures} times and cannot remain — force a way onward this turn: an opening, an escape, or the danger driving them out, even at a cost.`
+      : state.roomFailures >= 2
+        ? `The party has failed here ${state.roomFailures} times. Raise the stakes and push the scene toward a change.`
+        : '',
     `Narrate this outcome and return the JSON.`,
   ];
-  return lines.join('\n');
+  return lines.filter((line) => line.length > 0).join('\n');
 }
 
 export const INTRO_SYSTEM_PROMPT = `You are the Dungeon Master opening a new run of a collaborative Reddit dungeon crawler, where a whole community controls one party by voting in the comments.

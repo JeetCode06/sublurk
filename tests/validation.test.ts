@@ -145,3 +145,13 @@ describe('applyResolveResult', () => {
     expect(party.inventory).toEqual(['torch']);
   });
 });
+
+describe('condition health drain', () => {
+  it('drains health each turn from lingering conditions', () => {
+    const { party } = applyResolveResult(
+      makeParty({ hp: 50, conditions: ['poisoned'] }),
+      makeResult({ hpDelta: 0 })
+    );
+    expect(party.hp).toBe(48);
+  });
+});

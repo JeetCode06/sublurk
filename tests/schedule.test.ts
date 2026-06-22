@@ -40,6 +40,7 @@ const base: GameState = {
   },
   intro: '',
   recentEvents: [],
+  roomFailures: 0,
   nextResolveAt: 0,
   voteThreshold: 20,
 };

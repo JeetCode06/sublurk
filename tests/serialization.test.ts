@@ -65,3 +65,12 @@ describe('serialization', () => {
     );
   });
 });
+
+describe('roomFailures migration', () => {
+  it('backfills roomFailures on a save that predates it', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    delete legacy.roomFailures;
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.roomFailures).toBe(0);
+  });
+});

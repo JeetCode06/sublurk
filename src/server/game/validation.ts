@@ -1,5 +1,5 @@
 import type { Party, ResolveResult } from '../../shared/game';
-import { applyConditions } from './conditions';
+import { applyConditions, conditionHpTick } from './conditions';
 
 export type AppliedResult = {
   party: Party;
@@ -61,7 +61,12 @@ export function applyResolveResult(
     adjustments.push(`goldDelta ${result.goldDelta} clamped to ${goldDelta}`);
   }
 
-  const hp = clamp(party.hp + hpDelta, 0, party.maxHp);
+  const conditionDrain = conditionHpTick(party.conditions);
+  if (conditionDrain > 0) {
+    adjustments.push(`conditions drained ${conditionDrain} hp`);
+  }
+
+  const hp = clamp(party.hp + hpDelta - conditionDrain, 0, party.maxHp);
   const gold = Math.max(0, party.gold + goldDelta);
 
   const inv = applyInventory(
