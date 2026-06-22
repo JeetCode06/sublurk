@@ -64,6 +64,7 @@ export async function withRoomIntro(
       description: scene.description,
       entities: scene.entities,
       threats: scene.threats,
+      suggestions: scene.suggestions,
     },
   };
 }

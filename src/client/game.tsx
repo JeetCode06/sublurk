@@ -598,6 +598,20 @@ function Board({
               <label className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
                 Playing solo? Take a single action directly
               </label>
+              {game.room.suggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {game.room.suggestions.map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setDraft(suggestion)}
+                      disabled={resolving}
+                      className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2">
                 <input
                   value={draft}

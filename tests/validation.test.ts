@@ -30,6 +30,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     roomResolved: false,
     nextRoomHint: null,
     death: false,
+    suggestions: [],
     ...overrides,
   };
 }

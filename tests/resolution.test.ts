@@ -25,6 +25,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       difficulty: 12,
       entities: [],
       threats: [],
+      suggestions: [],
       situation: {},
     },
     map: {
@@ -57,6 +58,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     roomResolved: false,
     nextRoomHint: null,
     death: false,
+    suggestions: [],
     ...overrides,
   };
 }
@@ -158,5 +160,15 @@ describe('applyTurn', () => {
     expect(next.phase).toBe('awaiting_actions');
     expect(next.room.type).toBe('boss');
     expect(next.map.currentNodeIndex).toBe(2);
+  });
+});
+
+describe('applyTurn suggestions', () => {
+  it('refreshes the room suggestions on a turn that does not resolve', () => {
+    const next = applyTurn(
+      makeState(),
+      makeResult({ roomResolved: false, suggestions: ['Flee', 'Fight'] })
+    );
+    expect(next.room.suggestions).toEqual(['Flee', 'Fight']);
   });
 });

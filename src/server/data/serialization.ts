@@ -48,6 +48,9 @@ export function deserializeGame(raw: string): GameState | null {
             ? state.room.entities
             : [],
           threats: Array.isArray(state.room.threats) ? state.room.threats : [],
+          suggestions: Array.isArray(state.room.suggestions)
+            ? state.room.suggestions
+            : [],
         },
       };
     }

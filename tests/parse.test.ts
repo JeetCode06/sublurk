@@ -282,3 +282,35 @@ describe('parseIntro', () => {
     expect(parseIntro(JSON.stringify({ intro: '' })).length).toBeGreaterThan(0);
   });
 });
+
+describe('parseScene suggestions', () => {
+  it('parses and caps suggestions at three', () => {
+    const raw = JSON.stringify({
+      description: 'A hall.',
+      entities: [],
+      threats: [],
+      suggestions: ['Look', 'Listen', 'Wait', 'Run', 'Hide'],
+    });
+    expect(parseScene(raw).suggestions).toEqual(['Look', 'Listen', 'Wait']);
+  });
+
+  it('defaults to no suggestions when absent', () => {
+    const raw = JSON.stringify({
+      description: 'A hall.',
+      entities: [],
+      threats: [],
+    });
+    expect(parseScene(raw).suggestions).toEqual([]);
+  });
+});
+
+describe('parseResolveResult suggestions', () => {
+  it('parses suggestions for the next move', () => {
+    const raw = JSON.stringify({
+      narration: 'ok',
+      outcome: 'success',
+      suggestions: ['Press on', 'Rest'],
+    });
+    expect(parseResolveResult(raw).suggestions).toEqual(['Press on', 'Rest']);
+  });
+});

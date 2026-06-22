@@ -94,13 +94,19 @@ export type Room = {
   // in it, both rendered on the board. Empty until the AI populates a new scene.
   entities: SceneEntity[];
   threats: string[];
+  // 2-3 concrete actions the party could try right now, offered to the players
+  // so a turn never starts from a blank prompt. Refreshed each turn.
+  suggestions: string[];
   // Per-room server-only state, e.g. a monster's remaining hp. Shape varies by room type.
   situation: Record<string, unknown>;
 };
 
 // The narrative slice of a room the AI authors for a new scene: the prose plus
 // what fills the board. Merged into the room when the party enters it.
-export type Scene = Pick<Room, 'description' | 'entities' | 'threats'>;
+export type Scene = Pick<
+  Room,
+  'description' | 'entities' | 'threats' | 'suggestions'
+>;
 
 // One location on the campaign map — a themed biome the party passes through on
 // the way to the final boss. Its themeTag constrains the scenes generated while
@@ -148,6 +154,8 @@ export type ResolveResult = {
   roomResolved: boolean;
   nextRoomHint: string | null;
   death: boolean;
+  // Fresh suggestions for what to try next, given how this turn went.
+  suggestions: string[];
 };
 
 // A candidate action the community has proposed: one comment on the post,

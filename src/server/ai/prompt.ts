@@ -17,6 +17,7 @@ Rules:
 - Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with the party's current HP, gold, and the room.
 - Keep it tense and fun, match the world and weave in its villain and motifs when it fits, and keep content safe for a general audience.
 - The only conditions you may put in statusAdd or statusRemove are: ${CONDITION_IDS.join(', ')}. Each makes the party's ability checks harder. Apply one when the fiction earns it and lift it when they recover; any other word is ignored.
+- "suggestions": 2-3 short, concrete actions the party could try next given how this turn went, each a brief imperative phrase (e.g. "Press the attack", "Bind the wound", "Search the wreckage"). Options for the community to weigh, not commands.
 - Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
   "narration": string,
@@ -29,7 +30,8 @@ Rules:
   "statusRemove": string[],
   "roomResolved": boolean,
   "nextRoomHint": string | null,
-  "death": boolean
+  "death": boolean,
+  "suggestions": string[]
 }`;
 
 // The shared world context injected into every prompt so each turn reflects the
@@ -115,12 +117,14 @@ Describe what the party sees in 2-3 vivid, atmospheric sentences, then list what
 For the scene's contents:
 - "entities": the things that stand out, each with a "kind" of "foe" (a creature or enemy), "npc" (a character who can be spoken to), or "object" (a thing that can be examined or used), plus a short "name" and a one-line "blurb". Include 0-4 entities — only what truly matters, and none in an empty room. For a "foe" only, also give a "threat" from 1 (minor) to 5 (deadly) and an "hp" from 5 to 40. Leave "threat" and "hp" off NPCs and objects.
 - "threats": 0-3 short phrases naming active dangers in the room (e.g. "rising water", "crumbling floor"). Use an empty list if the room is calm.
+- "suggestions": 2-3 short, concrete actions the party could try here, each a brief imperative phrase (e.g. "Search the altar", "Attack the wraith", "Slip past in the dark"). These are options for the community to weigh, not commands.
 
 Match the world and let its villain loom when fitting, and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
   "description": string,
   "entities": [{ "kind": "foe" | "npc" | "object", "name": string, "blurb": string, "threat": number, "hp": number }],
-  "threats": string[]
+  "threats": string[],
+  "suggestions": string[]
 }`;
 
 export function buildRoomIntroPrompt(

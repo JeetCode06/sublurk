@@ -218,3 +218,10 @@ describe('buildIntroPrompt', () => {
     expect(prompt).toContain(state.map.finalBoss.name);
   });
 });
+
+describe('suggestions in prompts', () => {
+  it('asks both the scene and turn prompts for suggestions', () => {
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('suggestions');
+    expect(SYSTEM_PROMPT).toContain('suggestions');
+  });
+});

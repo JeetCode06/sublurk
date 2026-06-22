@@ -38,6 +38,7 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
       difficulty: dcForBand(bandForRoom('boss', depth)),
       entities: [],
       threats: [],
+      suggestions: [],
       situation: {},
     };
   }
@@ -49,6 +50,7 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
     difficulty: dcForBand(bandForRoom(archetype.type, depth)),
     entities: [],
     threats: [],
+    suggestions: [],
     situation: {},
   };
 }
@@ -62,6 +64,7 @@ export function createFinalBossRoom(depth: number): Room {
     difficulty: dcForBand(nextBand(bandForRoom('boss', depth))),
     entities: [],
     threats: [],
+    suggestions: [],
     situation: {},
   };
 }

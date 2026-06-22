@@ -83,6 +83,7 @@ export function applyTurn(
   return {
     ...state,
     party: applied.party,
+    room: { ...state.room, suggestions: result.suggestions },
     phase: 'awaiting_actions',
     recentEvents,
   };

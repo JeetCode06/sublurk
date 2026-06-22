@@ -52,6 +52,7 @@ const FALLBACK_RESULT: ResolveResult = {
   roomResolved: false,
   nextRoomHint: null,
   death: false,
+  suggestions: [],
 };
 
 // Pulls the first {...} block out of the reply, tolerating markdown fences or
@@ -86,6 +87,7 @@ export function parseResolveResult(raw: string): ResolveResult {
     roomResolved: asBoolean(value.roomResolved, false),
     nextRoomHint: asNullableString(value.nextRoomHint),
     death: asBoolean(value.death, false),
+    suggestions: asSuggestions(value.suggestions),
   };
 }
 
@@ -93,6 +95,7 @@ export function parseResolveResult(raw: string): ResolveResult {
 // entities and dangers, and a foe's stats must stay in playable ranges.
 const MAX_ENTITIES = 4;
 const MAX_THREATS = 3;
+const MAX_SUGGESTIONS = 3;
 const MIN_FOE_THREAT = 1;
 const MAX_FOE_THREAT = 5;
 const MIN_FOE_HP = 1;
@@ -159,6 +162,23 @@ function asThreats(value: unknown): string[] {
   return out;
 }
 
+// Trims, de-duplicates, and caps the AI's suggested actions so the player is
+// offered a short, clean list.
+function asSuggestions(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= MAX_SUGGESTIONS) break;
+  }
+  return out;
+}
+
 // Used when a scene can't be generated, so a room is never left blank.
 const FALLBACK_DESCRIPTION =
   'The chamber waits in restless shadow, its purpose not yet clear. The party steadies their torches and presses on.';
@@ -167,6 +187,7 @@ export const FALLBACK_SCENE: Scene = {
   description: FALLBACK_DESCRIPTION,
   entities: [],
   threats: [],
+  suggestions: [],
 };
 
 // Parses the structured scene reply, coercing the AI's entity and threat lists
@@ -201,6 +222,7 @@ export function parseScene(raw: string): Scene {
       description,
       entities: asEntities(value.entities),
       threats: asThreats(value.threats),
+      suggestions: asSuggestions(value.suggestions),
     };
   } catch {
     return FALLBACK_SCENE;

@@ -30,6 +30,7 @@ const base: GameState = {
     difficulty: 11,
     entities: [],
     threats: [],
+    suggestions: [],
     situation: {},
   },
   map: {
