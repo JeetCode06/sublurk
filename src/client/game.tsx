@@ -326,12 +326,28 @@ function mapMarkerClass(
 function CampaignMap({ map }: { map: MapState }) {
   const lastIndex = map.nodes.length - 1;
   const current = map.nodes[map.currentNodeIndex];
+  const destination = map.nodes[lastIndex];
   const boss = map.finalBoss;
+  const clearedCount = map.nodes.filter((node) => node.cleared).length;
   return (
     <section className="flex flex-col gap-2">
       <p className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
-        The campaign
+        Objective
       </p>
+      {boss.defeated ? (
+        <p className="text-sm text-[#a89880]">
+          Campaign complete — {boss.name} has fallen.
+        </p>
+      ) : (
+        <p className="text-sm leading-snug text-[#e8ddc8]">
+          Reach{' '}
+          <span className="text-[#c9b896]">
+            {destination?.name ?? 'the final chamber'}
+          </span>
+          {' · defeat '}
+          <span className="text-[#c0705a]">{boss.name}</span>
+        </p>
+      )}
       <div className="flex items-center">
         {map.nodes.map((node, i) => (
           <Fragment key={node.id}>
@@ -353,19 +369,12 @@ function CampaignMap({ map }: { map: MapState }) {
           </Fragment>
         ))}
       </div>
-      <p className="text-xs text-[#a89880]">
-        {boss.defeated ? (
-          <>Campaign complete — {boss.name} has fallen.</>
-        ) : (
-          <>
-            <span className="text-[#e8ddc8]">
-              {current?.name ?? 'The journey'}
-            </span>
-            {' · the road leads to '}
-            <span className="text-[#c0705a]">{boss.name}</span>
-          </>
-        )}
-      </p>
+      {!boss.defeated && (
+        <p className="font-mono text-[0.65rem] text-[#8a7d72]">
+          At {current?.name ?? 'the start'} · {clearedCount}/{map.nodes.length}{' '}
+          cleared
+        </p>
+      )}
     </section>
   );
 }
