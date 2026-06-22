@@ -37,6 +37,7 @@ const base: GameState = {
     currentNodeIndex: 0,
     finalBoss: { name: 'The Test Boss', defeated: false },
   },
+  intro: '',
   recentEvents: [],
   nextResolveAt: 0,
   voteThreshold: 20,

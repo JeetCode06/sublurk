@@ -24,6 +24,7 @@ export function deserializeGame(raw: string): GameState | null {
       // through coerceMap, which fills it for older saves and repairs partials.
       return {
         ...state,
+        intro: typeof state.intro === 'string' ? state.intro : '',
         map: coerceMap(state.map),
         party: {
           ...state.party,

@@ -47,6 +47,13 @@ describe('serialization', () => {
     expect(restored?.party.conditions).toEqual(['poisoned']); // migrated, unknown dropped
   });
 
+  it('backfills intro on a save that predates the cold open', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    delete legacy.intro;
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.intro).toBe('');
+  });
+
   it('backfills party abilities from the class on an older save', () => {
     const parsed = JSON.parse(serializeGame(sample)) as {
       party: Record<string, unknown>;

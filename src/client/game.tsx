@@ -496,9 +496,9 @@ function Board({
             {game.party.inventory.length > 0 && (
               <span>⚸ {game.party.inventory.join(', ')}</span>
             )}
-            {game.party.statuses.length > 0 && (
-              <span className="text-[#c0392b]">
-                {game.party.statuses.join(', ')}
+            {game.party.conditions.length > 0 && (
+              <span className="text-[#c0392b] capitalize">
+                {game.party.conditions.join(', ')}
               </span>
             )}
             {record !== null && <span>🏆 record depth {record}</span>}
@@ -507,6 +507,16 @@ function Board({
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
+          {!over && game.intro.length > 0 && (
+            <section className="rounded border border-[#3a302b] bg-[#211b17] px-4 py-3">
+              <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#8a7d72]">
+                Prologue
+              </p>
+              <p className="text-sm italic leading-relaxed text-[#c9b896]">
+                {game.intro}
+              </p>
+            </section>
+          )}
           <CampaignMap map={game.map} />
           <section className="flex flex-col gap-3">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">

@@ -36,6 +36,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       currentNodeIndex: 0,
       finalBoss: { name: 'Boss', defeated: false },
     },
+    intro: '',
     recentEvents: [],
     nextResolveAt: 0,
     voteThreshold: 20,

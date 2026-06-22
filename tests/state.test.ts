@@ -51,6 +51,10 @@ describe('createInitialState', () => {
     expect(state.room.description).toBe('');
     expect(state.voteThreshold).toBeGreaterThan(0);
   });
+
+  it('starts with an empty intro, to be filled at run start', () => {
+    expect(createInitialState(input, () => 0).intro).toBe('');
+  });
 });
 
 describe('startNewRun', () => {
@@ -76,6 +80,11 @@ describe('startNewRun', () => {
 
   it('clears the recent-events log', () => {
     expect(startNewRun(deadState(), () => 0).recentEvents).toEqual([]);
+  });
+
+  it('clears the intro so the new run gets a fresh cold open', () => {
+    const prior = { ...deadState(), intro: 'the old opening' };
+    expect(startNewRun(prior, () => 0).intro).toBe('');
   });
 
   it('does not mutate the dead state', () => {

@@ -42,6 +42,7 @@ export function createInitialState(
     party: freshParty(input.classId, name),
     room: createRoom(0, rand),
     map: freshMap(DEFAULT_MAP),
+    intro: '',
     recentEvents: [],
     nextResolveAt: 0,
     voteThreshold: DEFAULT_VOTE_THRESHOLD,
@@ -60,6 +61,7 @@ export function startNewRun(
     party: freshParty(state.party.classId, state.party.name),
     room: createRoom(0, rand),
     map: freshMap(state.map),
+    intro: '',
     recentEvents: [],
     nextResolveAt: 0,
   };

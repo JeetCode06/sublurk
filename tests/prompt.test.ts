@@ -4,6 +4,8 @@ import {
   SYSTEM_PROMPT,
   buildRoomIntroPrompt,
   ROOM_INTRO_SYSTEM_PROMPT,
+  INTRO_SYSTEM_PROMPT,
+  buildIntroPrompt,
   WORLD_BIBLE_SYSTEM_PROMPT,
   buildWorldBiblePrompt,
   MAP_SYSTEM_PROMPT,
@@ -199,5 +201,20 @@ describe('buildMapPrompt', () => {
 
   it('includes the motifs to draw on', () => {
     expect(buildMapPrompt(bible)).toContain('drowned bells');
+  });
+});
+
+describe('INTRO_SYSTEM_PROMPT', () => {
+  it('asks for a cold open and an intro field', () => {
+    expect(INTRO_SYSTEM_PROMPT).toContain('cold open');
+    expect(INTRO_SYSTEM_PROMPT).toContain('intro');
+  });
+});
+
+describe('buildIntroPrompt', () => {
+  it('states the goal and names the final boss', () => {
+    const prompt = buildIntroPrompt(state, bible);
+    expect(prompt).toContain('Their goal');
+    expect(prompt).toContain(state.map.finalBoss.name);
   });
 });

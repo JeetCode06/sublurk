@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   parseResolveResult,
   parseScene,
+  parseIntro,
   parseWorldBible,
   parseMap,
   FALLBACK_SCENE,
@@ -266,5 +267,18 @@ describe('parseMap', () => {
       finalBoss: { name: 'Boss' },
     });
     expect(parseMap(tooFew)).toEqual(DEFAULT_MAP);
+  });
+});
+
+describe('parseIntro', () => {
+  it('extracts the intro text', () => {
+    expect(parseIntro(JSON.stringify({ intro: 'The coven gathers.' }))).toBe(
+      'The coven gathers.'
+    );
+  });
+
+  it('falls back to non-empty text on bad or empty input', () => {
+    expect(parseIntro('not json at all').length).toBeGreaterThan(0);
+    expect(parseIntro(JSON.stringify({ intro: '' })).length).toBeGreaterThan(0);
   });
 });

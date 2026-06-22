@@ -128,6 +128,7 @@ export type GameState = {
   party: Party;
   room: Room;
   map: MapState;
+  intro: string;
   recentEvents: string[];
   nextResolveAt: number; // unix ms
   voteThreshold: number;

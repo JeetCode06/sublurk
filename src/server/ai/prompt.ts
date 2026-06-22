@@ -85,6 +85,29 @@ export function buildTurnPrompt(
   return lines.join('\n');
 }
 
+export const INTRO_SYSTEM_PROMPT = `You are the Dungeon Master opening a new run of a collaborative Reddit dungeon crawler, where a whole community controls one party by voting in the comments.
+
+Write a short, punchy cold open of 3-4 sentences that does three things: introduce who this party is and how they came to be here, set the mood of the world, and state plainly what they must do — the goal and the foe waiting at the end. Speak to the community as the shared will guiding the party ("you"). End on a beat that invites them to act. Do NOT describe a specific room, resolve anything, or decide the first action — the community chooses that next.
+
+Match the world, let its villain loom, and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
+{
+  "intro": string
+}`;
+
+export function buildIntroPrompt(state: GameState, bible: WorldBible): string {
+  const { party, map } = state;
+  const start = map.nodes[0];
+  const destination = map.nodes.at(-1);
+  const lines = [
+    ...worldContextLines(bible),
+    `Party: ${party.name} (class: ${party.classId})`,
+    start ? `They set out from ${start.name} — ${start.themeTag}.` : '',
+    `Their goal: reach ${destination ? destination.name : 'the heart of the dungeon'} and defeat ${map.finalBoss.name}.`,
+    `Write the cold open for this run.`,
+  ].filter((line) => line.length > 0);
+  return lines.join('\n');
+}
+
 export const ROOM_INTRO_SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler, setting the scene as the party enters a new room.
 
 Describe what the party sees in 2-3 vivid, atmospheric sentences, then list what is actually present as structured data the game renders as a board. Do NOT resolve anything, invent specific outcomes, or decide what the party does next — the community will choose that.

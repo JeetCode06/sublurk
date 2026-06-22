@@ -172,6 +172,21 @@ export const FALLBACK_SCENE: Scene = {
 // Parses the structured scene reply, coercing the AI's entity and threat lists
 // into safe, capped, well-formed data. A missing or unreadable reply falls back
 // to a calm, empty scene so the board always has something valid to render.
+const FALLBACK_INTRO =
+  'Your party stands at the dungeon mouth, bound by a common purpose. The dark ahead is long and the goal far, but every step is yours to choose together. Begin.';
+
+export function parseIntro(raw: string): string {
+  const json = extractJson(raw);
+  if (json === null) return FALLBACK_INTRO;
+  try {
+    const value = JSON.parse(json) as Record<string, unknown>;
+    const intro = typeof value.intro === 'string' ? value.intro.trim() : '';
+    return intro.length > 0 ? intro : FALLBACK_INTRO;
+  } catch {
+    return FALLBACK_INTRO;
+  }
+}
+
 export function parseScene(raw: string): Scene {
   const json = extractJson(raw);
   if (json === null) return FALLBACK_SCENE;
