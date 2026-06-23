@@ -191,3 +191,59 @@ describe('markBossDefeated', () => {
     expect(map.nodes.every((n) => n.cleared)).toBe(true);
   });
 });
+
+describe('coerceMap per-location villains', () => {
+  it('keeps a well-formed villain and leaves others undefined', () => {
+    const map = coerceMap({
+      nodes: [
+        {
+          id: 'n0',
+          name: 'The Grinding Hall',
+          themeTag: 'stone mill',
+          cleared: true,
+          villain: {
+            name: 'The Burr-Toothed Tyrant',
+            concept: 'a crushing warden',
+          },
+        },
+        {
+          id: 'n1',
+          name: 'Vault of Crema',
+          themeTag: 'gilded vault',
+          cleared: false,
+        },
+      ],
+      currentNodeIndex: 1,
+      finalBoss: { name: 'The Charred Sovereign', defeated: false },
+    });
+    expect(map.nodes[0]?.villain).toEqual({
+      name: 'The Burr-Toothed Tyrant',
+      concept: 'a crushing warden',
+    });
+    expect(map.nodes[1]?.villain).toBeUndefined();
+  });
+
+  it('drops a malformed villain but keeps the node', () => {
+    const map = coerceMap({
+      nodes: [
+        {
+          id: 'n0',
+          name: 'The Grinding Hall',
+          themeTag: 'stone mill',
+          cleared: false,
+          villain: { name: 'No Concept' },
+        },
+        {
+          id: 'n1',
+          name: 'Vault of Crema',
+          themeTag: 'gilded vault',
+          cleared: false,
+        },
+      ],
+      currentNodeIndex: 0,
+      finalBoss: { name: 'The Charred Sovereign', defeated: false },
+    });
+    expect(map.nodes[0]?.name).toBe('The Grinding Hall');
+    expect(map.nodes[0]?.villain).toBeUndefined();
+  });
+});

@@ -54,17 +54,30 @@ function asBoolean(value: unknown): boolean {
   return value === true;
 }
 
+function coerceVillain(
+  value: unknown
+): { name: string; concept: string } | undefined {
+  const source = asRecord(value);
+  const name = cleanString(source.name, '');
+  const concept = cleanString(source.concept, '');
+  if (name.length === 0 || concept.length === 0) return undefined;
+  return { name, concept };
+}
+
 function coerceNode(value: unknown, index: number): MapNode | null {
   const source = asRecord(value);
   const name = cleanString(source.name, '');
   const themeTag = cleanString(source.themeTag, '');
   if (name.length === 0 || themeTag.length === 0) return null;
-  return {
+  const node: MapNode = {
     id: cleanString(source.id, `node-${index + 1}`),
     name,
     themeTag,
     cleared: asBoolean(source.cleared),
   };
+  const villain = coerceVillain(source.villain);
+  if (villain) node.villain = villain;
+  return node;
 }
 
 function coerceNodes(value: unknown): MapNode[] {

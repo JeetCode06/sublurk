@@ -116,6 +116,9 @@ export type MapNode = {
   name: string;
   themeTag: string;
   cleared: boolean;
+  // Optional villain that rules this location, themed to the subreddit. Filled
+  // in by world generation later; absent on older saves and early nodes.
+  villain?: { name: string; concept: string };
 };
 
 // The campaign's journey: an ordered list of locations toward one fixed final
