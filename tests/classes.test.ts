@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CLASSES, classAdvantage } from '../src/server/game/classes';
+import { classAffinitySummary } from '../src/shared/classes';
 import type { ClassId } from '../src/shared/game';
 
 describe('CLASSES', () => {
@@ -31,5 +32,20 @@ describe('classAdvantage', () => {
   it('grants the witch advantage on puzzles and traps', () => {
     expect(classAdvantage('witch', 'puzzle')).toBe('advantage');
     expect(classAdvantage('witch', 'trap')).toBe('advantage');
+  });
+});
+
+describe('classAffinitySummary', () => {
+  it('splits affinities into strong and weak rooms', () => {
+    const fighter = classAffinitySummary('warrior');
+    expect(fighter.strong).toEqual(expect.arrayContaining(['combat', 'boss']));
+    expect(fighter.weak).toEqual(['puzzle']);
+  });
+
+  it('returns empty lists for the balanced class', () => {
+    expect(classAffinitySummary('adventurer')).toEqual({
+      strong: [],
+      weak: [],
+    });
   });
 });
