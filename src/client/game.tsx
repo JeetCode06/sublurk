@@ -1,6 +1,6 @@
 import './index.css';
 
-import { Fragment, StrictMode, useEffect, useState } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type {
   Abilities,
@@ -9,11 +9,12 @@ import type {
   EntityKind,
   GameState,
   LeaderboardEntry,
+  MapNode,
   MapState,
   Proposal,
   SceneEntity,
 } from '../shared/game';
-import { useGame } from './hooks/useGame';
+import { useGame, useSolo } from './hooks/useGame';
 
 function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
   const pct = maxHp > 0 ? Math.max(0, Math.min(100, (hp / maxHp) * 100)) : 0;
@@ -311,67 +312,357 @@ function ThreatStrip({ threats }: { threats: string[] }) {
   );
 }
 
-function mapMarkerClass(
-  cleared: boolean,
-  isCurrent: boolean,
-  isBoss: boolean
-): string {
-  const base = 'h-3 w-3 shrink-0 rounded-full border-2';
-  if (isCurrent) return `${base} border-[#f0a050] bg-[#e8893f]`;
-  if (cleared) return `${base} border-[#6b4a2f] bg-[#6b4a2f]`;
-  if (isBoss) return `${base} border-[#8a4a3f] bg-transparent`;
-  return `${base} border-[#3a302b] bg-transparent`;
+const MAP_W = 360;
+const MAP_TOP = 36;
+const MAP_STEP = 82;
+const MAP_LABEL_X = 116;
+const NODE_R = 18;
+const BOSS_R = 28;
+
+type NodeState = 'cleared' | 'current' | 'upcoming';
+
+// A smooth winding path through the given points, used for the trail between
+// map locations. Each segment eases vertically via control points at its midpoint.
+function mapPath(points: { x: number; y: number }[]): string {
+  if (points.length < 2) return '';
+  let d = `M${points[0]!.x},${points[0]!.y}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1]!;
+    const b = points[i]!;
+    const mid = (a.y + b.y) / 2;
+    d += ` C${a.x},${mid} ${b.x},${mid} ${b.x},${b.y}`;
+  }
+  return d;
+}
+
+function MapNodeMark({
+  node,
+  index,
+  x,
+  y,
+  state,
+}: {
+  node: MapNode;
+  index: number;
+  x: number;
+  y: number;
+  state: NodeState;
+}) {
+  const current = state === 'current';
+  const cleared = state === 'cleared';
+  const fill = current ? '#2c221c' : cleared ? '#241d1a' : '#1b1613';
+  const ring = current ? '#e8893f' : cleared ? '#4a3f38' : '#352c26';
+  const num = current ? '#f0c050' : cleared ? '#8a7d72' : '#5a4f46';
+  const nameFill = current ? '#f3cd7f' : cleared ? '#8a7d72' : '#675d54';
+  const villainFill = current ? '#cdbb9a' : cleared ? '#6f655b' : '#564c44';
+  const nameY = node.villain ? y - 2 : y + 4;
+  return (
+    <>
+      {current && (
+        <>
+          <circle cx={x} cy={y} r={NODE_R + 18} fill="#e8893f" opacity="0.06" />
+          <circle cx={x} cy={y} r={NODE_R + 9} fill="#e8893f" opacity="0.11" />
+          <polygon
+            points={`${x},${y - NODE_R - 8} ${x + 5},${y - NODE_R - 3} ${x - 5},${y - NODE_R - 3}`}
+            fill="#f0a050"
+          />
+        </>
+      )}
+      <circle
+        cx={x}
+        cy={y}
+        r={NODE_R}
+        fill={fill}
+        stroke={ring}
+        strokeWidth={current ? 2 : 1.5}
+      />
+      <circle
+        cx={x}
+        cy={y}
+        r={NODE_R - 5}
+        fill="none"
+        stroke={ring}
+        strokeWidth="0.6"
+        opacity="0.5"
+      />
+      <text
+        x={x}
+        y={y + 4}
+        textAnchor="middle"
+        fontFamily="sans-serif"
+        fontSize="12"
+        fontWeight="600"
+        fill={num}
+      >
+        {index + 1}
+      </text>
+      <text
+        x={MAP_LABEL_X}
+        y={nameY}
+        fontFamily="sans-serif"
+        fontSize="13"
+        fontWeight="500"
+        fill={nameFill}
+      >
+        {node.name}
+      </text>
+      {node.villain && (
+        <text
+          x={MAP_LABEL_X}
+          y={y + 14}
+          fontFamily="sans-serif"
+          fontSize="11"
+          fontStyle="italic"
+          fill={villainFill}
+        >
+          {node.villain.name}
+        </text>
+      )}
+    </>
+  );
+}
+
+function MapBossMark({
+  name,
+  defeated,
+  x,
+  y,
+}: {
+  name: string;
+  defeated: boolean;
+  x: number;
+  y: number;
+}) {
+  const crown = defeated ? '#6a5d52' : '#d07a64';
+  const nameFill = defeated ? '#8a7d72' : '#ecc6ab';
+  return (
+    <>
+      <polygon
+        points={`${x - 22},${y + 34} ${x - 22},${y - 8} ${x - 12},${y + 4} ${x - 5},${y - 16} ${x},${y - 30} ${x + 5},${y - 16} ${x + 12},${y + 4} ${x + 22},${y - 8} ${x + 22},${y + 34}`}
+        fill="#160f0d"
+        stroke="#3a2622"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      {!defeated && (
+        <>
+          <circle cx={x} cy={y} r={BOSS_R + 18} fill="#c0392b" opacity="0.05" />
+          <circle cx={x} cy={y} r={BOSS_R + 9} fill="#c0392b" opacity="0.09" />
+        </>
+      )}
+      <circle
+        cx={x}
+        cy={y}
+        r={BOSS_R}
+        fill="#2a1714"
+        stroke={defeated ? '#4a3f38' : '#c0392b'}
+        strokeWidth="2"
+      />
+      <circle
+        cx={x}
+        cy={y}
+        r={BOSS_R - 6}
+        fill="none"
+        stroke={defeated ? '#3a302b' : '#6a2018'}
+        strokeWidth="0.6"
+        opacity="0.6"
+      />
+      <path
+        d={`M${x - 12},${y + 8} L${x - 12},${y - 4} L${x - 6},${y + 3} L${x},${y - 8} L${x + 6},${y + 3} L${x + 12},${y - 4} L${x + 12},${y + 8} Z`}
+        fill="none"
+        stroke={crown}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <text
+        x={MAP_LABEL_X}
+        y={y + 4}
+        fontFamily="sans-serif"
+        fontSize="13"
+        fontWeight="500"
+        fill={nameFill}
+      >
+        {name}
+      </text>
+    </>
+  );
 }
 
 function CampaignMap({ map }: { map: MapState }) {
-  const lastIndex = map.nodes.length - 1;
-  const current = map.nodes[map.currentNodeIndex];
-  const destination = map.nodes[lastIndex];
+  const nodes = map.nodes;
+  const lastIndex = nodes.length - 1;
+  const currentIndex = map.currentNodeIndex;
   const boss = map.finalBoss;
-  const clearedCount = map.nodes.filter((node) => node.cleared).length;
+  const destination = nodes[lastIndex];
+  const current = nodes[currentIndex];
+  const clearedCount = nodes.filter((node) => node.cleared).length;
+
+  const nodeX = (i: number) => 74 + (i % 2 === 0 ? -16 : 16);
+  const nodeY = (i: number) => MAP_TOP + i * MAP_STEP;
+  const bossX = 74;
+  const bossY = MAP_TOP + nodes.length * MAP_STEP;
+  const height = bossY + 70;
+
+  const points = [
+    ...nodes.map((_, i) => ({ x: nodeX(i), y: nodeY(i) })),
+    { x: bossX, y: bossY },
+  ];
+  const traveled = mapPath(points.slice(0, currentIndex + 1));
+  const ahead = mapPath(points.slice(currentIndex));
+
   return (
-    <section className="flex flex-col gap-2">
-      <p className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
-        Objective
-      </p>
-      {boss.defeated ? (
-        <p className="text-sm text-[#a89880]">
-          Campaign complete — {boss.name} has fallen.
+    <section className="flex flex-col gap-3">
+      <div>
+        <p className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
+          Objective
         </p>
-      ) : (
-        <p className="text-sm leading-snug text-[#e8ddc8]">
-          Reach{' '}
-          <span className="text-[#c9b896]">
-            {destination?.name ?? 'the final chamber'}
-          </span>
-          {' · defeat '}
-          <span className="text-[#c0705a]">{boss.name}</span>
-        </p>
-      )}
-      <div className="flex items-center">
-        {map.nodes.map((node, i) => (
-          <Fragment key={node.id}>
-            {i > 0 && (
-              <div
-                className={`h-px flex-1 ${
-                  map.nodes[i - 1]?.cleared ? 'bg-[#6b4a2f]' : 'bg-[#3a302b]'
-                }`}
-              />
-            )}
-            <span
-              title={node.name}
-              className={mapMarkerClass(
-                node.cleared,
-                i === map.currentNodeIndex,
-                i === lastIndex
-              )}
-            />
-          </Fragment>
-        ))}
+        {boss.defeated ? (
+          <p className="text-sm text-[#a89880]">
+            Campaign complete — {boss.name} has fallen.
+          </p>
+        ) : (
+          <p className="text-sm leading-snug text-[#e8ddc8]">
+            Descend to{' '}
+            <span className="text-[#c9b896]">
+              {destination?.name ?? 'the final chamber'}
+            </span>
+            {' · defeat '}
+            <span className="text-[#c0705a]">{boss.name}</span>
+          </p>
+        )}
       </div>
+
+      <div className="mx-auto w-full max-w-sm">
+        <svg
+          viewBox={`0 0 ${MAP_W} ${height}`}
+          className="w-full"
+          role="img"
+          aria-label="Campaign map"
+        >
+          <defs>
+            <linearGradient id="mapStone" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#211a16" />
+              <stop offset="1" stopColor="#140f0d" />
+            </linearGradient>
+            <radialGradient id="mapVignette" cx="0.5" cy="0.4" r="0.7">
+              <stop offset="0.5" stopColor="#000000" stopOpacity="0" />
+              <stop offset="1" stopColor="#000000" stopOpacity="0.45" />
+            </radialGradient>
+            <pattern
+              id="mapMasonry"
+              width="40"
+              height="56"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M0,0 H40 M0,28 H40 M0,56 H40"
+                stroke="#332b25"
+                strokeWidth="0.6"
+                opacity="0.5"
+              />
+              <path
+                d="M0,0 V28 M20,28 V56"
+                stroke="#332b25"
+                strokeWidth="0.6"
+                opacity="0.5"
+              />
+            </pattern>
+            <clipPath id="mapClip">
+              <rect x="1" y="1" width={MAP_W - 2} height={height - 2} rx="13" />
+            </clipPath>
+          </defs>
+
+          <rect
+            x="1"
+            y="1"
+            width={MAP_W - 2}
+            height={height - 2}
+            rx="13"
+            fill="url(#mapStone)"
+          />
+          <rect
+            x="1"
+            y="1"
+            width={MAP_W - 2}
+            height={height - 2}
+            fill="url(#mapMasonry)"
+            clipPath="url(#mapClip)"
+          />
+          <rect
+            x="1"
+            y="1"
+            width={MAP_W - 2}
+            height={height - 2}
+            fill="url(#mapVignette)"
+            clipPath="url(#mapClip)"
+          />
+          <rect
+            x="0.75"
+            y="0.75"
+            width={MAP_W - 1.5}
+            height={height - 1.5}
+            rx="13.5"
+            fill="none"
+            stroke="#3a302b"
+            strokeWidth="1"
+          />
+
+          <path
+            d={mapPath(points)}
+            fill="none"
+            stroke="#100c0a"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+          {ahead && (
+            <path
+              d={ahead}
+              fill="none"
+              stroke="#352c26"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeDasharray="2 7"
+            />
+          )}
+          {traveled && (
+            <path
+              d={traveled}
+              fill="none"
+              stroke="#e8893f"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          )}
+
+          {nodes.map((node, i) => (
+            <MapNodeMark
+              key={node.id}
+              node={node}
+              index={i}
+              x={nodeX(i)}
+              y={nodeY(i)}
+              state={
+                i === currentIndex
+                  ? 'current'
+                  : node.cleared
+                    ? 'cleared'
+                    : 'upcoming'
+              }
+            />
+          ))}
+
+          <MapBossMark
+            name={boss.name}
+            defeated={boss.defeated}
+            x={bossX}
+            y={bossY}
+          />
+        </svg>
+      </div>
+
       {!boss.defeated && (
-        <p className="font-mono text-[0.65rem] text-[#8a7d72]">
-          At {current?.name ?? 'the start'} · {clearedCount}/{map.nodes.length}{' '}
+        <p className="text-center font-mono text-[0.65rem] text-[#8a7d72]">
+          At {current?.name ?? 'the start'} · {clearedCount}/{nodes.length}{' '}
           cleared
         </p>
       )}
@@ -742,7 +1033,13 @@ function ModeSelect({
   );
 }
 
-function CharacterSelect({ onBack }: { onBack: () => void }) {
+function CharacterSelect({
+  onBack,
+  onBegin,
+}: {
+  onBack: () => void;
+  onBegin: () => void;
+}) {
   const roster = ['Fighter', 'Wizard', 'Cleric', 'Rogue', 'Wanderer'];
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1a1614] px-5 py-12 text-[#e8ddc8]">
@@ -755,62 +1052,268 @@ function CharacterSelect({ onBack }: { onBack: () => void }) {
           Choose your character
         </h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-[#8a7d72]">
-          The full roster, themed to your subreddit, arrives in the next build.
+          Full selection is coming. For now you descend as the Wanderer —
+          balanced, with no weaknesses.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2 opacity-60">
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
           {roster.map((name) => (
             <span
               key={name}
-              className="rounded-md border border-[#3a302b] bg-[#201a16] px-3 py-1.5 font-mono text-xs tracking-wide text-[#8a7d72]"
+              className={`rounded-md border px-3 py-1.5 font-mono text-xs tracking-wide ${
+                name === 'Wanderer'
+                  ? 'border-[#e8893f] bg-[#2a211c] text-[#f0c050]'
+                  : 'border-[#3a302b] bg-[#201a16] text-[#6a5d52]'
+              }`}
             >
               {name}
             </span>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="mt-9 font-mono text-xs tracking-wide text-[#8a7d72] transition hover:text-[#e8893f]"
-        >
-          ‹ Back to modes
-        </button>
+        <div className="mt-8 flex flex-col items-center gap-4">
+          <button
+            type="button"
+            onClick={onBegin}
+            className="w-full max-w-xs rounded-lg bg-[#e8893f] px-5 py-3 font-medium text-[#1a1614] transition hover:bg-[#f0a050]"
+          >
+            Begin the descent
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="font-mono text-xs tracking-wide text-[#8a7d72] transition hover:text-[#e8893f]"
+          >
+            ‹ Back to modes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SOLO_DEFAULT_CLASS = 'adventurer';
+
+function SoloPlay({
+  solo,
+  onExit,
+}: {
+  solo: ReturnType<typeof useSolo>;
+  onExit: () => void;
+}) {
+  const [draft, setDraft] = useState('');
+  const { game, loading, resolving, error } = solo;
+
+  if (loading || !game) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#1a1614] px-6 text-center font-mono text-sm text-[#8a7d72]">
+        {loading ? 'Descending into the dark…' : (error ?? 'No solo run yet.')}
+      </div>
+    );
+  }
+
+  const events = game.recentEvents;
+  const dead = game.phase === 'dead';
+  const won = game.phase === 'won';
+  const over = dead || won;
+  const scene = won
+    ? (events.at(-1) ?? 'The last foe falls, and the long dark lifts at last.')
+    : dead
+      ? (events.at(-1) ??
+        'You have fallen. The dungeon falls silent around you.')
+      : game.room.description ||
+        'You press into the dark. The dungeon master is setting the scene…';
+  const log = (over ? events.slice(0, -1) : events.slice()).reverse();
+
+  const submit = () => {
+    const action = draft.trim();
+    if (action.length === 0 || resolving) return;
+    void solo.act(action);
+    setDraft('');
+  };
+
+  return (
+    <div className="flex min-h-screen justify-center bg-[#1a1614] text-[#e8ddc8]">
+      <div className="flex w-full max-w-2xl flex-col gap-5 px-5 py-6">
+        <header className="flex flex-col gap-3 border-b border-[#3a302b] pb-4">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={onExit}
+              className="font-mono text-[0.65rem] uppercase tracking-widest text-[#6a5d52] transition hover:text-[#e8893f]"
+            >
+              ‹ Modes
+            </button>
+            <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
+              Solo · Run {game.runNumber} · Depth {game.party.depth}
+            </span>
+          </div>
+          <h1 className="text-xl font-semibold tracking-wide text-[#f0a050]">
+            {game.party.name}
+          </h1>
+          <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
+          <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-[#8a7d72]">
+            <span>◈ {game.party.gold} gold</span>
+            {game.party.inventory.length > 0 && (
+              <span>⚸ {game.party.inventory.join(', ')}</span>
+            )}
+            {game.party.conditions.length > 0 && (
+              <span className="text-[#c0392b] capitalize">
+                {game.party.conditions.join(', ')}
+              </span>
+            )}
+          </div>
+          <StatBlock abilities={game.party.abilities} />
+        </header>
+
+        <main className="flex flex-1 flex-col gap-5">
+          {!over && game.intro.length > 0 && (
+            <section className="rounded border border-[#3a302b] bg-[#211b17] px-4 py-3">
+              <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#8a7d72]">
+                Prologue
+              </p>
+              <p className="text-sm italic leading-relaxed text-[#c9b896]">
+                {game.intro}
+              </p>
+            </section>
+          )}
+          <CampaignMap map={game.map} />
+          <section className="flex flex-col gap-3">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+              {won
+                ? 'Victory'
+                : dead
+                  ? 'The run ends'
+                  : `${game.room.type} · depth ${game.party.depth}`}
+            </p>
+            <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
+            {game.lastCheck && <LastCheck check={game.lastCheck} />}
+            {won && (
+              <p className="text-base font-semibold text-[#f0c050]">
+                🏆 You have defeated {game.map.finalBoss.name}. The campaign is
+                yours.
+              </p>
+            )}
+            {!over && <SceneEntities entities={game.room.entities} />}
+            {!over && <ThreatStrip threats={game.room.threats} />}
+            {log.length > 0 && (
+              <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
+                {log.map((event, i) => (
+                  <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
+                    {event}
+                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+
+        <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
+          {error && <p className="text-sm text-[#c0392b]">{error}</p>}
+          {over ? (
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => void solo.start(SOLO_DEFAULT_CLASS)}
+                disabled={resolving}
+                className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-50"
+              >
+                {resolving ? 'Descending…' : 'Descend again'}
+              </button>
+              <button
+                onClick={onExit}
+                className="rounded border border-[#3a302b] px-5 py-2.5 text-[#a89880] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8]"
+              >
+                Leave the dungeon
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
+              {game.room.suggestions.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {game.room.suggestions.map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setDraft(suggestion)}
+                      disabled={resolving}
+                      className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submit();
+                  }}
+                  disabled={resolving}
+                  placeholder="Search the altar, draw a blade, light a torch…"
+                  className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
+                />
+                <button
+                  onClick={submit}
+                  disabled={resolving || draft.trim().length === 0}
+                  className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
+                >
+                  {resolving ? '…' : 'Act'}
+                </button>
+              </div>
+            </div>
+          )}
+        </footer>
       </div>
     </div>
   );
 }
 
 type View = 'mode_select' | 'character_select' | 'play';
+type Mode = 'solo' | 'community';
 
 export const App = () => {
   const [view, setView] = useState<View>('mode_select');
-  const {
-    game,
-    loading,
-    resolving,
-    error,
-    note,
-    proposals,
-    serverOffset,
-    leaderboard,
-    submitAction,
-    resolveVotes,
-    restart,
-  } = useGame();
+  const [mode, setMode] = useState<Mode | null>(null);
+  const community = useGame();
+  const solo = useSolo();
 
   if (view === 'mode_select') {
     return (
       <ModeSelect
         onSolo={() => setView('character_select')}
-        onCommunity={() => setView('play')}
+        onCommunity={() => {
+          setMode('community');
+          setView('play');
+        }}
       />
     );
   }
 
   if (view === 'character_select') {
-    return <CharacterSelect onBack={() => setView('mode_select')} />;
+    return (
+      <CharacterSelect
+        onBack={() => setView('mode_select')}
+        onBegin={() => {
+          void solo.start(SOLO_DEFAULT_CLASS);
+          setMode('solo');
+          setView('play');
+        }}
+      />
+    );
   }
 
-  if (loading) {
+  if (mode === 'solo') {
+    return (
+      <SoloPlay
+        solo={solo}
+        onExit={() => {
+          setMode(null);
+          setView('mode_select');
+        }}
+      />
+    );
+  }
+
+  if (community.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1a1614] font-mono text-sm text-[#8a7d72]">
         Lighting the torches…
@@ -818,26 +1321,28 @@ export const App = () => {
     );
   }
 
-  if (!game) {
+  if (!community.game) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1a1614] px-6 text-center text-[#e8ddc8]">
-        <p>{error ?? 'The dungeon is sealed. Reload to try again.'}</p>
+        <p>
+          {community.error ?? 'The dungeon is sealed. Reload to try again.'}
+        </p>
       </div>
     );
   }
 
   return (
     <Board
-      game={game}
-      resolving={resolving}
-      error={error}
-      note={note}
-      proposals={proposals}
-      serverOffset={serverOffset}
-      leaderboard={leaderboard}
-      onAct={submitAction}
-      onResolveVotes={resolveVotes}
-      onRestart={restart}
+      game={community.game}
+      resolving={community.resolving}
+      error={community.error}
+      note={community.note}
+      proposals={community.proposals}
+      serverOffset={community.serverOffset}
+      leaderboard={community.leaderboard}
+      onAct={community.submitAction}
+      onResolveVotes={community.resolveVotes}
+      onRestart={community.restart}
     />
   );
 };

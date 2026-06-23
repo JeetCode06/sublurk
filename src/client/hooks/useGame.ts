@@ -147,3 +147,78 @@ export const useGame = () => {
 
   return { ...state, submitAction, resolveVotes, restart } as const;
 };
+
+type SoloHookState = {
+  game: GameState | null;
+  username: string | null;
+  loading: boolean;
+  resolving: boolean;
+  error: string | null;
+};
+
+const SOLO_INITIAL: SoloHookState = {
+  game: null,
+  username: null,
+  loading: false,
+  resolving: false,
+  error: null,
+};
+
+// A private, real-time solo run. Unlike useGame there is no polling: each action
+// returns the next state directly, since only the player changes the run.
+export const useSolo = () => {
+  const [state, setState] = useState<SoloHookState>(SOLO_INITIAL);
+
+  const start = useCallback(async (classId: string) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const res = await fetch('/api/solo/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId }),
+      });
+      const data = (await res.json()) as GameResponse | ErrorResponse;
+      if (!res.ok || !('type' in data)) {
+        const message = 'message' in data ? data.message : GENERIC_ERROR;
+        setState((prev) => ({ ...prev, loading: false, error: message }));
+        return;
+      }
+      setState({
+        game: data.state,
+        username: data.username,
+        loading: false,
+        resolving: false,
+        error: null,
+      });
+    } catch {
+      setState((prev) => ({ ...prev, loading: false, error: GENERIC_ERROR }));
+    }
+  }, []);
+
+  const act = useCallback(async (action: string) => {
+    setState((prev) => ({ ...prev, resolving: true, error: null }));
+    try {
+      const res = await fetch('/api/solo/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = (await res.json()) as GameResponse | ErrorResponse;
+      if (!res.ok || !('type' in data)) {
+        const message = 'message' in data ? data.message : GENERIC_ERROR;
+        setState((prev) => ({ ...prev, resolving: false, error: message }));
+        return;
+      }
+      setState((prev) => ({
+        ...prev,
+        game: data.state,
+        resolving: false,
+        error: null,
+      }));
+    } catch {
+      setState((prev) => ({ ...prev, resolving: false, error: GENERIC_ERROR }));
+    }
+  }, []);
+
+  return { ...state, start, act } as const;
+};
