@@ -16,3 +16,20 @@ export async function loadGame(): Promise<GameState | null> {
 export async function saveGame(state: GameState): Promise<void> {
   await redis.set(gameKey(context.subredditName), serializeGame(state));
 }
+
+// A private, per-user solo run. Keyed by sub and user so every player has their
+// own game, separate from the sub's one shared community run.
+const soloKey = (subredditName: string, userId: string): string =>
+  `crawl:${subredditName}:solo:${userId}:state`;
+
+export async function loadSoloGame(userId: string): Promise<GameState | null> {
+  const raw = await redis.get(soloKey(context.subredditName, userId));
+  return raw ? deserializeGame(raw) : null;
+}
+
+export async function saveSoloGame(
+  userId: string,
+  state: GameState
+): Promise<void> {
+  await redis.set(soloKey(context.subredditName, userId), serializeGame(state));
+}

@@ -6,9 +6,11 @@ import type {
   LeaderboardResponse,
   ProposalsResponse,
 } from '../../shared/api';
-import { loadGame, saveGame } from '../data/games';
+import type { ClassId } from '../../shared/game';
+import { loadGame, saveGame, loadSoloGame, saveSoloGame } from '../data/games';
 import { recordRun, topRuns } from '../data/leaderboard';
 import { createInitialState, startNewRun } from '../game/state';
+import { CLASSES } from '../game/classes';
 import { freshMap } from '../game/map';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
@@ -145,6 +147,110 @@ api.post('/action', async (c) => {
     if (nextState.party.depth > state.party.depth) {
       await recordRun(nextState);
     }
+
+    return c.json<GameResponse>({
+      type: 'game',
+      state: nextState,
+      username: await currentUsername(),
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
+api.post('/solo/start', async (c) => {
+  const { postId, subredditName, userId } = context;
+  if (!postId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'postId is missing from context' },
+      400
+    );
+  }
+  if (!userId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'Sign in to play a solo run' },
+      401
+    );
+  }
+  try {
+    const body = await c.req.json<{ classId?: unknown }>();
+    const requested = typeof body.classId === 'string' ? body.classId : '';
+    const classId: ClassId =
+      requested in CLASSES
+        ? (requested as ClassId)
+        : classForSubreddit(subredditName);
+
+    const bible = await ensureWorldBible();
+    const map = await ensureMap(bible);
+    const state = await withRoomIntro(
+      {
+        ...createInitialState({
+          postId,
+          subredditName,
+          classId,
+          theme: themeForSubreddit(subredditName),
+        }),
+        map: freshMap(map),
+      },
+      bible
+    );
+    await saveSoloGame(userId, state);
+
+    return c.json<GameResponse>({
+      type: 'game',
+      state,
+      username: await currentUsername(),
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
+api.post('/solo/action', async (c) => {
+  const { userId } = context;
+  if (!userId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'Sign in to play a solo run' },
+      401
+    );
+  }
+  try {
+    const body = await c.req.json<{ action?: unknown }>();
+    const action = typeof body.action === 'string' ? body.action.trim() : '';
+    if (action.length === 0) {
+      return c.json<ErrorResponse>(
+        { status: 'error', message: 'An action is required' },
+        400
+      );
+    }
+
+    const state = await loadSoloGame(userId);
+    if (!state) {
+      return c.json<ErrorResponse>(
+        { status: 'error', message: 'No active solo run' },
+        404
+      );
+    }
+    if (state.phase === 'dead') {
+      return c.json<GameResponse>({
+        type: 'game',
+        state,
+        username: await currentUsername(),
+      });
+    }
+
+    const bible = await ensureWorldBible();
+    const nextState = await withRoomIntro(
+      await runTurn(state, action, bible),
+      bible
+    );
+    await saveSoloGame(userId, nextState);
 
     return c.json<GameResponse>({
       type: 'game',
