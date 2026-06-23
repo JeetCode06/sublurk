@@ -37,7 +37,7 @@ describe('createInitialState', () => {
 
   it('names the party from the subreddit and its class', () => {
     const state = createInitialState(input, () => 0);
-    expect(state.party.name).toBe('The r/witchcraft Coven');
+    expect(state.party.name).toBe('The r/witchcraft Wizard');
   });
 
   it('carries the postId and theme through', () => {
@@ -73,7 +73,7 @@ describe('startNewRun', () => {
   it('keeps the subreddit identity across runs', () => {
     const next = startNewRun(deadState(), () => 0);
     expect(next.party.classId).toBe('witch');
-    expect(next.party.name).toBe('The r/witchcraft Coven');
+    expect(next.party.name).toBe('The r/witchcraft Wizard');
     expect(next.postId).toBe('t3_abc');
     expect(next.theme).toBe('mossy catacombs');
   });
