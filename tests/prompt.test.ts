@@ -140,6 +140,29 @@ describe('buildRoomIntroPrompt', () => {
   it('marks the start of the run when there is no history', () => {
     expect(buildRoomIntroPrompt(state, bible)).toContain('start of the run');
   });
+
+  it('names the location villain when the node has one', () => {
+    const withVillain = {
+      ...state,
+      map: {
+        ...state.map,
+        nodes: state.map.nodes.map((node, i) =>
+          i === state.map.currentNodeIndex
+            ? {
+                ...node,
+                villain: {
+                  name: 'the Bean Wraith',
+                  concept: 'a ghost of burnt grounds',
+                },
+              }
+            : node
+        ),
+      },
+    };
+    const prompt = buildRoomIntroPrompt(withVillain, bible);
+    expect(prompt).toContain('the Bean Wraith');
+    expect(prompt).toContain('burnt grounds');
+  });
 });
 
 describe('WORLD_BIBLE_SYSTEM_PROMPT', () => {
@@ -189,6 +212,11 @@ describe('MAP_SYSTEM_PROMPT', () => {
     expect(MAP_SYSTEM_PROMPT).toContain('nodes');
     expect(MAP_SYSTEM_PROMPT).toContain('themeTag');
     expect(MAP_SYSTEM_PROMPT).toContain('finalBoss');
+  });
+
+  it('asks for a villain per location', () => {
+    expect(MAP_SYSTEM_PROMPT).toContain('villain');
+    expect(MAP_SYSTEM_PROMPT).toContain('concept');
   });
 });
 

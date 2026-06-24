@@ -14,24 +14,42 @@ export const DEFAULT_MAP: MapState = {
       name: 'The Threshold',
       themeTag: 'a crumbling entrance hall of cold stone',
       cleared: false,
+      villain: {
+        name: 'the Gatekeeper',
+        concept:
+          'a hulking sentinel of fused armor that lets nothing pass unchallenged',
+      },
     },
     {
       id: 'node-2',
       name: 'The Deep Halls',
       themeTag: 'twisting underground passages lit by guttering torches',
       cleared: false,
+      villain: {
+        name: 'the Whispering Warden',
+        concept: 'a blind jailer who hunts by sound through the endless dark',
+      },
     },
     {
       id: 'node-3',
       name: 'The Sunken Vault',
       themeTag: 'a flooded vault of forgotten relics',
       cleared: false,
+      villain: {
+        name: 'the Drowned Custodian',
+        concept: 'a bloated guardian hoarding the relics this vault swallowed',
+      },
     },
     {
       id: 'node-4',
       name: 'The Hollow Throne',
       themeTag: 'a vast throne room of fused bone',
       cleared: false,
+      villain: {
+        name: 'the Hollow King',
+        concept:
+          'the bone-crowned ruler of the dungeon, throned on the fused dead',
+      },
     },
   ],
   currentNodeIndex: 0,

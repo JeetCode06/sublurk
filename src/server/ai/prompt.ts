@@ -53,9 +53,11 @@ function worldContextLines(bible: WorldBible): string[] {
 // marsh location yields marsh scenes rather than wandering off-world.
 function locationLine(state: GameState): string {
   const node = state.map.nodes[state.map.currentNodeIndex];
-  return node
-    ? `Current location: ${node.name} — ${node.themeTag}.`
-    : `Current location: deep in the dungeon.`;
+  if (!node) return `Current location: deep in the dungeon.`;
+  const villain = node.villain
+    ? ` This place answers to ${node.villain.name} — ${node.villain.concept}. Let their presence be felt, without resolving anything.`
+    : '';
+  return `Current location: ${node.name} — ${node.themeTag}.${villain}`;
 }
 
 function advantagePhrase(advantage: Advantage): string {
@@ -208,12 +210,13 @@ export const MAP_SYSTEM_PROMPT = `You are designing the journey for a collaborat
 Design 4-6 locations in order, each a different biome or place in this world, escalating toward the final boss's domain — the last location is where the boss waits. For each location give:
 - "name": an evocative place name (e.g. "The Withered Orchard").
 - "themeTag": a short scene-setting phrase for the place, which the dungeon master will reuse to keep every scene there consistent (e.g. "a frostbitten orchard of blackened, clawing trees").
+- "villain": the antagonist who holds this location — a "name" (e.g. "Mother Bramble") and a one-line "concept" of who they are and what they want here. Every location's villain is distinct and themed to the world, and together they escalate toward the final boss; the LAST location's villain IS the final boss and shares its name.
 
-Also name the "finalBoss" — usually the world's villain or its avatar.
+Also name the "finalBoss" — the world's villain or its avatar, matching the last location's villain.
 
 Keep everything original, coherent with the world, and safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
-  "nodes": [{ "name": string, "themeTag": string }],
+  "nodes": [{ "name": string, "themeTag": string, "villain": { "name": string, "concept": string } }],
   "finalBoss": { "name": string }
 }`;
 
@@ -223,6 +226,7 @@ export function buildMapPrompt(bible: WorldBible): string {
     `Villain: ${bible.villain.name}, who seeks ${bible.villain.motive}`,
     `The final confrontation: ${bible.finalBossConcept}`,
     `Motifs to draw on: ${bible.motifs.join(', ')}`,
+    `Give each location a distinct villain — lesser powers, guardians, or lieutenants — escalating toward ${bible.villain.name} at the final location.`,
     `Design the party's journey through this world and return the JSON.`,
   ];
   return lines.join('\n');
