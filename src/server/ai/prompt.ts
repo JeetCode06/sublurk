@@ -185,6 +185,7 @@ Design:
 - "itemVocabulary": 3-5 flavored names for treasures and tools that fit the world.
 - "artStyle": a short comma-separated visual style for illustrating scenes.
 - "finalBossConcept": what waits at the end of the journey, usually the villain or its avatar.
+- "classNames": this world's own name for each of five hero archetypes, given as keys "warrior" (a frontline fighter), "witch" (an arcane caster), "healer" (a supportive mender), "trickster" (a cunning rogue), and "adventurer" (a balanced wanderer). Each value is a short, evocative title of 1-3 words fitting the world — name the role, never a real or specific person.
 
 Keep everything original (no copyrighted characters, settings, or names) and safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
@@ -194,7 +195,8 @@ Keep everything original (no copyrighted characters, settings, or names) and saf
   "motifs": string[],
   "itemVocabulary": string[],
   "artStyle": string,
-  "finalBossConcept": string
+  "finalBossConcept": string,
+  "classNames": { "warrior": string, "witch": string, "healer": string, "trickster": string, "adventurer": string }
 }`;
 
 export function buildWorldBiblePrompt(context: SubredditContext): string {

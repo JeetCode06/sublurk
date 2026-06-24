@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { context, reddit } from '@devvit/web/server';
 import type {
+  ClassNamesResponse,
   ErrorResponse,
   GameResponse,
   LeaderboardResponse,
@@ -30,6 +31,22 @@ async function currentUsername(): Promise<string> {
   const username = await reddit.getCurrentUsername();
   return username ?? 'adventurer';
 }
+
+// The subreddit's themed name for each hero archetype, for the character screen.
+api.get('/classes', async (c) => {
+  try {
+    const bible = await ensureWorldBible();
+    return c.json<ClassNamesResponse>({
+      type: 'classNames',
+      names: bible.classNames,
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      500
+    );
+  }
+});
 
 api.get('/game', async (c) => {
   const { postId, subredditName } = context;

@@ -1,4 +1,4 @@
-import type { GameState, LeaderboardEntry, Proposal } from './game';
+import type { ClassId, GameState, LeaderboardEntry, Proposal } from './game';
 
 export type GameResponse = {
   type: 'game';
@@ -26,4 +26,9 @@ export type ErrorResponse = {
 export type LeaderboardResponse = {
   type: 'leaderboard';
   entries: LeaderboardEntry[];
+};
+
+export type ClassNamesResponse = {
+  type: 'classNames';
+  names: Record<ClassId, string>;
 };

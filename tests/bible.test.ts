@@ -17,11 +17,27 @@ function makeBible(overrides: Partial<WorldBible> = {}): WorldBible {
     itemVocabulary: ['a conch horn', 'a salt-iron blade'],
     artStyle: 'eerie undersea painterly, bioluminescent teal',
     finalBossConcept: 'the Drowned Cantor in his cathedral of coral.',
+    classNames: {
+      warrior: 'Tideguard',
+      witch: 'Coral Seer',
+      healer: 'Pearl Mender',
+      trickster: 'Reef Stalker',
+      adventurer: 'Drifter',
+    },
     ...overrides,
   };
 }
 
 describe('coerceWorldBible', () => {
+  it('fills missing class names from the base archetypes', () => {
+    const result = coerceWorldBible({ classNames: { warrior: 'Tideguard' } });
+    expect(result.classNames.warrior).toBe('Tideguard');
+    expect(result.classNames.witch).toBe(DEFAULT_WORLD_BIBLE.classNames.witch);
+    expect(result.classNames.adventurer).toBe(
+      DEFAULT_WORLD_BIBLE.classNames.adventurer
+    );
+  });
+
   it('returns the default bible for an empty object', () => {
     expect(coerceWorldBible({})).toEqual(DEFAULT_WORLD_BIBLE);
   });

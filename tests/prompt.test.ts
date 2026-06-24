@@ -41,6 +41,13 @@ const bible: WorldBible = {
   itemVocabulary: ['a brine-lamp'],
   artStyle: 'sunken gothic',
   finalBossConcept: 'the Tidemother in her flooded nave',
+  classNames: {
+    warrior: 'Tideguard',
+    witch: 'Brine Oracle',
+    healer: 'Lantern Tender',
+    trickster: 'Wave Skulker',
+    adventurer: 'Wanderer',
+  },
 };
 
 describe('SYSTEM_PROMPT', () => {
@@ -169,6 +176,7 @@ describe('WORLD_BIBLE_SYSTEM_PROMPT', () => {
   it('specifies the world-bible JSON contract', () => {
     expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('villain');
     expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('finalBossConcept');
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('classNames');
   });
 
   it('forbids referencing Reddit or real people', () => {

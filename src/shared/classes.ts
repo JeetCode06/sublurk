@@ -49,6 +49,25 @@ export const CLASS_INFO: Record<ClassId, ClassInfo> = {
   },
 };
 
+// Canonical ordering of the class ids, for iterating the roster deterministically.
+export const CLASS_IDS: ClassId[] = [
+  'warrior',
+  'witch',
+  'healer',
+  'trickster',
+  'adventurer',
+];
+
+// The base archetype name for each class, used as the fallback whenever a
+// subreddit has no themed name for it.
+export const BASE_CLASS_NAMES: Record<ClassId, string> = {
+  warrior: CLASS_INFO.warrior.name,
+  witch: CLASS_INFO.witch.name,
+  healer: CLASS_INFO.healer.name,
+  trickster: CLASS_INFO.trickster.name,
+  adventurer: CLASS_INFO.adventurer.name,
+};
+
 // Splits a class's room affinities into the rooms it is strong and weak in, for
 // display on the character screen.
 export function classAffinitySummary(id: ClassId): {

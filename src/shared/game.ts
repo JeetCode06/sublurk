@@ -198,4 +198,7 @@ export type WorldBible = {
   itemVocabulary: string[];
   artStyle: string;
   finalBossConcept: string;
+  // This world's own name for each hero archetype, keyed by class id. Themed to
+  // the subreddit; falls back to the base archetype names.
+  classNames: Record<ClassId, string>;
 };

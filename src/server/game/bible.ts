@@ -1,4 +1,5 @@
-import type { WorldBible } from '../../shared/game';
+import type { ClassId, WorldBible } from '../../shared/game';
+import { BASE_CLASS_NAMES, CLASS_IDS } from '../../shared/classes';
 
 // Caps keep AI-authored lists from bloating prompts and storage; a world only
 // needs a handful of recurring motifs and item names to feel coherent.
@@ -22,6 +23,7 @@ export const DEFAULT_WORLD_BIBLE: WorldBible = {
     'moody painterly fantasy, deep shadow, warm torchlight, muted earthy palette',
   finalBossConcept:
     'the Hollow King upon his throne of fused bone, where the deepest hall ends.',
+  classNames: BASE_CLASS_NAMES,
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -65,6 +67,17 @@ function cleanVillain(value: unknown): WorldBible['villain'] {
   };
 }
 
+// Fills a themed name for every class, falling back to the base archetype name
+// for any the AI left out, so the roster is always complete.
+function cleanClassNames(value: unknown): Record<ClassId, string> {
+  const source = asRecord(value);
+  const names = {} as Record<ClassId, string>;
+  for (const id of CLASS_IDS) {
+    names[id] = cleanString(source[id], BASE_CLASS_NAMES[id]);
+  }
+  return names;
+}
+
 // Forces a parsed-but-untrusted bible into a complete, sane WorldBible: every
 // field is filled (falling back to the default), strings are trimmed, and the
 // flavor lists are de-duplicated and capped. The AI proposes the world; the
@@ -90,5 +103,6 @@ export function coerceWorldBible(raw: unknown): WorldBible {
       source.finalBossConcept,
       DEFAULT_WORLD_BIBLE.finalBossConcept
     ),
+    classNames: cleanClassNames(source.classNames),
   };
 }
