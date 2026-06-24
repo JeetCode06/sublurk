@@ -5,6 +5,7 @@ import { BASE_CLASS_NAMES, CLASS_IDS } from '../../shared/classes';
 // needs a handful of recurring motifs and item names to feel coherent.
 const MAX_MOTIFS = 8;
 const MAX_ITEMS = 12;
+const MAX_INTEL = 12;
 
 // A safe, generic fantasy world used whenever a bible can't be generated or the
 // AI reply can't be read, so a campaign always has a coherent backdrop to run on.
@@ -24,6 +25,14 @@ export const DEFAULT_WORLD_BIBLE: WorldBible = {
   finalBossConcept:
     'the Hollow King upon his throne of fused bone, where the deepest hall ends.',
   classNames: BASE_CLASS_NAMES,
+  intelSeeds: [
+    'The deeper halls remember every step taken in them.',
+    'They say the Hollow King was once a delver like any other.',
+    'No torch has ever stayed lit in the lowest vault.',
+    'Some doors here open only for those who have already died once.',
+    'The bones set into the walls are said to still be listening.',
+    'A second throne lies buried beneath the first.',
+  ],
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -104,5 +113,10 @@ export function coerceWorldBible(raw: unknown): WorldBible {
       DEFAULT_WORLD_BIBLE.finalBossConcept
     ),
     classNames: cleanClassNames(source.classNames),
+    intelSeeds: cleanStringList(
+      source.intelSeeds,
+      DEFAULT_WORLD_BIBLE.intelSeeds,
+      MAX_INTEL
+    ),
   };
 }

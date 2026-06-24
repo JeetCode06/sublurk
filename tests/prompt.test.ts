@@ -48,6 +48,11 @@ const bible: WorldBible = {
     trickster: 'Wave Skulker',
     adventurer: 'Wanderer',
   },
+  intelSeeds: [
+    'The drowned bells still toll for the faithless.',
+    'Salt remembers every name it has touched.',
+    'The deepest nave was sealed from the inside.',
+  ],
 };
 
 describe('SYSTEM_PROMPT', () => {
@@ -170,6 +175,17 @@ describe('buildRoomIntroPrompt', () => {
     expect(prompt).toContain('the Bean Wraith');
     expect(prompt).toContain('burnt grounds');
   });
+
+  it('reveals more world lore as the run number climbs', () => {
+    expect(buildRoomIntroPrompt(state, bible)).toContain('drowned bells');
+    expect(buildRoomIntroPrompt(state, bible)).not.toContain(
+      'sealed from the inside'
+    );
+    const deeper = { ...state, runNumber: 6 };
+    expect(buildRoomIntroPrompt(deeper, bible)).toContain(
+      'sealed from the inside'
+    );
+  });
 });
 
 describe('WORLD_BIBLE_SYSTEM_PROMPT', () => {
@@ -177,6 +193,7 @@ describe('WORLD_BIBLE_SYSTEM_PROMPT', () => {
     expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('villain');
     expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('finalBossConcept');
     expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('classNames');
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('intelSeeds');
   });
 
   it('forbids referencing Reddit or real people', () => {

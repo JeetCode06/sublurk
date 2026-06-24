@@ -48,6 +48,21 @@ function worldContextLines(bible: WorldBible): string[] {
   ];
 }
 
+// How much of the world's lore has surfaced by a given run. Lore accrues per
+// descent: the deeper into a campaign, the more of the world is revealed.
+function revealedIntel(bible: WorldBible, runNumber: number): string[] {
+  const count = Math.min(bible.intelSeeds.length, runNumber + 1);
+  return bible.intelSeeds.slice(0, count);
+}
+
+// A prompt line dripping the lore uncovered so far, or empty before any has
+// surfaced. The dungeon master weaves these in rather than reciting them.
+function intelLine(bible: WorldBible, runNumber: number): string {
+  const revealed = revealedIntel(bible, runNumber);
+  if (revealed.length === 0) return '';
+  return `Lore the world has yielded so far (weave one in when it fits, never list them outright): ${revealed.join(' / ')}`;
+}
+
 // The party's current stop on the campaign map. Its theme tag is the spatial
 // "rail" — it keeps scenes consistent with where the party actually is, so a
 // marsh location yields marsh scenes rather than wandering off-world.
@@ -122,6 +137,7 @@ export function buildIntroPrompt(state: GameState, bible: WorldBible): string {
     `Party: ${party.name} (class: ${party.classId})`,
     start ? `They set out from ${start.name} — ${start.themeTag}.` : '',
     `Their goal: reach ${destination ? destination.name : 'the heart of the dungeon'} and defeat ${map.finalBoss.name}.`,
+    intelLine(bible, state.runNumber),
     `Write the cold open for this run.`,
   ].filter((line) => line.length > 0);
   return lines.join('\n');
@@ -160,8 +176,9 @@ export function buildRoomIntroPrompt(
     lastEvent
       ? `Moments ago: ${lastEvent}`
       : `This is the very start of the run.`,
+    intelLine(bible, state.runNumber),
     `Set the scene for this ${room.type} room and return the JSON.`,
-  ];
+  ].filter((line) => line.length > 0);
   return lines.join('\n');
 }
 
@@ -186,6 +203,7 @@ Design:
 - "artStyle": a short comma-separated visual style for illustrating scenes.
 - "finalBossConcept": what waits at the end of the journey, usually the villain or its avatar.
 - "classNames": this world's own name for each of five hero archetypes, given as keys "warrior" (a frontline fighter), "witch" (an arcane caster), "healer" (a supportive mender), "trickster" (a cunning rogue), and "adventurer" (a balanced wanderer). Each value is a short, evocative title of 1-3 words fitting the world — name the role, never a real or specific person.
+- "intelSeeds": 6-10 short rumors, secrets, or fragments of lore about this world — evocative one-liners a dungeon master can drip in as the party explores deeper (e.g. "The orchard's roots are said to drink more than water"). Draw them from the community's spirit; reveal the world's mysteries, and never mention the game, the subreddit, or real people.
 
 Keep everything original (no copyrighted characters, settings, or names) and safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
 {
@@ -196,7 +214,8 @@ Keep everything original (no copyrighted characters, settings, or names) and saf
   "itemVocabulary": string[],
   "artStyle": string,
   "finalBossConcept": string,
-  "classNames": { "warrior": string, "witch": string, "healer": string, "trickster": string, "adventurer": string }
+  "classNames": { "warrior": string, "witch": string, "healer": string, "trickster": string, "adventurer": string },
+  "intelSeeds": string[]
 }`;
 
 export function buildWorldBiblePrompt(context: SubredditContext): string {

@@ -201,4 +201,7 @@ export type WorldBible = {
   // This world's own name for each hero archetype, keyed by class id. Themed to
   // the subreddit; falls back to the base archetype names.
   classNames: Record<ClassId, string>;
+  // Short lore fragments about this world, revealed progressively as the party
+  // descends across runs so deeper campaigns surface more of the world.
+  intelSeeds: string[];
 };

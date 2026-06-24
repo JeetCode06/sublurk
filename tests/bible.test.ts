@@ -24,11 +24,28 @@ function makeBible(overrides: Partial<WorldBible> = {}): WorldBible {
       trickster: 'Reef Stalker',
       adventurer: 'Drifter',
     },
+    intelSeeds: [
+      'The tide keeps its own counsel.',
+      'Pearls remember the drowned.',
+    ],
     ...overrides,
   };
 }
 
 describe('coerceWorldBible', () => {
+  it('keeps valid intel seeds and caps the list', () => {
+    const many = Array.from({ length: 20 }, (_, i) => `secret ${i}`);
+    const result = coerceWorldBible(makeBible({ intelSeeds: many }));
+    expect(result.intelSeeds.length).toBeLessThanOrEqual(12);
+    expect(result.intelSeeds).toContain('secret 0');
+  });
+
+  it('falls back to default intel seeds when missing', () => {
+    expect(coerceWorldBible({ theme: 'Bare.' }).intelSeeds).toEqual(
+      DEFAULT_WORLD_BIBLE.intelSeeds
+    );
+  });
+
   it('fills missing class names from the base archetypes', () => {
     const result = coerceWorldBible({ classNames: { warrior: 'Tideguard' } });
     expect(result.classNames.warrior).toBe('Tideguard');
