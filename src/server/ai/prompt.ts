@@ -66,6 +66,18 @@ function advantagePhrase(advantage: Advantage): string {
   return '';
 }
 
+// Escalating nudge when the party keeps failing the same room, so a run can't
+// stall: a hard shove onward at the limit, a softer raise of stakes before it.
+function pressureLine(state: GameState): string {
+  if (state.roomFailures >= STUCK_LIMIT - 1) {
+    return `The party has already failed here ${state.roomFailures} times and cannot remain — force a way onward this turn: an opening, an escape, or the danger driving them out, even at a cost.`;
+  }
+  if (state.roomFailures >= 2) {
+    return `The party has failed here ${state.roomFailures} times. Raise the stakes and push the scene toward a change.`;
+  }
+  return '';
+}
+
 export function buildTurnPrompt(
   state: GameState,
   action: string,
@@ -86,11 +98,7 @@ export function buildTurnPrompt(
       : `This is the party's first move.`,
     `The community chose: "${action}"`,
     `The party made a ${ABILITY_LABELS[check.ability]} check${advantagePhrase(check.advantage)} and rolled a ${check.outcome} (rolled ${check.die}, total ${check.total} vs difficulty ${check.difficulty}).`,
-    state.roomFailures >= STUCK_LIMIT - 1
-      ? `The party has already failed here ${state.roomFailures} times and cannot remain — force a way onward this turn: an opening, an escape, or the danger driving them out, even at a cost.`
-      : state.roomFailures >= 2
-        ? `The party has failed here ${state.roomFailures} times. Raise the stakes and push the scene toward a change.`
-        : '',
+    pressureLine(state),
     `Narrate this outcome and return the JSON.`,
   ];
   return lines.filter((line) => line.length > 0).join('\n');
@@ -192,13 +200,14 @@ Keep everything original (no copyrighted characters, settings, or names) and saf
 export function buildWorldBiblePrompt(context: SubredditContext): string {
   const { name, description, topPostTitles } = context;
   const trimmedDescription = description.trim();
+  const titleBullets = topPostTitles.map((title) => `- ${title}`).join('\n');
   const lines = [
     `Subreddit: r/${name}`,
     trimmedDescription.length > 0
       ? `Description: ${trimmedDescription}`
       : `Description: (none provided)`,
     topPostTitles.length > 0
-      ? `Top post titles:\n${topPostTitles.map((title) => `- ${title}`).join('\n')}`
+      ? `Top post titles:\n${titleBullets}`
       : `Top post titles: (none available)`,
     `Invent this community's original fantasy world and return the JSON.`,
   ];

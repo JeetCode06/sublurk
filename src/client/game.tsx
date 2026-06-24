@@ -18,7 +18,7 @@ import type {
 import { CLASS_INFO, classAffinitySummary } from '../shared/classes';
 import { useGame, useSolo } from './hooks/useGame';
 
-function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
+function HealthBar({ hp, maxHp }: Readonly<{ hp: number; maxHp: number }>) {
   const pct = maxHp > 0 ? Math.max(0, Math.min(100, (hp / maxHp) * 100)) : 0;
   const low = hp <= maxHp * 0.3;
   return (
@@ -41,10 +41,10 @@ function HealthBar({ hp, maxHp }: { hp: number; maxHp: number }) {
 function RestartButton({
   resolving,
   onRestart,
-}: {
+}: Readonly<{
   resolving: boolean;
   onRestart: () => void;
-}) {
+}>) {
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
     return (
@@ -82,10 +82,10 @@ function RestartButton({
 function Countdown({
   deadline,
   serverOffset,
-}: {
+}: Readonly<{
   deadline: number;
   serverOffset: number | null;
-}) {
+}>) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -120,13 +120,13 @@ function CandidateActions({
   deadline,
   serverOffset,
   onResolveVotes,
-}: {
+}: Readonly<{
   proposals: Proposal[];
   resolving: boolean;
   deadline: number;
   serverOffset: number | null;
   onResolveVotes: () => void;
-}) {
+}>) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
@@ -155,7 +155,7 @@ function CandidateActions({
                 }`}
               >
                 <span
-                  className={`flex min-w-[2.75rem] flex-col items-center font-mono leading-tight ${
+                  className={`flex min-w-11 flex-col items-center font-mono leading-tight ${
                     leading ? 'text-[#f0a050]' : 'text-[#8a7d72]'
                   }`}
                 >
@@ -191,10 +191,10 @@ function CandidateActions({
 function Leaderboard({
   entries,
   currentRun,
-}: {
+}: Readonly<{
   entries: LeaderboardEntry[];
   currentRun: number;
-}) {
+}>) {
   if (entries.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
@@ -230,7 +230,7 @@ const ENTITY_GLYPH: Record<EntityKind, { icon: string; tone: string }> = {
   object: { icon: '◇', tone: 'text-[#9fb0c0]' },
 };
 
-function ThreatPips({ threat }: { threat: number }) {
+function ThreatPips({ threat }: Readonly<{ threat: number }>) {
   return (
     <span className="flex gap-0.5" title={`threat ${threat} of 5`}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -245,7 +245,7 @@ function ThreatPips({ threat }: { threat: number }) {
   );
 }
 
-function EntityCard({ entity }: { entity: SceneEntity }) {
+function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
   const glyph = ENTITY_GLYPH[entity.kind];
   const showStats =
     entity.kind === 'foe' &&
@@ -276,7 +276,7 @@ function EntityCard({ entity }: { entity: SceneEntity }) {
   );
 }
 
-function SceneEntities({ entities }: { entities: SceneEntity[] }) {
+function SceneEntities({ entities }: Readonly<{ entities: SceneEntity[] }>) {
   if (entities.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
@@ -284,27 +284,24 @@ function SceneEntities({ entities }: { entities: SceneEntity[] }) {
         In the room
       </h2>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {entities.map((entity, i) => (
-          <EntityCard
-            key={`${entity.kind}-${entity.name}-${i}`}
-            entity={entity}
-          />
+        {entities.map((entity) => (
+          <EntityCard key={`${entity.kind}-${entity.name}`} entity={entity} />
         ))}
       </div>
     </section>
   );
 }
 
-function ThreatStrip({ threats }: { threats: string[] }) {
+function ThreatStrip({ threats }: Readonly<{ threats: string[] }>) {
   if (threats.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#c0392b]">
         ⚠ dangers
       </span>
-      {threats.map((threat, i) => (
+      {threats.map((threat) => (
         <span
-          key={i}
+          key={threat}
           className="rounded-full border border-[#5a2a25] bg-[#271a18] px-2.5 py-0.5 text-xs text-[#d98a80]"
         >
           {threat}
@@ -322,6 +319,43 @@ const NODE_R = 18;
 const BOSS_R = 28;
 
 type NodeState = 'cleared' | 'current' | 'upcoming';
+
+const NODE_PALETTE: Record<
+  NodeState,
+  { fill: string; ring: string; num: string; name: string; villain: string }
+> = {
+  current: {
+    fill: '#2c221c',
+    ring: '#e8893f',
+    num: '#f0c050',
+    name: '#f3cd7f',
+    villain: '#cdbb9a',
+  },
+  cleared: {
+    fill: '#241d1a',
+    ring: '#4a3f38',
+    num: '#8a7d72',
+    name: '#8a7d72',
+    villain: '#6f655b',
+  },
+  upcoming: {
+    fill: '#1b1613',
+    ring: '#352c26',
+    num: '#5a4f46',
+    name: '#675d54',
+    villain: '#564c44',
+  },
+};
+
+function nodeStateFor(
+  index: number,
+  currentIndex: number,
+  cleared: boolean
+): NodeState {
+  if (index === currentIndex) return 'current';
+  if (cleared) return 'cleared';
+  return 'upcoming';
+}
 
 // A smooth winding path through the given points, used for the trail between
 // map locations. Each segment eases vertically via control points at its midpoint.
@@ -343,20 +377,21 @@ function MapNodeMark({
   x,
   y,
   state,
-}: {
+}: Readonly<{
   node: MapNode;
   index: number;
   x: number;
   y: number;
   state: NodeState;
-}) {
+}>) {
   const current = state === 'current';
-  const cleared = state === 'cleared';
-  const fill = current ? '#2c221c' : cleared ? '#241d1a' : '#1b1613';
-  const ring = current ? '#e8893f' : cleared ? '#4a3f38' : '#352c26';
-  const num = current ? '#f0c050' : cleared ? '#8a7d72' : '#5a4f46';
-  const nameFill = current ? '#f3cd7f' : cleared ? '#8a7d72' : '#675d54';
-  const villainFill = current ? '#cdbb9a' : cleared ? '#6f655b' : '#564c44';
+  const {
+    fill,
+    ring,
+    num,
+    name: nameFill,
+    villain: villainFill,
+  } = NODE_PALETTE[state];
   const nameY = node.villain ? y - 2 : y + 4;
   return (
     <>
@@ -429,12 +464,12 @@ function MapBossMark({
   defeated,
   x,
   y,
-}: {
+}: Readonly<{
   name: string;
   defeated: boolean;
   x: number;
   y: number;
-}) {
+}>) {
   const crown = defeated ? '#6a5d52' : '#d07a64';
   const nameFill = defeated ? '#8a7d72' : '#ecc6ab';
   return (
@@ -490,7 +525,7 @@ function MapBossMark({
   );
 }
 
-function CampaignMap({ map }: { map: MapState }) {
+function CampaignMap({ map }: Readonly<{ map: MapState }>) {
   const nodes = map.nodes;
   const lastIndex = nodes.length - 1;
   const currentIndex = map.currentNodeIndex;
@@ -643,13 +678,7 @@ function CampaignMap({ map }: { map: MapState }) {
               index={i}
               x={nodeX(i)}
               y={nodeY(i)}
-              state={
-                i === currentIndex
-                  ? 'current'
-                  : node.cleared
-                    ? 'cleared'
-                    : 'upcoming'
-              }
+              state={nodeStateFor(i, currentIndex, node.cleared)}
             />
           ))}
 
@@ -691,7 +720,25 @@ function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;
 }
 
-function StatBlock({ abilities }: { abilities: Abilities }) {
+function abilityModColor(mod: number): string {
+  if (mod > 0) return 'text-[#e8893f]';
+  if (mod < 0) return 'text-[#c0705a]';
+  return 'text-[#6a5d52]';
+}
+
+function advantageNote(advantage: AbilityCheck['advantage']): string {
+  if (advantage === 'advantage') return ' · advantage';
+  if (advantage === 'disadvantage') return ' · disadvantage';
+  return '';
+}
+
+function outcomeTone(outcome: AbilityCheck['outcome']): string {
+  if (outcome === 'success') return 'text-[#7fb069]';
+  if (outcome === 'partial') return 'text-[#e8c050]';
+  return 'text-[#c0705a]';
+}
+
+function StatBlock({ abilities }: Readonly<{ abilities: Abilities }>) {
   return (
     <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs">
       {ABILITY_ORDER.map((id) => (
@@ -707,19 +754,9 @@ function StatBlock({ abilities }: { abilities: Abilities }) {
   );
 }
 
-function LastCheck({ check }: { check: AbilityCheck }) {
-  const advantage =
-    check.advantage === 'advantage'
-      ? ' · advantage'
-      : check.advantage === 'disadvantage'
-        ? ' · disadvantage'
-        : '';
-  const tone =
-    check.outcome === 'success'
-      ? 'text-[#7fb069]'
-      : check.outcome === 'partial'
-        ? 'text-[#e8c050]'
-        : 'text-[#c0705a]';
+function LastCheck({ check }: Readonly<{ check: AbilityCheck }>) {
+  const advantage = advantageNote(check.advantage);
+  const tone = outcomeTone(check.outcome);
   return (
     <p className="font-mono text-xs text-[#6f6359]">
       {ABILITY_SHORT[check.ability]} check{advantage} · rolled {check.die},
@@ -778,14 +815,14 @@ function RunSummary({
   onExit,
   leaderboard,
   currentRun,
-}: {
+}: Readonly<{
   game: GameState;
   restarting: boolean;
   onRestart: () => void;
   onExit?: () => void;
   leaderboard?: LeaderboardEntry[];
   currentRun?: number;
-}) {
+}>) {
   const won = game.phase === 'won';
   const color = won ? '#f0c050' : '#c0392b';
   const accentText = won ? 'text-[#f0c050]' : 'text-[#c0392b]';
@@ -804,6 +841,11 @@ function RunSummary({
     { label: 'Gold', value: String(game.party.gold) },
     { label: 'Run', value: String(game.runNumber) },
   ];
+
+  let restartLabel: string;
+  if (restarting) restartLabel = 'Raising a new party…';
+  else if (won) restartLabel = 'Descend anew';
+  else restartLabel = 'Descend again';
 
   return (
     <div className="flex min-h-screen justify-center bg-[#1a1614] text-[#e8ddc8]">
@@ -859,11 +901,7 @@ function RunSummary({
             disabled={restarting}
             className="w-full rounded-lg bg-[#e8893f] px-5 py-3 font-semibold text-[#1a1614] transition hover:bg-[#f0a050] disabled:opacity-50"
           >
-            {restarting
-              ? 'Raising a new party…'
-              : won
-                ? 'Descend anew'
-                : 'Descend again'}
+            {restartLabel}
           </button>
           {onExit && (
             <button
@@ -891,7 +929,7 @@ function Board({
   onAct,
   onResolveVotes,
   onRestart,
-}: {
+}: Readonly<{
   game: GameState;
   resolving: boolean;
   error: string | null;
@@ -902,7 +940,7 @@ function Board({
   onAct: (action: string) => void;
   onResolveVotes: () => void;
   onRestart: () => void;
-}) {
+}>) {
   const [draft, setDraft] = useState('');
 
   if (game.phase === 'dead' || game.phase === 'won') {
@@ -983,8 +1021,11 @@ function Board({
             <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
-                {log.map((event, i) => (
-                  <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
+                {log.map((event) => (
+                  <p
+                    key={event}
+                    className="text-sm leading-relaxed text-[#8a7d72]"
+                  >
                     {event}
                   </p>
                 ))}
@@ -1010,14 +1051,14 @@ function Board({
           {error && <p className="text-sm text-[#c0392b]">{error}</p>}
           {note && <p className="text-sm text-[#e8893f]">{note}</p>}
           <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
-            <label className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
+            <p className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
               Playing solo? Take a single action directly
-            </label>
+            </p>
             {game.room.suggestions.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {game.room.suggestions.map((suggestion, i) => (
+                {game.room.suggestions.map((suggestion) => (
                   <button
-                    key={i}
+                    key={suggestion}
                     onClick={() => setDraft(suggestion)}
                     disabled={resolving}
                     className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
@@ -1056,10 +1097,10 @@ function Board({
 function ModeSelect({
   onSolo,
   onCommunity,
-}: {
+}: Readonly<{
   onSolo: () => void;
   onCommunity: () => void;
-}) {
+}>) {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1a1614] px-5 py-12 text-[#e8ddc8]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.55))]" />
@@ -1244,10 +1285,10 @@ function classSigil(id: ClassId) {
 function CharacterSelect({
   onBack,
   onBegin,
-}: {
+}: Readonly<{
   onBack: () => void;
   onBegin: (classId: string) => void;
-}) {
+}>) {
   const [selected, setSelected] = useState<ClassId>('warrior');
   const klass = CLASS_INFO[selected];
   const { strong, weak } = classAffinitySummary(selected);
@@ -1318,8 +1359,7 @@ function CharacterSelect({
           <div className="mt-3 grid grid-cols-6 gap-1 text-center">
             {ABILITY_ORDER.map((ability) => {
               const score = klass.abilities[ability];
-              const mod = Math.floor((score - 10) / 2);
-              const modText = mod >= 0 ? `+${mod}` : `${mod}`;
+              const mod = abilityMod(score);
               return (
                 <div key={ability}>
                   <div className="font-mono text-[0.6rem] tracking-wider text-[#8a7d72]">
@@ -1329,15 +1369,9 @@ function CharacterSelect({
                     {score}
                   </div>
                   <div
-                    className={`font-mono text-[0.65rem] ${
-                      mod > 0
-                        ? 'text-[#e8893f]'
-                        : mod < 0
-                          ? 'text-[#c0705a]'
-                          : 'text-[#6a5d52]'
-                    }`}
+                    className={`font-mono text-[0.65rem] ${abilityModColor(mod)}`}
                   >
-                    {modText}
+                    {signed(mod)}
                   </div>
                 </div>
               );
@@ -1392,11 +1426,11 @@ function SoloPlay({
   solo,
   classId,
   onExit,
-}: {
+}: Readonly<{
   solo: ReturnType<typeof useSolo>;
   classId: string;
   onExit: () => void;
-}) {
+}>) {
   const [draft, setDraft] = useState('');
   const { game, loading, resolving, error } = solo;
 
@@ -1487,8 +1521,11 @@ function SoloPlay({
             <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
-                {log.map((event, i) => (
-                  <p key={i} className="text-sm leading-relaxed text-[#8a7d72]">
+                {log.map((event) => (
+                  <p
+                    key={event}
+                    className="text-sm leading-relaxed text-[#8a7d72]"
+                  >
                     {event}
                   </p>
                 ))}
@@ -1502,9 +1539,9 @@ function SoloPlay({
           <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
             {game.room.suggestions.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {game.room.suggestions.map((suggestion, i) => (
+                {game.room.suggestions.map((suggestion) => (
                   <button
-                    key={i}
+                    key={suggestion}
                     onClick={() => setDraft(suggestion)}
                     disabled={resolving}
                     className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
