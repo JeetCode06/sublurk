@@ -729,6 +729,157 @@ function LastCheck({ check }: { check: AbilityCheck }) {
   );
 }
 
+function villainMark(color: string) {
+  return (
+    <svg viewBox="0 0 120 120" className="h-32 w-32" aria-hidden="true">
+      <circle cx="60" cy="60" r="54" fill={color} opacity="0.05" />
+      <circle cx="60" cy="60" r="42" fill={color} opacity="0.07" />
+      <circle cx="60" cy="60" r="30" fill={color} opacity="0.09" />
+      <circle
+        cx="60"
+        cy="60"
+        r="50"
+        fill="#16110e"
+        stroke={color}
+        strokeWidth="1.5"
+        opacity="0.55"
+      />
+      <circle
+        cx="60"
+        cy="60"
+        r="44"
+        fill="none"
+        stroke={color}
+        strokeWidth="0.75"
+        opacity="0.3"
+      />
+      <path
+        d="M60 28 C47 28 39 40 39 55 C39 68 45 80 60 90 C75 80 81 68 81 55 C81 40 73 28 60 28 Z"
+        fill="#0c0a09"
+        stroke={color}
+        strokeWidth="1"
+        opacity="0.85"
+      />
+      <path
+        d="M60 42 C52 42 48 50 48 58 C48 67 54 76 60 80 C66 76 72 67 72 58 C72 50 68 42 60 42 Z"
+        fill="#000"
+        opacity="0.55"
+      />
+      <circle cx="54" cy="58" r="2.6" fill={color} />
+      <circle cx="66" cy="58" r="2.6" fill={color} />
+    </svg>
+  );
+}
+
+function RunSummary({
+  game,
+  restarting,
+  onRestart,
+  onExit,
+  leaderboard,
+  currentRun,
+}: {
+  game: GameState;
+  restarting: boolean;
+  onRestart: () => void;
+  onExit?: () => void;
+  leaderboard?: LeaderboardEntry[];
+  currentRun?: number;
+}) {
+  const won = game.phase === 'won';
+  const color = won ? '#f0c050' : '#c0392b';
+  const accentText = won ? 'text-[#f0c050]' : 'text-[#c0392b]';
+  const boss = game.map.finalBoss.name;
+  // The closing narration doubles as the villain's parting word until F8 swaps
+  // in a remembered taunt addressed to this player.
+  const finalLine =
+    game.recentEvents.at(-1) ??
+    (won
+      ? 'The last blow lands true, and the long dark lifts at last.'
+      : 'The party falls, and the dungeon goes silent around them.');
+  const cleared = game.map.nodes.filter((node) => node.cleared).length;
+  const stats = [
+    { label: 'Depth', value: String(game.party.depth) },
+    { label: 'Cleared', value: `${cleared}/${game.map.nodes.length}` },
+    { label: 'Gold', value: String(game.party.gold) },
+    { label: 'Run', value: String(game.runNumber) },
+  ];
+
+  return (
+    <div className="flex min-h-screen justify-center bg-[#1a1614] text-[#e8ddc8]">
+      <div className="flex w-full max-w-md flex-col items-center gap-5 px-6 py-10 text-center">
+        <p
+          className={`font-mono text-xs uppercase tracking-[0.3em] ${accentText}`}
+        >
+          {won ? 'The campaign is won' : 'The run ends'}
+        </p>
+
+        {villainMark(color)}
+
+        <div>
+          <p className={`text-lg font-semibold ${accentText}`}>{boss}</p>
+          <p className="font-mono text-[0.7rem] uppercase tracking-widest text-[#8a7d72]">
+            {won ? 'lies defeated' : 'still waits below'}
+          </p>
+        </div>
+
+        <p className="text-base italic leading-relaxed text-[#c9b896]">
+          “{finalLine}”
+        </p>
+
+        <div className="grid w-full grid-cols-4 gap-2">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-lg border border-[#2f2722] bg-[#1b1613] px-2 py-3"
+            >
+              <div className="text-lg font-semibold text-[#e8ddc8]">
+                {stat.value}
+              </div>
+              <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#7a6f64]">
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {leaderboard && leaderboard.length > 0 && (
+          <div className="w-full text-left">
+            <Leaderboard
+              entries={leaderboard}
+              currentRun={currentRun ?? game.runNumber}
+            />
+          </div>
+        )}
+
+        <div className="mt-2 flex w-full flex-col gap-3">
+          <button
+            type="button"
+            onClick={onRestart}
+            disabled={restarting}
+            className="w-full rounded-lg bg-[#e8893f] px-5 py-3 font-semibold text-[#1a1614] transition hover:bg-[#f0a050] disabled:opacity-50"
+          >
+            {restarting
+              ? 'Raising a new party…'
+              : won
+                ? 'Descend anew'
+                : 'Descend again'}
+          </button>
+          {onExit && (
+            <button
+              type="button"
+              onClick={onExit}
+              className="font-mono text-xs tracking-wide text-[#8a7d72] transition hover:text-[#e8893f]"
+            >
+              ‹ Back to modes
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Board({
   game,
   resolving,
@@ -753,20 +904,24 @@ function Board({
   onRestart: () => void;
 }) {
   const [draft, setDraft] = useState('');
-  const events = game.recentEvents;
-  const dead = game.phase === 'dead';
-  const won = game.phase === 'won';
-  const over = dead || won;
-  const scene = won
-    ? (events.at(-1) ??
-      'The last foe falls, and the long dark finally lifts from the realm.')
-    : dead
-      ? (events.at(-1) ??
-        'The party has fallen. The dungeon falls silent around them.')
-      : game.room.description ||
-        'The party presses into the dark. The dungeon master is setting the scene…';
-  const log = (over ? events.slice(0, -1) : events.slice()).reverse();
+
+  if (game.phase === 'dead' || game.phase === 'won') {
+    return (
+      <RunSummary
+        game={game}
+        restarting={resolving}
+        onRestart={onRestart}
+        leaderboard={leaderboard}
+        currentRun={game.runNumber}
+      />
+    );
+  }
+
+  const log = game.recentEvents.slice().reverse();
   const record = leaderboard[0]?.depth ?? null;
+  const scene =
+    game.room.description ||
+    'The party presses into the dark. The dungeon master is setting the scene…';
 
   const submit = () => {
     const action = draft.trim();
@@ -787,9 +942,7 @@ function Board({
               <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
                 Run {game.runNumber} · Depth {game.party.depth}
               </span>
-              {!over && (
-                <RestartButton resolving={resolving} onRestart={onRestart} />
-              )}
+              <RestartButton resolving={resolving} onRestart={onRestart} />
             </div>
           </div>
           <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
@@ -809,7 +962,7 @@ function Board({
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
-          {!over && game.intro.length > 0 && (
+          {game.intro.length > 0 && (
             <section className="rounded border border-[#3a302b] bg-[#211b17] px-4 py-3">
               <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#8a7d72]">
                 Prologue
@@ -822,22 +975,12 @@ function Board({
           <CampaignMap map={game.map} />
           <section className="flex flex-col gap-3">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-              {won
-                ? 'Victory'
-                : dead
-                  ? 'The run ends'
-                  : `${game.room.type} · depth ${game.party.depth}`}
+              {game.room.type} · depth {game.party.depth}
             </p>
             <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
             {game.lastCheck && <LastCheck check={game.lastCheck} />}
-            {won && (
-              <p className="text-base font-semibold text-[#f0c050]">
-                🏆 The hive has defeated {game.map.finalBoss.name}. This
-                subreddit&apos;s campaign is won.
-              </p>
-            )}
-            {!over && <SceneEntities entities={game.room.entities} />}
-            {!over && <ThreatStrip threats={game.room.threats} />}
+            <SceneEntities entities={game.room.entities} />
+            <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
                 {log.map((event, i) => (
@@ -849,83 +992,61 @@ function Board({
             )}
           </section>
 
-          {!over && (
-            <>
-              <p className="text-sm leading-relaxed text-[#a89880]">
-                Reply to this post with what the party should do, or upvote an
-                action below. When the turn resolves, the top-voted action is
-                the one the party takes.
-              </p>
-              <CandidateActions
-                proposals={proposals}
-                resolving={resolving}
-                deadline={game.nextResolveAt}
-                serverOffset={serverOffset}
-                onResolveVotes={onResolveVotes}
-              />
-            </>
-          )}
-
-          {over && (
-            <Leaderboard entries={leaderboard} currentRun={game.runNumber} />
-          )}
+          <p className="text-sm leading-relaxed text-[#a89880]">
+            Reply to this post with what the party should do, or upvote an
+            action below. When the turn resolves, the top-voted action is the
+            one the party takes.
+          </p>
+          <CandidateActions
+            proposals={proposals}
+            resolving={resolving}
+            deadline={game.nextResolveAt}
+            serverOffset={serverOffset}
+            onResolveVotes={onResolveVotes}
+          />
         </main>
 
         <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
           {error && <p className="text-sm text-[#c0392b]">{error}</p>}
           {note && <p className="text-sm text-[#e8893f]">{note}</p>}
-          {over ? (
-            <button
-              onClick={onRestart}
-              disabled={resolving}
-              className="self-start rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-50"
-            >
-              {resolving
-                ? 'Raising a new party…'
-                : won
-                  ? 'Begin a new campaign'
-                  : 'Begin a new run'}
-            </button>
-          ) : (
-            <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
-              <label className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
-                Playing solo? Take a single action directly
-              </label>
-              {game.room.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {game.room.suggestions.map((suggestion, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setDraft(suggestion)}
-                      disabled={resolving}
-                      className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') submit();
-                  }}
-                  disabled={resolving}
-                  placeholder="Search the altar, draw a blade, light a torch…"
-                  className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
-                />
-                <button
-                  onClick={submit}
-                  disabled={resolving || draft.trim().length === 0}
-                  className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
-                >
-                  {resolving ? '…' : 'Act'}
-                </button>
+          <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
+            <label className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
+              Playing solo? Take a single action directly
+            </label>
+            {game.room.suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {game.room.suggestions.map((suggestion, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDraft(suggestion)}
+                    disabled={resolving}
+                    className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submit();
+                }}
+                disabled={resolving}
+                placeholder="Search the altar, draw a blade, light a torch…"
+                className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
+              />
+              <button
+                onClick={submit}
+                disabled={resolving || draft.trim().length === 0}
+                className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
+              >
+                {resolving ? '…' : 'Act'}
+              </button>
             </div>
-          )}
+          </div>
         </footer>
       </div>
     </div>
@@ -1287,18 +1408,21 @@ function SoloPlay({
     );
   }
 
-  const events = game.recentEvents;
-  const dead = game.phase === 'dead';
-  const won = game.phase === 'won';
-  const over = dead || won;
-  const scene = won
-    ? (events.at(-1) ?? 'The last foe falls, and the long dark lifts at last.')
-    : dead
-      ? (events.at(-1) ??
-        'You have fallen. The dungeon falls silent around you.')
-      : game.room.description ||
-        'You press into the dark. The dungeon master is setting the scene…';
-  const log = (over ? events.slice(0, -1) : events.slice()).reverse();
+  if (game.phase === 'dead' || game.phase === 'won') {
+    return (
+      <RunSummary
+        game={game}
+        restarting={resolving}
+        onRestart={() => void solo.start(classId)}
+        onExit={onExit}
+      />
+    );
+  }
+
+  const log = game.recentEvents.slice().reverse();
+  const scene =
+    game.room.description ||
+    'You press into the dark. The dungeon master is setting the scene…';
 
   const submit = () => {
     const action = draft.trim();
@@ -1342,7 +1466,7 @@ function SoloPlay({
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
-          {!over && game.intro.length > 0 && (
+          {game.intro.length > 0 && (
             <section className="rounded border border-[#3a302b] bg-[#211b17] px-4 py-3">
               <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#8a7d72]">
                 Prologue
@@ -1355,22 +1479,12 @@ function SoloPlay({
           <CampaignMap map={game.map} />
           <section className="flex flex-col gap-3">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-              {won
-                ? 'Victory'
-                : dead
-                  ? 'The run ends'
-                  : `${game.room.type} · depth ${game.party.depth}`}
+              {game.room.type} · depth {game.party.depth}
             </p>
             <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
             {game.lastCheck && <LastCheck check={game.lastCheck} />}
-            {won && (
-              <p className="text-base font-semibold text-[#f0c050]">
-                🏆 You have defeated {game.map.finalBoss.name}. The campaign is
-                yours.
-              </p>
-            )}
-            {!over && <SceneEntities entities={game.room.entities} />}
-            {!over && <ThreatStrip threats={game.room.threats} />}
+            <SceneEntities entities={game.room.entities} />
+            <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
               <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
                 {log.map((event, i) => (
@@ -1385,59 +1499,41 @@ function SoloPlay({
 
         <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
           {error && <p className="text-sm text-[#c0392b]">{error}</p>}
-          {over ? (
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => void solo.start(classId)}
-                disabled={resolving}
-                className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-50"
-              >
-                {resolving ? 'Descending…' : 'Descend again'}
-              </button>
-              <button
-                onClick={onExit}
-                className="rounded border border-[#3a302b] px-5 py-2.5 text-[#a89880] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8]"
-              >
-                Leave the dungeon
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
-              {game.room.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {game.room.suggestions.map((suggestion, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setDraft(suggestion)}
-                      disabled={resolving}
-                      className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') submit();
-                  }}
-                  disabled={resolving}
-                  placeholder="Search the altar, draw a blade, light a torch…"
-                  className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
-                />
-                <button
-                  onClick={submit}
-                  disabled={resolving || draft.trim().length === 0}
-                  className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
-                >
-                  {resolving ? '…' : 'Act'}
-                </button>
+          <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
+            {game.room.suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {game.room.suggestions.map((suggestion, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setDraft(suggestion)}
+                    disabled={resolving}
+                    className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submit();
+                }}
+                disabled={resolving}
+                placeholder="Search the altar, draw a blade, light a torch…"
+                className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
+              />
+              <button
+                onClick={submit}
+                disabled={resolving || draft.trim().length === 0}
+                className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
+              >
+                {resolving ? '…' : 'Act'}
+              </button>
             </div>
-          )}
+          </div>
         </footer>
       </div>
     </div>
