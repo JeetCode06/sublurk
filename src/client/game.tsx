@@ -16,6 +16,7 @@ import type {
   SceneEntity,
 } from '../shared/game';
 import { CLASS_INFO, classAffinitySummary } from '../shared/classes';
+import type { ClassNamesResponse, ErrorResponse } from '../shared/api';
 import { useGame, useSolo } from './hooks/useGame';
 
 function HealthBar({ hp, maxHp }: Readonly<{ hp: number; maxHp: number }>) {
@@ -827,13 +828,14 @@ function RunSummary({
   const color = won ? '#f0c050' : '#c0392b';
   const accentText = won ? 'text-[#f0c050]' : 'text-[#c0392b]';
   const boss = game.map.finalBoss.name;
-  // The closing narration doubles as the villain's parting word until F8 swaps
-  // in a remembered taunt addressed to this player.
+  // The closing narration, used as the quote on a first run; from the second run
+  // on, the nemesis's remembered taunt takes its place.
   const finalLine =
     game.recentEvents.at(-1) ??
     (won
       ? 'The last blow lands true, and the long dark lifts at last.'
       : 'The party falls, and the dungeon goes silent around them.');
+  const quote = game.nemesisLine.length > 0 ? game.nemesisLine : finalLine;
   const cleared = game.map.nodes.filter((node) => node.cleared).length;
   const stats = [
     { label: 'Depth', value: String(game.party.depth) },
@@ -866,7 +868,7 @@ function RunSummary({
         </div>
 
         <p className="text-base italic leading-relaxed text-[#c9b896]">
-          “{finalLine}”
+          “{quote}”
         </p>
 
         <div className="grid w-full grid-cols-4 gap-2">
@@ -1290,8 +1292,31 @@ function CharacterSelect({
   onBegin: (classId: string) => void;
 }>) {
   const [selected, setSelected] = useState<ClassId>('warrior');
+  const [themed, setThemed] = useState<Record<ClassId, string> | null>(null);
   const klass = CLASS_INFO[selected];
   const { strong, weak } = classAffinitySummary(selected);
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/classes');
+        const data = (await res.json()) as ClassNamesResponse | ErrorResponse;
+        if (active && 'type' in data) setThemed(data.names);
+      } catch {
+        // Keep the base archetype names if themed names can't be loaded.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const selectedName = themed?.[selected] ?? klass.name;
+  const selectedTag =
+    selectedName === klass.name
+      ? CLASS_ROLE[selected]
+      : `${klass.name} · ${CLASS_ROLE[selected]}`;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1a1614] px-5 py-10 text-[#e8ddc8]">
@@ -1307,6 +1332,8 @@ function CharacterSelect({
         <div className="mt-6 grid grid-cols-2 gap-2.5">
           {CLASS_ORDER.map((id) => {
             const info = CLASS_INFO[id];
+            const display = themed?.[id] ?? info.name;
+            const tag = display === info.name ? CLASS_ROLE[id] : info.name;
             const isSelected = id === selected;
             return (
               <button
@@ -1336,10 +1363,10 @@ function CharacterSelect({
                       isSelected ? 'text-[#f3cd7f]' : 'text-[#a89a8c]'
                     }`}
                   >
-                    {info.name}
+                    {display}
                   </span>
                   <span className="block font-mono text-[0.65rem] uppercase tracking-wider text-[#7a6f64]">
-                    {CLASS_ROLE[id]}
+                    {tag}
                   </span>
                 </span>
               </button>
@@ -1350,10 +1377,10 @@ function CharacterSelect({
         <div className="mt-4 rounded-lg border border-[#2f2722] bg-[#1b1613] p-4">
           <div className="flex items-baseline gap-2">
             <span className="text-base font-medium text-[#f3cd7f]">
-              {klass.name}
+              {selectedName}
             </span>
             <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#7a6f64]">
-              {CLASS_ROLE[selected]}
+              {selectedTag}
             </span>
           </div>
           <div className="mt-3 grid grid-cols-6 gap-1 text-center">

@@ -144,6 +144,10 @@ export type GameState = {
   // Consecutive failed turns in the current room. Drives escalation and a hard
   // forced exit so a room can never become an infinite loop.
   roomFailures: number;
+  // The nemesis's remembered taunt for this run, drawn from past runs' outcomes
+  // at run start. Empty on a first descent. Surfaces in the cold open and on the
+  // run-summary screen.
+  nemesisLine: string;
   lastCheck?: AbilityCheck;
 };
 

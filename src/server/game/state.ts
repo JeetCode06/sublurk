@@ -47,6 +47,7 @@ export function createInitialState(
     nextResolveAt: 0,
     voteThreshold: DEFAULT_VOTE_THRESHOLD,
     roomFailures: 0,
+    nemesisLine: '',
   };
 }
 
@@ -66,5 +67,6 @@ export function startNewRun(
     recentEvents: [],
     nextResolveAt: 0,
     roomFailures: 0,
+    nemesisLine: '',
   };
 }

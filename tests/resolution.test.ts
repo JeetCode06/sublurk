@@ -12,6 +12,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     phase: 'awaiting_actions',
     postId: 't3_test',
     theme: 'catacombs',
+    nemesisLine: '',
     party: {
       hp: 50,
       maxHp: 50,

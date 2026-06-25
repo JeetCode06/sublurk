@@ -271,6 +271,19 @@ describe('buildIntroPrompt', () => {
     expect(prompt).toContain('Their goal');
     expect(prompt).toContain(state.map.finalBoss.name);
   });
+
+  it('weaves in the nemesis taunt when the run carries one', () => {
+    const haunted = {
+      ...state,
+      nemesisLine: 'Last time, you fell to the Tidemother at the Drowned Nave.',
+    };
+    expect(buildIntroPrompt(haunted, bible)).toContain(
+      'fell to the Tidemother at the Drowned Nave'
+    );
+    expect(buildIntroPrompt(state, bible)).not.toContain(
+      'remembers this party'
+    );
+  });
 });
 
 describe('suggestions in prompts', () => {

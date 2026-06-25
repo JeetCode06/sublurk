@@ -137,6 +137,9 @@ export function buildIntroPrompt(state: GameState, bible: WorldBible): string {
     `Party: ${party.name} (class: ${party.classId})`,
     start ? `They set out from ${start.name} — ${start.themeTag}.` : '',
     `Their goal: reach ${destination ? destination.name : 'the heart of the dungeon'} and defeat ${map.finalBoss.name}.`,
+    state.nemesisLine.length > 0
+      ? `The dungeon remembers this party: ${state.nemesisLine} Let that memory shadow the opening, in the world's own voice.`
+      : '',
     intelLine(bible, state.runNumber),
     `Write the cold open for this run.`,
   ].filter((line) => line.length > 0);

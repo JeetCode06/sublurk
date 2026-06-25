@@ -7,9 +7,11 @@ import type {
   LeaderboardResponse,
   ProposalsResponse,
 } from '../../shared/api';
-import type { ClassId } from '../../shared/game';
+import type { ClassId, GameState } from '../../shared/game';
 import { loadGame, saveGame, loadSoloGame, saveSoloGame } from '../data/games';
 import { recordRun, topRuns } from '../data/leaderboard';
+import { loadLore, appendRun } from '../data/lore';
+import { tauntFromLore, recordFromState } from '../game/lore';
 import { createInitialState, startNewRun } from '../game/state';
 import { CLASSES } from '../game/classes';
 import { freshMap } from '../game/map';
@@ -30,6 +32,22 @@ function errorMessage(error: unknown): string {
 async function currentUsername(): Promise<string> {
   const username = await reddit.getCurrentUsername();
   return username ?? 'adventurer';
+}
+
+// The nemesis's remembered line for a new run, from past outcomes in this scope
+// (the subreddit's shared history, or a solo player's own).
+async function rememberedTaunt(userId?: string): Promise<string> {
+  return tauntFromLore(await loadLore(userId));
+}
+
+// Records a run's outcome once it has ended, so the next descent can be taunted.
+async function rememberOutcome(
+  state: GameState,
+  userId?: string
+): Promise<void> {
+  if (state.phase === 'dead' || state.phase === 'won') {
+    await appendRun(recordFromState(state), userId);
+  }
 }
 
 // The subreddit's themed name for each hero archetype, for the character screen.
@@ -69,6 +87,7 @@ api.get('/game', async (c) => {
           theme: themeForSubreddit(subredditName),
         }),
         map: freshMap(map),
+        nemesisLine: await rememberedTaunt(),
       });
     }
     // Fill the room's intro if missing, without re-stamping the deadline, so
@@ -160,6 +179,7 @@ api.post('/action', async (c) => {
       await withRoomIntro(await runTurn(state, action, bible), bible)
     );
     await saveGame(nextState);
+    await rememberOutcome(nextState);
 
     if (nextState.party.depth > state.party.depth) {
       await recordRun(nextState);
@@ -211,6 +231,7 @@ api.post('/solo/start', async (c) => {
           theme: themeForSubreddit(subredditName),
         }),
         map: freshMap(map),
+        nemesisLine: await rememberedTaunt(userId),
       },
       bible
     );
@@ -268,6 +289,7 @@ api.post('/solo/action', async (c) => {
       bible
     );
     await saveSoloGame(userId, nextState);
+    await rememberOutcome(nextState, userId);
 
     return c.json<GameResponse>({
       type: 'game',
@@ -287,6 +309,7 @@ api.post('/resolve', async (c) => {
     const outcome = await resolveTurnFromComments();
     const username = await currentUsername();
     if (outcome.status === 'resolved') {
+      await rememberOutcome(outcome.state);
       return c.json<GameResponse>({
         type: 'game',
         state: outcome.state,
@@ -342,7 +365,10 @@ api.post('/restart', async (c) => {
     // A new run always begins on the subreddit's canonical campaign map, so a
     // restart also adopts a map that was generated since the run started.
     const state = withDeadline(
-      await withRoomIntro({ ...base, map: freshMap(map) }, bible)
+      await withRoomIntro(
+        { ...base, map: freshMap(map), nemesisLine: await rememberedTaunt() },
+        bible
+      )
     );
     await saveGame(state);
     return c.json<GameResponse>({

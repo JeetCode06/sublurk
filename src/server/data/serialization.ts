@@ -25,6 +25,8 @@ export function deserializeGame(raw: string): GameState | null {
       return {
         ...state,
         intro: typeof state.intro === 'string' ? state.intro : '',
+        nemesisLine:
+          typeof state.nemesisLine === 'string' ? state.nemesisLine : '',
         roomFailures:
           typeof state.roomFailures === 'number' ? state.roomFailures : 0,
         map: coerceMap(state.map),
