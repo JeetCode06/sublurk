@@ -1096,6 +1096,10 @@ function Board({
   );
 }
 
+// The app's page in Reddit's Developer Platform app directory, where a mod can
+// add it to their own community. Update the slug to the published app's URL.
+const INSTALL_URL = 'https://developers.reddit.com/apps/hivemind-crawl';
+
 function ModeSelect({
   onSolo,
   onCommunity,
@@ -1103,6 +1107,7 @@ function ModeSelect({
   onSolo: () => void;
   onCommunity: () => void;
 }>) {
+  const [showInstall, setShowInstall] = useState(false);
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1a1614] px-5 py-12 text-[#e8ddc8]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.55))]" />
@@ -1188,12 +1193,53 @@ function ModeSelect({
           </button>
         </div>
 
-        <button
-          type="button"
-          className="mx-auto mt-7 block font-mono text-[11px] tracking-wide text-[#6a5d52] transition hover:text-[#8a7d72]"
-        >
-          Get Hivemind Crawl on your subreddit →
-        </button>
+        <div className="mt-7">
+          <button
+            type="button"
+            onClick={() => setShowInstall((open) => !open)}
+            className="mx-auto block font-mono text-[11px] tracking-wide text-[#6a5d52] transition hover:text-[#8a7d72]"
+          >
+            Get Hivemind Crawl on your subreddit →
+          </button>
+          {showInstall && (
+            <div className="mt-4 rounded-xl border border-[#2f2722] bg-[#1b1613] p-4 text-left">
+              <p className="text-sm leading-relaxed text-[#c9b896]">
+                Hivemind Crawl builds its world from whatever subreddit it lives
+                in. Add it to a community you moderate and it forges a brand-new
+                dungeon from that sub.
+              </p>
+              <ol className="mt-3 flex flex-col gap-1.5 text-xs leading-snug text-[#a89880]">
+                <li>
+                  <span className="text-[#8a7d72]">1.</span> Open the app page
+                  on Reddit&apos;s Developer Platform.
+                </li>
+                <li>
+                  <span className="text-[#8a7d72]">2.</span> Click{' '}
+                  <span className="text-[#e8ddc8]">+ Add to Community</span> and
+                  grant permissions.
+                </li>
+                <li>
+                  <span className="text-[#8a7d72]">3.</span> Pick a subreddit
+                  you fully moderate — done.
+                </li>
+              </ol>
+              <a
+                href={INSTALL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex items-center justify-center rounded-lg bg-[#e8893f] px-4 py-2.5 text-sm font-medium text-[#1a1614] transition hover:bg-[#f0a050]"
+              >
+                Open the app page ↗
+              </a>
+              <p className="mt-2 break-all text-center font-mono text-[10px] text-[#5a4f47]">
+                {INSTALL_URL}
+              </p>
+              <p className="mt-2 text-center text-[10px] text-[#6a5d52]">
+                Installing apps is limited to subreddit moderators.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
