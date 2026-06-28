@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildTurnPrompt,
+  turnSystemPrompt,
   SYSTEM_PROMPT,
   buildRoomIntroPrompt,
   ROOM_INTRO_SYSTEM_PROMPT,
@@ -299,5 +300,29 @@ describe('stuck escalation', () => {
     expect(buildTurnPrompt(stuck, 'wait', roll, bible)).toContain(
       'force a way onward'
     );
+  });
+});
+
+describe('solo voice', () => {
+  it('addresses a lone adventurer, not the community or a party', () => {
+    const solo = buildTurnPrompt(state, 'attack', roll, bible, 'solo');
+    expect(solo).toContain('You chose');
+    expect(solo).not.toContain('The community chose');
+    expect(turnSystemPrompt('solo')).toContain('lone adventurer');
+    expect(turnSystemPrompt('solo')).not.toContain('community');
+  });
+
+  it('keeps the community lane as the default', () => {
+    expect(buildTurnPrompt(state, 'attack', roll, bible)).toContain(
+      'The community chose'
+    );
+    expect(turnSystemPrompt('community')).toBe(SYSTEM_PROMPT);
+  });
+});
+
+describe('concrete foes', () => {
+  it('steers scene and world generation toward physical creatures', () => {
+    expect(ROOM_INTRO_SYSTEM_PROMPT).toContain('physical');
+    expect(WORLD_BIBLE_SYSTEM_PROMPT).toContain('physical');
   });
 });

@@ -2,7 +2,7 @@ import { reddit } from '@devvit/web/server';
 import type { GameState, Proposal, WorldBible } from '../shared/game';
 import { prepareRoll, applyTurn } from './game/resolution';
 import { rankProposals, RECAP_MARKER } from './game/voting';
-import { SYSTEM_PROMPT, buildTurnPrompt } from './ai/prompt';
+import { turnSystemPrompt, buildTurnPrompt, type Lane } from './ai/prompt';
 import { parseResolveResult } from './ai/parse';
 import { callGemini } from './ai/gemini';
 import { loadGame, saveGame } from './data/games';
@@ -21,12 +21,13 @@ type PostId = `t3_${string}`;
 export async function runTurn(
   state: GameState,
   action: string,
-  bible: WorldBible
+  bible: WorldBible,
+  lane: Lane = 'community'
 ): Promise<GameState> {
   const roll = prepareRoll(state);
   const raw = await callGemini(
-    SYSTEM_PROMPT,
-    buildTurnPrompt(state, action, roll, bible)
+    turnSystemPrompt(lane),
+    buildTurnPrompt(state, action, roll, bible, lane)
   );
   return { ...applyTurn(state, parseResolveResult(raw)), lastCheck: roll };
 }

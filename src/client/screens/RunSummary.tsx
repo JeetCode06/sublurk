@@ -68,7 +68,7 @@ export function RunSummary({
     game.recentEvents.at(-1) ??
     (won
       ? 'The last blow lands true, and the long dark lifts at last.'
-      : 'The party falls, and the dungeon goes silent around them.');
+      : 'The last torch gutters out, and the dungeon falls silent.');
   const quote = game.nemesisLine.length > 0 ? game.nemesisLine : finalLine;
   const cleared = game.map.nodes.filter((node) => node.cleared).length;
   const stats = [
@@ -79,7 +79,7 @@ export function RunSummary({
   ];
 
   let restartLabel: string;
-  if (restarting) restartLabel = 'Raising a new party…';
+  if (restarting) restartLabel = 'Descending again…';
   else if (won) restartLabel = 'Descend anew';
   else restartLabel = 'Descend again';
 

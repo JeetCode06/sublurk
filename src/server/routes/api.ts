@@ -233,7 +233,8 @@ api.post('/solo/start', async (c) => {
         map: freshMap(map),
         nemesisLine: await rememberedTaunt(userId),
       },
-      bible
+      bible,
+      'solo'
     );
     await saveSoloGame(userId, state);
 
@@ -285,8 +286,9 @@ api.post('/solo/action', async (c) => {
 
     const bible = await ensureWorldBible();
     const nextState = await withRoomIntro(
-      await runTurn(state, action, bible),
-      bible
+      await runTurn(state, action, bible, 'solo'),
+      bible,
+      'solo'
     );
     await saveSoloGame(userId, nextState);
     await rememberOutcome(nextState, userId);

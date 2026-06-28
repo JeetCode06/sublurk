@@ -181,7 +181,7 @@ function asSuggestions(value: unknown): string[] {
 
 // Used when a scene can't be generated, so a room is never left blank.
 const FALLBACK_DESCRIPTION =
-  'The chamber waits in restless shadow, its purpose not yet clear. The party steadies their torches and presses on.';
+  'The chamber waits in restless shadow, its purpose not yet clear. Torchlight trembles against the dark, and the way ahead beckons.';
 
 export const FALLBACK_SCENE: Scene = {
   description: FALLBACK_DESCRIPTION,
@@ -194,7 +194,7 @@ export const FALLBACK_SCENE: Scene = {
 // into safe, capped, well-formed data. A missing or unreadable reply falls back
 // to a calm, empty scene so the board always has something valid to render.
 const FALLBACK_INTRO =
-  'Your party stands at the dungeon mouth, bound by a common purpose. The dark ahead is long and the goal far, but every step is yours to choose together. Begin.';
+  'The dungeon mouth yawns ahead, dark and waiting. The goal lies far below, past every danger between here and the deep — and the first step is yours. Begin.';
 
 export function parseIntro(raw: string): string {
   const json = extractJson(raw);
