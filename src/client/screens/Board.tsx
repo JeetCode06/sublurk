@@ -49,7 +49,7 @@ export function Board({
     );
   }
 
-  const log = game.recentEvents.slice().reverse();
+  const log = game.recentEvents.slice(-3);
   const record = leaderboard[0]?.depth ?? null;
   const scene =
     game.room.description ||

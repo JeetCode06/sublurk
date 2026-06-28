@@ -41,7 +41,7 @@ export function SoloPlay({
     );
   }
 
-  const log = game.recentEvents.slice().reverse();
+  const log = game.recentEvents.slice(-3);
   const scene =
     game.room.description ||
     'You press into the dark. The dungeon master is setting the scene…';
