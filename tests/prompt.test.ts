@@ -310,6 +310,7 @@ describe('solo voice', () => {
     expect(solo).not.toContain('The community chose');
     expect(turnSystemPrompt('solo')).toContain('lone adventurer');
     expect(turnSystemPrompt('solo')).not.toContain('community');
+    expect(turnSystemPrompt('solo')).toContain('only one lone adventurer');
   });
 
   it('keeps the community lane as the default', () => {

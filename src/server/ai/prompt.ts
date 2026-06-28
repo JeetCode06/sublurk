@@ -20,6 +20,13 @@ export type Lane = 'solo' | 'community';
 const CONCRETE_FOES =
   'Make foes concrete and physical — named beasts, monsters, guardians, or people with real bodies and clear forms. Avoid vague abstractions like "shadows", "gloom", "whispers", or formless "presences" as enemies.';
 
+// A solo player embodies the world's hero archetype alone, but worlds describe
+// their heroes as a group — and a sub literally named for a "hivemind" bakes
+// that in — so solo prompts need an explicit guard or the narration slips into
+// a collective "we".
+const SOLO_GUARD =
+  'You act alone: even if the world\'s lore frames its heroes as a group, a collective, or a "hivemind", there is only one lone adventurer here — no companions, party, or shared mind — so never imply that anyone else acts with you.';
+
 export const SYSTEM_PROMPT = `You are the Dungeon Master for a collaborative Reddit dungeon crawler. A whole community controls one party by voting on actions in the comments.
 
 Narrate the outcome of the party's chosen action in 2-4 vivid sentences, then report the mechanical result.
@@ -48,6 +55,8 @@ Rules:
 }`;
 
 export const SYSTEM_PROMPT_SOLO = `You are the Dungeon Master for a solo Reddit dungeon crawler. A lone adventurer delves into the dungeon, and you narrate what becomes of them.
+
+${SOLO_GUARD}
 
 Narrate the outcome of the adventurer's chosen action in 2-4 vivid sentences, addressing them directly as "you", then report the mechanical result.
 
@@ -175,6 +184,8 @@ Match the world, let its villain loom, and keep content safe for a general audie
 
 export const INTRO_SYSTEM_PROMPT_SOLO = `You are the Dungeon Master opening a new run of a solo Reddit dungeon crawler, where a lone adventurer delves into the dungeon alone.
 
+${SOLO_GUARD}
+
 Write a short, punchy cold open of 3-4 sentences that does three things: introduce who this adventurer is and how they came to be here, set the mood of the world, and state plainly what they must do — the goal and the foe waiting at the end. Address the adventurer directly as "you". End on a beat that invites them to act. Do NOT describe a specific room, resolve anything, or decide the first action — you choose that next.
 
 Match the world, let its villain loom, and keep content safe for a general audience. Respond with ONLY a JSON object, no markdown and no extra text, in exactly this shape:
@@ -230,6 +241,8 @@ Match the world and let its villain loom when fitting, and keep content safe for
 }`;
 
 export const ROOM_INTRO_SYSTEM_PROMPT_SOLO = `You are the Dungeon Master for a solo Reddit dungeon crawler, setting the scene as a lone adventurer enters a new room.
+
+${SOLO_GUARD}
 
 Describe what you see in 2-3 vivid, atmospheric sentences, addressing the adventurer as "you", then list what is actually present as structured data the game renders as a board. Do NOT resolve anything, invent specific outcomes, or decide what you do next — you will choose that.
 
