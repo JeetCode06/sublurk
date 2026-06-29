@@ -21,3 +21,8 @@ export async function loadMap(): Promise<MapState | null> {
 export async function saveMap(map: MapState): Promise<void> {
   await redis.set(mapKey(context.subredditName), JSON.stringify(map));
 }
+
+// Clears the sub's cached map so the next access regenerates a fresh journey.
+export async function deleteMap(): Promise<void> {
+  await redis.del(mapKey(context.subredditName));
+}

@@ -24,3 +24,8 @@ export async function loadBible(): Promise<WorldBible | null> {
 export async function saveBible(bible: WorldBible): Promise<void> {
   await redis.set(bibleKey(context.subredditName), JSON.stringify(bible));
 }
+
+// Clears the sub's cached world so the next access regenerates a fresh one.
+export async function deleteBible(): Promise<void> {
+  await redis.del(bibleKey(context.subredditName));
+}

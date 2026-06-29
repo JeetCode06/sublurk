@@ -33,11 +33,11 @@
         "endpoint": "/internal/menu/post-create"
       },
       {
-        "label": "Example form",
-        "description": "Show a simple form",
+        "label": "Reset world",
+        "description": "Clear this community's cached world so a fresh one is generated",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/example-form"
+        "endpoint": "/internal/menu/reset-world"
       },
       {
         "label": "Resolve the turn",
@@ -47,9 +47,6 @@
         "endpoint": "/internal/menu/resolve-turn"
       }
     ]
-  },
-  "forms": {
-    "exampleForm": "/internal/form/example-submit"
   },
   "triggers": {
     "onAppInstall": "/internal/triggers/on-app-install"

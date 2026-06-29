@@ -17,6 +17,12 @@ export async function saveGame(state: GameState): Promise<void> {
   await redis.set(gameKey(context.subredditName), serializeGame(state));
 }
 
+// Clears the sub's shared community run so a world reset starts from a fresh
+// game rather than one still carrying the old map.
+export async function deleteGame(): Promise<void> {
+  await redis.del(gameKey(context.subredditName));
+}
+
 // A private, per-user solo run. Keyed by sub and user so every player has their
 // own game, separate from the sub's one shared community run.
 const soloKey = (subredditName: string, userId: string): string =>

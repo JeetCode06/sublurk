@@ -3,6 +3,9 @@ import type { UiResponse } from '@devvit/web/shared';
 import { context } from '@devvit/web/server';
 import { createPost } from '../core/post';
 import { resolveTurnFromComments, type ResolveOutcome } from '../turn';
+import { deleteBible } from '../data/bible';
+import { deleteMap } from '../data/map';
+import { deleteGame } from '../data/games';
 
 export const menu = new Hono();
 
@@ -47,5 +50,18 @@ menu.post('/resolve-turn', async (c) => {
   } catch (error) {
     console.error(`Error resolving turn: ${error}`);
     return c.json<UiResponse>({ showToast: 'Failed to resolve the turn' }, 400);
+  }
+});
+
+menu.post('/reset-world', async (c) => {
+  try {
+    await Promise.all([deleteBible(), deleteMap(), deleteGame()]);
+    return c.json<UiResponse>(
+      { showToast: 'World reset — create a new post to generate a fresh one.' },
+      200
+    );
+  } catch (error) {
+    console.error(`Error resetting world: ${error}`);
+    return c.json<UiResponse>({ showToast: 'Failed to reset the world' }, 400);
   }
 });
