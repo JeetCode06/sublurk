@@ -1,1 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Oswald:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
+
+/* Torchlit design tokens — three voices: Cinzel for display, Spectral for prose,
+   Oswald for stat labels and badges. Palette is firelit stone: pitch dark under
+   an ember-orange torch, with a cold teal reserved for the community lane. */
+@theme {
+  --font-display: 'Cinzel', Georgia, serif;
+  --font-body: 'Spectral', Georgia, serif;
+  --font-label: 'Oswald', system-ui, sans-serif;
+
+  --color-pitch: #0a0705;
+  --color-pitch-2: #140d09;
+  --color-stone: #1c130c;
+  --color-ink: #e8ddc8;
+  --color-parchment: #cdbb9c;
+  --color-muted: #9a8a72;
+  --color-faint: #6b5f52;
+  --color-edge: #3a302b;
+
+  --color-ember: #e8893f;
+  --color-ember-bright: #f7a85a;
+  --color-ember-glow: #f7c98a;
+  --color-blood: #d6453f;
+  --color-teal: #5cc4d6;
+  --color-teal-bright: #7fd6e4;
+}
+
+@keyframes flick {
+  0%,
+  100% {
+    opacity: 0.95;
+    transform: scale(1) translateY(0);
+  }
+  40% {
+    opacity: 0.6;
+    transform: scale(0.93);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.04) translateY(-0.5px);
+  }
+}
+@keyframes ember {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-90px) scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes popin {
+  from {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes sheen {
+  0% {
+    transform: translateX(-130%);
+  }
+  55%,
+  100% {
+    transform: translateX(260%);
+  }
+}
+@keyframes hppulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(214, 69, 63, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px 1px rgba(214, 69, 63, 0.6);
+  }
+}
+@keyframes glowpulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: #0a0705;
+  color: #e8ddc8;
+  -webkit-font-smoothing: antialiased;
+}
+::selection {
+  background: rgba(232, 137, 63, 0.3);
+}
+
+/* The firelit room behind every screen, plus its drifting embers. */
+.torchlit {
+  background: radial-gradient(
+    130% 80% at 50% -10%,
+    #241910 0%,
+    #140d09 46%,
+    #0a0705 100%
+  );
+}
+.ember-dot {
+  position: absolute;
+  border-radius: 9999px;
+  background: #f7a85a;
+  box-shadow: 0 0 9px #e8893f;
+  pointer-events: none;
+}
+.anim-rise {
+  animation: rise 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.anim-pop {
+  animation: popin 0.3s ease-out;
+}
+.anim-flick {
+  animation: flick 4s ease-in-out infinite;
+}
