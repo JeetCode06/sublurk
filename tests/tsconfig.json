@@ -1,0 +1,10 @@
+{
+  "extends": "../tools/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "types": ["node"],
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["**/*"]
+}
