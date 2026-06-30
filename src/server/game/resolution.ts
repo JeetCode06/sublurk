@@ -6,7 +6,7 @@ import type {
 } from '../../shared/game';
 import type { RandFn } from './dice';
 import { rollCheck, combineAdvantage } from './dice';
-import { abilityForRoomType } from './abilities';
+import { abilityForRoomType, combatAbility } from './abilities';
 import { classAdvantage } from './classes';
 import { checkDisadvantageFrom } from './conditions';
 import { createRoom, createFinalBossRoom } from './rooms';
@@ -25,7 +25,11 @@ export function prepareRoll(
   state: GameState,
   rand: RandFn = Math.random
 ): AbilityCheck {
-  const ability = abilityForRoomType(state.room.type);
+  const { type } = state.room;
+  const ability =
+    type === 'combat' || type === 'boss'
+      ? combatAbility(state.party.abilities)
+      : abilityForRoomType(type);
   const score = state.party.abilities[ability];
   const fromClass = classAdvantage(state.party.classId, state.room.type);
   const fromConditions: Advantage = checkDisadvantageFrom(
@@ -60,13 +64,19 @@ export function applyTurn(
 
   if (resolved) {
     const depth = state.party.depth + 1;
+    // Clearing a room pays gold scaled to its difficulty, so deeper, harder
+    // rooms pay more; being forced out by the stuck-limit pays nothing.
+    const gold = result.roomResolved
+      ? applied.party.gold + state.room.difficulty
+      : applied.party.gold;
+    const clearedParty = { ...applied.party, depth, gold };
 
     // Resolving the room at the final location is the campaign's climax —
     // defeating the boss wins the run.
     if (atFinalBoss(state.map)) {
       return {
         ...state,
-        party: { ...applied.party, depth },
+        party: clearedParty,
         map: markBossDefeated(state.map),
         phase: 'won',
         recentEvents,
@@ -82,7 +92,7 @@ export function applyTurn(
       : createRoom(depth, rand);
     return {
       ...state,
-      party: { ...applied.party, depth },
+      party: clearedParty,
       room,
       map,
       phase: 'awaiting_actions',

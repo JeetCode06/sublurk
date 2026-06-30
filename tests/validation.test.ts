@@ -152,6 +152,6 @@ describe('condition health drain', () => {
       makeParty({ hp: 50, conditions: ['poisoned'] }),
       makeResult({ hpDelta: 0 })
     );
-    expect(party.hp).toBe(48);
+    expect(party.hp).toBe(49);
   });
 });

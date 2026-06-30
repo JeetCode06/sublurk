@@ -64,8 +64,8 @@ describe('checkDisadvantageFrom', () => {
 
 describe('conditionHpTick', () => {
   it('sums the per-turn drain of active conditions', () => {
-    expect(conditionHpTick(['poisoned'])).toBe(2);
-    expect(conditionHpTick(['poisoned', 'exhausted'])).toBe(5);
+    expect(conditionHpTick(['poisoned'])).toBe(1);
+    expect(conditionHpTick(['poisoned', 'exhausted'])).toBe(3);
   });
 
   it('is zero for conditions that do not drain health', () => {

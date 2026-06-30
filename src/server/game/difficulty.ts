@@ -43,9 +43,9 @@ const BASE_BAND: Record<RoomType, DifficultyBand> = {
   shop: 'easy',
   treasure: 'easy',
   npc: 'easy',
-  combat: 'medium',
-  puzzle: 'medium',
-  trap: 'medium',
+  combat: 'easy',
+  puzzle: 'easy',
+  trap: 'easy',
   boss: 'hard',
 };
 

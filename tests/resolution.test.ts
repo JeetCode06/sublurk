@@ -84,6 +84,19 @@ describe('prepareRoll', () => {
     const warrior = prepareRoll(withClass('warrior'), () => 0.45);
     expect(warrior.advantage).toBe('advantage'); // strong in combat
   });
+
+  it('lets a finesse class fight with Dexterity in combat', () => {
+    const base = makeState();
+    const finesse = {
+      ...base,
+      party: {
+        ...base.party,
+        abilities: { ...base.party.abilities, str: 10, dex: 16 },
+      },
+    };
+    const roll = prepareRoll(finesse, () => 0.45);
+    expect(roll.ability).toBe('dex'); // dex 16 > str 10
+  });
 });
 
 describe('applyTurn', () => {
@@ -102,6 +115,24 @@ describe('applyTurn', () => {
     expect(next.party.depth).toBe(3);
     expect(next.phase).toBe('awaiting_actions');
     expect(next.room).not.toBe(start.room);
+  });
+
+  it('awards gold scaled to difficulty when a room is genuinely cleared', () => {
+    const next = applyTurn(
+      makeState(),
+      makeResult({ roomResolved: true }),
+      () => 0
+    );
+    expect(next.party.gold).toBe(12); // room difficulty 12
+  });
+
+  it('awards no gold when the party is only forced onward', () => {
+    const next = applyTurn(
+      makeState({ roomFailures: STUCK_LIMIT - 1 }),
+      makeResult({ outcome: 'fail', roomResolved: false })
+    );
+    expect(next.party.depth).toBe(1);
+    expect(next.party.gold).toBe(0);
   });
 
   it('keeps the same room when it is not resolved', () => {

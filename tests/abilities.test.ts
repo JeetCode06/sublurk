@@ -4,6 +4,7 @@ import {
   DEFAULT_ABILITIES,
   abilityModifier,
   abilityForRoomType,
+  combatAbility,
   coerceAbilities,
 } from '../src/server/game/abilities';
 import { CLASSES } from '../src/server/game/classes';
@@ -58,5 +59,22 @@ describe('abilityForRoomType', () => {
     expect(abilityForRoomType('treasure')).toBe('wis');
     expect(abilityForRoomType('npc')).toBe('cha');
     expect(abilityForRoomType('rest')).toBe('con');
+  });
+});
+
+describe('combatAbility', () => {
+  it('picks the stronger of Strength and Dexterity', () => {
+    expect(
+      combatAbility({ str: 16, dex: 12, con: 10, int: 10, wis: 10, cha: 10 })
+    ).toBe('str');
+    expect(
+      combatAbility({ str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 })
+    ).toBe('dex');
+  });
+
+  it('breaks ties toward Strength', () => {
+    expect(
+      combatAbility({ str: 12, dex: 12, con: 12, int: 12, wis: 12, cha: 12 })
+    ).toBe('str');
   });
 });

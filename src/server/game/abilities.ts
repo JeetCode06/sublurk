@@ -17,6 +17,13 @@ export function abilityForRoomType(roomType: RoomType): AbilityId {
   return ROOM_ABILITY[roomType];
 }
 
+// Combat and boss rooms can be met with muscle or finesse, so a hero fights with
+// whichever of Strength or Dexterity serves them better — a Rogue isn't punished
+// for not being a bruiser. Ties fall to Strength.
+export function combatAbility(abilities: Abilities): AbilityId {
+  return abilities.dex > abilities.str ? 'dex' : 'str';
+}
+
 export const ABILITY_IDS: AbilityId[] = [
   'str',
   'dex',

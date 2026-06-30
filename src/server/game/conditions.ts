@@ -24,7 +24,7 @@ export const CONDITIONS: Record<
     name: 'Poisoned',
     summary: 'Sickened — disadvantage on checks, and it saps health each turn.',
     disadvantageOnChecks: true,
-    hpTickPerTurn: 2,
+    hpTickPerTurn: 1,
   },
   frightened: {
     name: 'Frightened',
@@ -46,7 +46,7 @@ export const CONDITIONS: Record<
     summary:
       'Worn down — disadvantage on checks, and it wears health away each turn.',
     disadvantageOnChecks: true,
-    hpTickPerTurn: 3,
+    hpTickPerTurn: 2,
   },
   charmed: {
     name: 'Charmed',

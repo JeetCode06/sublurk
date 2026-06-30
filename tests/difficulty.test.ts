@@ -21,12 +21,12 @@ describe('bandForRoom', () => {
   it('uses a base band per room type at the surface', () => {
     expect(bandForRoom('rest', 0)).toBe('trivial');
     expect(bandForRoom('npc', 0)).toBe('easy');
-    expect(bandForRoom('combat', 0)).toBe('medium');
+    expect(bandForRoom('combat', 0)).toBe('easy');
     expect(bandForRoom('boss', 0)).toBe('hard');
   });
 
   it('raises the band as the party goes deeper', () => {
-    expect(bandForRoom('combat', 8)).toBe('very_hard'); // medium + 2 steps
+    expect(bandForRoom('combat', 8)).toBe('hard'); // easy + 2 steps
   });
 
   it('caps at the hardest band', () => {
