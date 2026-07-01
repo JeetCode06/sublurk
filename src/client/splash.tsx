@@ -3,31 +3,51 @@ import './index.css';
 import { navigateTo, requestExpandedMode } from '@devvit/web/client';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Embers } from './Embers';
 
 export const Splash = () => {
   return (
-    <div className="flex relative flex-col justify-center items-center min-h-screen gap-6 bg-[#1a1614] px-6 text-center">
-      <div className="flex flex-col items-center gap-3">
-        <h1 className="text-4xl font-bold tracking-wide text-[#e8893f]">
-          Hivemind Crawl
+    <div className="torchlit relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
+      <Embers />
+
+      <div className="anim-rise relative flex flex-col items-center gap-4">
+        <span className="inline-flex items-center rounded-full border border-[#5a3a1e] bg-[#1d130b] px-3.5 py-1 font-label text-[11px] font-semibold uppercase tracking-[0.3em] text-ember">
+          AI Dungeon Crawler
+        </span>
+
+        <h1
+          className="font-display text-[46px] font-black leading-[0.92] tracking-[0.03em] text-[#f7b061]"
+          style={{ textShadow: '0 0 34px rgba(247,176,97,.34)' }}
+        >
+          HIVEMIND
+          <br />
+          CRAWL
         </h1>
-        <p className="max-w-sm text-base leading-relaxed text-[#8a7d72]">
-          A subreddit plays one D&amp;D party. Propose a move, vote in the
-          comments, and survive the dungeon together.
+
+        <p className="max-w-[350px] font-body text-[15.5px] italic leading-relaxed text-parchment">
+          Descend an AI-narrated dungeon built from your subreddit. Roll dice.
+          Die permanently. Get taunted.
         </p>
+
+        <button
+          className="mt-2 flex h-12 cursor-pointer items-center justify-center rounded-full bg-ember px-8 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#1a1006] transition hover:brightness-110"
+          style={{ boxShadow: '0 0 26px rgba(232,137,63,.4)' }}
+          onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
+        >
+          Enter the dungeon
+        </button>
+
+        <div className="mt-1 flex items-center gap-2.5 font-label text-[10.5px] uppercase tracking-[0.24em]">
+          <span className="text-ember">Solo</span>
+          <span className="h-1 w-1 rounded-full bg-faint" />
+          <span className="text-teal">Community</span>
+        </div>
       </div>
 
-      <button
-        className="flex items-center justify-center h-11 px-6 rounded-full font-semibold text-[#1a1614] bg-[#e8893f] cursor-pointer transition-colors hover:bg-[#f0a25c]"
-        onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
-      >
-        Enter the Dungeon
-      </button>
-
-      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[0.72em] text-[#6b6058]">
+      <footer className="absolute bottom-4 left-1/2 -translate-x-1/2 font-body text-[11px] text-faint">
         <span>Mechanics from the D&amp;D SRD 5.1 · </span>
         <button
-          className="cursor-pointer underline hover:text-[#8a7d72] transition-colors"
+          className="cursor-pointer underline transition-colors hover:text-muted"
           onClick={() =>
             navigateTo('https://creativecommons.org/licenses/by/4.0/legalcode')
           }
