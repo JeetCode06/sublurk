@@ -63,62 +63,71 @@ export function Board({
   };
 
   return (
-    <div className="flex min-h-screen justify-center bg-[#1a1614] text-[#e8ddc8]">
-      <div className="flex w-full max-w-2xl flex-col gap-5 px-5 py-6">
-        <header className="flex flex-col gap-3 border-b border-[#3a302b] pb-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <h1 className="text-xl font-semibold tracking-wide text-[#f0a050]">
+    <div className="torchlit relative min-h-screen w-full">
+      <div className="relative mx-auto flex w-full max-w-[470px] flex-col gap-5 px-5 py-6">
+        <header className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-label text-[10px] uppercase tracking-[0.18em] text-muted">
+              Community · Run {game.runNumber}
+            </span>
+            <RestartButton resolving={resolving} onRestart={onRestart} />
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <h1 className="font-display text-[24px] font-bold leading-none text-[#f6b063]">
               {game.party.name}
             </h1>
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-xs uppercase tracking-widest text-[#8a7d72]">
-                Run {game.runNumber} · Depth {game.party.depth}
-              </span>
-              <RestartButton resolving={resolving} onRestart={onRestart} />
-            </div>
+            <span className="shrink-0 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.14em] text-ember-glow">
+              Depth {game.party.depth}
+            </span>
           </div>
           <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
-          <div className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-[#8a7d72]">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 font-label text-[12px] text-muted">
             <span>◈ {game.party.gold} gold</span>
             {game.party.inventory.length > 0 && (
               <span>⚸ {game.party.inventory.join(', ')}</span>
             )}
             {game.party.conditions.length > 0 && (
-              <span className="text-[#c0392b] capitalize">
+              <span className="capitalize text-[#f0594e]">
                 {game.party.conditions.join(', ')}
               </span>
             )}
             {record !== null && <span>🏆 record depth {record}</span>}
           </div>
           <StatBlock abilities={game.party.abilities} />
+          <div className="h-px w-full bg-edge" />
         </header>
 
         <main className="flex flex-1 flex-col gap-5">
           {game.intro.length > 0 && (
-            <section className="rounded border border-[#3a302b] bg-[#211b17] px-4 py-3">
-              <p className="mb-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-[#8a7d72]">
+            <section className="rounded-2xl border border-[#2f2722] bg-[#130d0a] px-4 py-3">
+              <p className="mb-1.5 font-label text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
                 Prologue
               </p>
-              <p className="text-sm italic leading-relaxed text-[#c9b896]">
+              <p className="font-body text-[14px] italic leading-relaxed text-parchment">
                 {game.intro}
               </p>
             </section>
           )}
           <CampaignMap map={game.map} />
           <section className="flex flex-col gap-3">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-              {game.room.type} · depth {game.party.depth}
+            <p className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-ember">
+              <span className="capitalize">{game.room.type}</span> · depth{' '}
+              {game.party.depth}
             </p>
-            <p className="text-lg leading-relaxed text-[#e8ddc8]">{scene}</p>
+            <div className="rounded-2xl border border-[#2a2018] bg-[#120d09] px-4 py-3.5">
+              <p className="font-body text-[16px] leading-relaxed text-ink">
+                {scene}
+              </p>
+            </div>
             {game.lastCheck && <LastCheck check={game.lastCheck} />}
             <SceneEntities entities={game.room.entities} />
             <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
-              <div className="flex flex-col gap-2 border-l-2 border-[#3a302b] pl-4">
+              <div className="flex flex-col gap-1.5 border-l-2 border-[#2f2722] pl-3.5">
                 {log.map((event) => (
                   <p
                     key={event}
-                    className="text-sm leading-relaxed text-[#8a7d72]"
+                    className="font-body text-[13px] italic leading-snug text-muted"
                   >
                     {event}
                   </p>
@@ -127,7 +136,7 @@ export function Board({
             )}
           </section>
 
-          <p className="text-sm leading-relaxed text-[#a89880]">
+          <p className="font-body text-[13.5px] leading-snug text-muted">
             Reply to this post with what the party should do, or upvote an
             action below. When the turn resolves, the top-voted action is the
             one the party takes.
@@ -141,11 +150,14 @@ export function Board({
           />
         </main>
 
-        <footer className="flex flex-col gap-3 border-t border-[#3a302b] pt-4">
-          {error && <p className="text-sm text-[#c0392b]">{error}</p>}
-          {note && <p className="text-sm text-[#e8893f]">{note}</p>}
-          <div className="flex flex-col gap-2 rounded border border-[#3a302b] bg-[#1f1916] px-3 py-3">
-            <p className="font-mono text-[0.65rem] uppercase tracking-widest text-[#5a4f47]">
+        <footer className="flex flex-col gap-3">
+          <div className="h-px w-full bg-edge" />
+          {error && (
+            <p className="font-body text-[13.5px] text-[#f0594e]">{error}</p>
+          )}
+          {note && <p className="font-body text-[13.5px] text-ember">{note}</p>}
+          <div className="flex flex-col gap-2.5 rounded-2xl border border-[#2f2722] bg-[#130d0a] px-3 py-3">
+            <p className="font-label text-[10px] uppercase tracking-[0.18em] text-faint">
               Playing solo? Take a single action directly
             </p>
             {game.room.suggestions.length > 0 && (
@@ -155,7 +167,7 @@ export function Board({
                     key={suggestion}
                     onClick={() => setDraft(suggestion)}
                     disabled={resolving}
-                    className="rounded-full border border-[#3a302b] bg-[#241d1a] px-2.5 py-1 text-xs text-[#c9b896] transition-colors hover:border-[#e8893f] hover:text-[#e8ddc8] disabled:opacity-50"
+                    className="rounded-full border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-ember hover:text-ink disabled:opacity-50"
                   >
                     {suggestion}
                   </button>
@@ -171,12 +183,12 @@ export function Board({
                 }}
                 disabled={resolving}
                 placeholder="Search the altar, draw a blade, light a torch…"
-                className="flex-1 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5 text-[#e8ddc8] outline-none placeholder:text-[#5a4f47] focus:border-[#e8893f] disabled:opacity-50"
+                className="flex-1 rounded-xl border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
               />
               <button
                 onClick={submit}
                 disabled={resolving || draft.trim().length === 0}
-                className="rounded bg-[#e8893f] px-5 py-2.5 font-semibold text-[#1a1614] transition-colors hover:bg-[#f0a050] disabled:opacity-40"
+                className="rounded-xl bg-ember px-5 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#150d06] transition hover:brightness-110 disabled:opacity-40"
               >
                 {resolving ? '…' : 'Act'}
               </button>
