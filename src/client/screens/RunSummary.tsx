@@ -59,8 +59,8 @@ export function RunSummary({
   currentRun?: number;
 }>) {
   const won = game.phase === 'won';
-  const color = won ? '#f0c050' : '#c0392b';
-  const accentText = won ? 'text-[#f0c050]' : 'text-[#c0392b]';
+  const color = won ? '#f0c050' : '#d6453f';
+  const bossColor = won ? '#f3d488' : '#e0a08e';
   const boss = game.map.finalBoss.name;
   // The closing narration, used as the quote on a first run; from the second run
   // on, the nemesis's remembered taunt takes its place.
@@ -84,24 +84,35 @@ export function RunSummary({
   else restartLabel = 'Descend again';
 
   return (
-    <div className="flex min-h-screen justify-center bg-[#1a1614] text-[#e8ddc8]">
-      <div className="flex w-full max-w-md flex-col items-center gap-5 px-6 py-10 text-center">
-        <p
-          className={`font-mono text-xs uppercase tracking-[0.3em] ${accentText}`}
-        >
-          {won ? 'The campaign is won' : 'The run ends'}
-        </p>
-
+    <div className="torchlit flex min-h-screen items-center justify-center px-6 py-10">
+      <div className="anim-rise flex w-full max-w-[440px] flex-col items-center gap-5 text-center">
         {villainMark(color)}
 
         <div>
-          <p className={`text-lg font-semibold ${accentText}`}>{boss}</p>
-          <p className="font-mono text-[0.7rem] uppercase tracking-widest text-[#8a7d72]">
+          <h1
+            className="font-display text-[34px] font-bold leading-none tracking-[0.06em]"
+            style={{ color }}
+          >
+            {won ? 'VICTORIOUS' : 'VANQUISHED'}
+          </h1>
+          <p className="mt-2 font-label text-[11px] uppercase tracking-[0.24em] text-muted">
+            {won ? 'The campaign is won' : 'The run ends here'}
+          </p>
+        </div>
+
+        <div>
+          <p
+            className="font-display text-[19px] font-semibold"
+            style={{ color: bossColor }}
+          >
+            {boss}
+          </p>
+          <p className="mt-0.5 font-label text-[10px] uppercase tracking-[0.2em] text-faint">
             {won ? 'lies defeated' : 'still waits below'}
           </p>
         </div>
 
-        <p className="text-base italic leading-relaxed text-[#c9b896]">
+        <p className="font-body text-[15px] italic leading-relaxed text-parchment">
           “{quote}”
         </p>
 
@@ -109,12 +120,12 @@ export function RunSummary({
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-lg border border-[#2f2722] bg-[#1b1613] px-2 py-3"
+              className="rounded-xl border border-[#2f2722] bg-[#140f0b] px-2 py-3"
             >
-              <div className="text-lg font-semibold text-[#e8ddc8]">
+              <div className="font-display text-[18px] font-bold text-ink">
                 {stat.value}
               </div>
-              <div className="font-mono text-[0.55rem] uppercase tracking-wider text-[#7a6f64]">
+              <div className="mt-0.5 font-label text-[9px] uppercase tracking-[0.12em] text-muted">
                 {stat.label}
               </div>
             </div>
@@ -135,7 +146,7 @@ export function RunSummary({
             type="button"
             onClick={onRestart}
             disabled={restarting}
-            className="w-full rounded-lg bg-[#e8893f] px-5 py-3 font-semibold text-[#1a1614] transition hover:bg-[#f0a050] disabled:opacity-50"
+            className="w-full rounded-xl bg-ember px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110 disabled:opacity-50"
           >
             {restartLabel}
           </button>
@@ -143,7 +154,7 @@ export function RunSummary({
             <button
               type="button"
               onClick={onExit}
-              className="font-mono text-xs tracking-wide text-[#8a7d72] transition hover:text-[#e8893f]"
+              className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
             >
               ‹ Back to modes
             </button>
