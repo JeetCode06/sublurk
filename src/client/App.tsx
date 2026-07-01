@@ -3,11 +3,12 @@ import { useGame, useSolo } from './hooks/useGame';
 import { Board } from './screens/Board';
 import { CharacterSelect } from './screens/CharacterSelect';
 import { ModeSelect } from './screens/ModeSelect';
+import { InstallScreen } from './screens/InstallScreen';
 import { SoloPlay } from './screens/SoloPlay';
 
 export const SOLO_DEFAULT_CLASS = 'adventurer';
 
-export type View = 'mode_select' | 'character_select' | 'play';
+export type View = 'mode_select' | 'character_select' | 'install' | 'play';
 export type Mode = 'solo' | 'community';
 
 export const App = () => {
@@ -25,8 +26,13 @@ export const App = () => {
           setMode('community');
           setView('play');
         }}
+        onInstall={() => setView('install')}
       />
     );
+  }
+
+  if (view === 'install') {
+    return <InstallScreen onBack={() => setView('mode_select')} />;
   }
 
   if (view === 'character_select') {
