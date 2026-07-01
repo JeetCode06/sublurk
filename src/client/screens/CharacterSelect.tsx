@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ClassId } from '../../shared/game';
 import { CLASS_INFO, classAffinitySummary } from '../../shared/classes';
 import type { ClassNamesResponse, ErrorResponse } from '../../shared/api';
+import { TorchlitScreen } from '../Embers';
 import {
   ABILITY_ORDER,
   ABILITY_SHORT,
@@ -19,11 +20,33 @@ const CLASS_ORDER: ClassId[] = [
 ];
 
 const CLASS_ROLE: Record<ClassId, string> = {
-  warrior: 'Frontline',
-  witch: 'Arcane',
+  warrior: 'Bruiser',
+  witch: 'Cannon',
   healer: 'Support',
-  trickster: 'Cunning',
-  adventurer: 'Balanced',
+  trickster: 'Sneak',
+  adventurer: 'Wildcard',
+};
+
+// Each class carries a firelit accent so it reads as its own thing: a main hue,
+// a lighter shade for text and icon gradients, a dim border, and a tinted dark
+// panel.
+type Accent = { main: string; light: string; dim: string; bg: string };
+const CLASS_ACCENT: Record<ClassId, Accent> = {
+  warrior: { main: '#e8893f', light: '#f6b063', dim: '#5a3a1e', bg: '#1d130b' },
+  witch: { main: '#5cc4d6', light: '#7fd6e4', dim: '#1d4a55', bg: '#07191e' },
+  healer: { main: '#e8c15a', light: '#f3d488', dim: '#5a4a1e', bg: '#1c160a' },
+  trickster: {
+    main: '#9ccb55',
+    light: '#bce07a',
+    dim: '#3a5520',
+    bg: '#121a0a',
+  },
+  adventurer: {
+    main: '#b08fd0',
+    light: '#caa8e8',
+    dim: '#3f2a55',
+    bg: '#150f1d',
+  },
 };
 
 function classSigil(id: ClassId) {
@@ -105,6 +128,7 @@ export function CharacterSelect({
   const [selected, setSelected] = useState<ClassId>('warrior');
   const [themed, setThemed] = useState<Record<ClassId, string> | null>(null);
   const klass = CLASS_INFO[selected];
+  const accent = CLASS_ACCENT[selected];
   const { strong, weak } = classAffinitySummary(selected);
 
   useEffect(() => {
@@ -124,136 +148,197 @@ export function CharacterSelect({
   }, []);
 
   const selectedName = themed?.[selected] ?? klass.name;
-  const selectedTag =
-    selectedName === klass.name
-      ? CLASS_ROLE[selected]
-      : `${klass.name} · ${CLASS_ROLE[selected]}`;
+  // Highlight a class's defining stat — the single highest score. The Wanderer's
+  // scores are all equal, so nothing lights up, which reads as "no specialty".
+  const scores = ABILITY_ORDER.map((a) => klass.abilities[a]);
+  const peak = Math.max(...scores);
+  const hasPeak = peak > Math.min(...scores);
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#1a1614] px-5 py-10 text-[#e8ddc8]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(0,0,0,0.55))]" />
-      <div className="relative w-full max-w-md">
-        <div className="text-center font-mono text-sm tracking-[0.35em] text-[#b6a08a]">
-          HIVEMIND CRAWL
+    <TorchlitScreen>
+      <header className="text-center">
+        <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
+          Pick 1 of 5
         </div>
-        <h1 className="mt-3 text-center text-xl font-medium text-[#ecd9bb]">
-          Choose your character
+        <h1 className="mt-3 font-display text-[28px] font-bold leading-tight text-ink">
+          Choose your crawler
         </h1>
+        <p className="mt-2 font-body text-[15px] italic text-muted">
+          Five fools volunteered. Pick the one you&apos;ll mourn.
+        </p>
+      </header>
 
-        <div className="mt-6 grid grid-cols-2 gap-2.5">
+      {/* Class picker — a firelit row you can scroll through. */}
+      <div className="-mx-5 mt-7 overflow-x-auto px-5 pb-1">
+        <div className="flex gap-2.5" style={{ width: 'max-content' }}>
           {CLASS_ORDER.map((id) => {
             const info = CLASS_INFO[id];
             const display = themed?.[id] ?? info.name;
-            const tag = display === info.name ? CLASS_ROLE[id] : info.name;
+            const a = CLASS_ACCENT[id];
             const isSelected = id === selected;
             return (
               <button
                 key={id}
                 type="button"
                 onClick={() => setSelected(id)}
-                className={`flex items-center gap-3 rounded-lg border p-3 text-left transition ${
-                  id === 'adventurer' ? 'col-span-2' : ''
-                } ${
-                  isSelected
-                    ? 'border-[#e8893f] bg-[#2a211c]'
-                    : 'border-[#3a302b] bg-[#201a16] hover:border-[#5a4f47]'
-                }`}
+                className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-xl border p-3 text-center transition duration-200"
+                style={{
+                  borderColor: isSelected ? a.main : '#2c241e',
+                  background: isSelected ? a.bg : '#161009',
+                }}
               >
                 <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${
-                    isSelected
-                      ? 'border-[#e8893f] bg-[#3a2c20] text-[#f0c050]'
-                      : 'border-[#4a3f38] bg-[#241d18] text-[#897c71]'
-                  }`}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg"
+                  style={{
+                    color: isSelected ? a.light : '#6f6358',
+                    background: isSelected ? 'rgba(0,0,0,0.25)' : '#1d160f',
+                    boxShadow: isSelected ? `0 0 14px ${a.dim}` : 'none',
+                  }}
                 >
                   {classSigil(id)}
                 </span>
-                <span className="min-w-0">
-                  <span
-                    className={`block text-sm font-medium ${
-                      isSelected ? 'text-[#f3cd7f]' : 'text-[#a89a8c]'
-                    }`}
-                  >
-                    {display}
-                  </span>
-                  <span className="block font-mono text-[0.65rem] uppercase tracking-wider text-[#7a6f64]">
-                    {tag}
-                  </span>
+                <span
+                  className="block truncate font-display text-[13px] font-semibold leading-none"
+                  style={{
+                    color: isSelected ? a.light : '#9a8a7a',
+                    maxWidth: '76px',
+                  }}
+                >
+                  {display}
+                </span>
+                <span className="font-label text-[9.5px] uppercase tracking-[0.16em] text-faint">
+                  {CLASS_ROLE[id]}
                 </span>
               </button>
             );
           })}
         </div>
-
-        <div className="mt-4 rounded-lg border border-[#2f2722] bg-[#1b1613] p-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-base font-medium text-[#f3cd7f]">
-              {selectedName}
-            </span>
-            <span className="font-mono text-[0.65rem] uppercase tracking-wider text-[#7a6f64]">
-              {selectedTag}
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-6 gap-1 text-center">
-            {ABILITY_ORDER.map((ability) => {
-              const score = klass.abilities[ability];
-              const mod = abilityMod(score);
-              return (
-                <div key={ability}>
-                  <div className="font-mono text-[0.6rem] tracking-wider text-[#8a7d72]">
-                    {ABILITY_SHORT[ability]}
-                  </div>
-                  <div className="text-sm font-medium text-[#e8ddc8]">
-                    {score}
-                  </div>
-                  <div
-                    className={`font-mono text-[0.65rem] ${abilityModColor(mod)}`}
-                  >
-                    {signed(mod)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {strong.length > 0 && (
-              <span className="rounded-full border border-[#8a6a2e] bg-[#2a2114] px-2.5 py-1 text-[0.7rem] text-[#d8b06a]">
-                Strong vs {strong.join(', ')}
-              </span>
-            )}
-            {weak.length > 0 && (
-              <span className="rounded-full border border-[#6a3a30] bg-[#2a1714] px-2.5 py-1 text-[0.7rem] text-[#c0705a]">
-                Weak at {weak.join(', ')}
-              </span>
-            )}
-            {strong.length === 0 && weak.length === 0 && (
-              <span className="rounded-full border border-[#3a302b] bg-[#201a16] px-2.5 py-1 text-[0.7rem] text-[#8a7d72]">
-                No strengths or weaknesses
-              </span>
-            )}
-          </div>
-          <p className="mt-3 text-xs italic leading-snug text-[#c9b896]">
-            ✦ {klass.signature}
-          </p>
-        </div>
-
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={() => onBegin(selected)}
-            className="w-full rounded-lg bg-[#e8893f] px-5 py-3 font-medium text-[#1a1614] transition hover:bg-[#f0a050]"
-          >
-            Begin the descent
-          </button>
-          <button
-            type="button"
-            onClick={onBack}
-            className="font-mono text-xs tracking-wide text-[#8a7d72] transition hover:text-[#e8893f]"
-          >
-            ‹ Back to modes
-          </button>
-        </div>
       </div>
-    </div>
+
+      {/* Selected crawler dossier */}
+      <div
+        className="anim-pop mt-4 rounded-2xl border p-4"
+        style={{ borderColor: accent.dim, background: accent.bg }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            style={{
+              color: '#150d06',
+              background: `linear-gradient(150deg, ${accent.light}, ${accent.main})`,
+              boxShadow: `0 0 18px ${accent.dim}`,
+            }}
+          >
+            {classSigil(selected)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2
+              className="truncate font-display text-[22px] font-bold leading-none"
+              style={{ color: accent.light }}
+            >
+              {selectedName}
+            </h2>
+            <span
+              className="mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] font-medium uppercase tracking-[0.18em]"
+              style={{
+                color: accent.light,
+                background: 'rgba(0,0,0,0.28)',
+                border: `1px solid ${accent.dim}`,
+              }}
+            >
+              {CLASS_ROLE[selected]}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-6 gap-1.5 text-center">
+          {ABILITY_ORDER.map((ability) => {
+            const score = klass.abilities[ability];
+            const mod = abilityMod(score);
+            const isPeak = hasPeak && score === peak;
+            return (
+              <div
+                key={ability}
+                className="rounded-lg py-1.5"
+                style={{
+                  background: isPeak ? 'rgba(0,0,0,0.3)' : 'transparent',
+                  border: isPeak
+                    ? `1px solid ${accent.dim}`
+                    : '1px solid transparent',
+                }}
+              >
+                <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
+                  {ABILITY_SHORT[ability]}
+                </div>
+                <div
+                  className="font-display text-[16px] font-semibold leading-tight"
+                  style={{ color: isPeak ? accent.light : '#e8ddc8' }}
+                >
+                  {score}
+                </div>
+                <div
+                  className={`font-label text-[10px] ${isPeak ? '' : abilityModColor(mod)}`}
+                  style={isPeak ? { color: accent.light } : undefined}
+                >
+                  {signed(mod)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3.5 flex flex-wrap gap-1.5">
+          {strong.map((room) => (
+            <span
+              key={room}
+              className="rounded-full px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide"
+              style={{
+                color: accent.light,
+                border: `1px solid ${accent.dim}`,
+                background: 'rgba(0,0,0,0.22)',
+              }}
+            >
+              ▲ {room}
+            </span>
+          ))}
+          {weak.map((room) => (
+            <span
+              key={room}
+              className="rounded-full border border-[#6a3a30] bg-[#241312] px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide text-[#d08a78]"
+            >
+              ▽ {room}
+            </span>
+          ))}
+          {strong.length === 0 && weak.length === 0 && (
+            <span className="rounded-full border border-edge bg-[#1a140f] px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide text-muted">
+              No weaknesses
+            </span>
+          )}
+        </div>
+
+        <p className="mt-3.5 flex gap-2 font-body text-[13px] italic leading-snug text-parchment">
+          <span style={{ color: accent.main }}>✦</span>
+          <span>{klass.signature}</span>
+        </p>
+      </div>
+
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onBegin(selected)}
+          className="w-full rounded-xl px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] transition hover:brightness-110"
+          style={{ background: accent.main, color: '#150d06' }}
+        >
+          Descend as {selectedName}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+        >
+          ‹ Back to modes
+        </button>
+      </div>
+    </TorchlitScreen>
   );
 }
