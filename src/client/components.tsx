@@ -25,17 +25,25 @@ export function HealthBar({
   const pct = maxHp > 0 ? Math.max(0, Math.min(100, (hp / maxHp) * 100)) : 0;
   const low = hp <= maxHp * 0.3;
   return (
-    <div className="flex items-center gap-3">
-      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-black/40">
+    <div className="flex items-center gap-2.5">
+      <span className="text-[15px] text-blood">♥</span>
+      <div
+        className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#2a1512]"
+        style={
+          low ? { animation: 'hppulse 1.4s ease-in-out infinite' } : undefined
+        }
+      >
         <div
-          className={`h-full rounded-full transition-all duration-500 ${
-            low ? 'bg-[#c0392b]' : 'bg-[#e8893f]'
-          }`}
-          style={{ width: `${pct}%` }}
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${pct}%`,
+            background: 'linear-gradient(90deg, #b3302b, #f0594e)',
+          }}
         />
       </div>
-      <span className="font-mono text-sm tabular-nums text-[#d9c9a8]">
-        {hp}/{maxHp}
+      <span className="font-label text-[13px] tabular-nums text-parchment">
+        {hp}
+        <span className="text-faint">/{maxHp}</span>
       </span>
     </div>
   );
@@ -51,21 +59,21 @@ export function RestartButton({
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 font-mono text-xs">
-        <span className="text-[#8a7d72]">abandon run?</span>
+      <span className="flex items-center gap-2 font-label text-[11px] uppercase tracking-wide">
+        <span className="text-muted">abandon run?</span>
         <button
           onClick={() => {
             onRestart();
             setConfirming(false);
           }}
           disabled={resolving}
-          className="text-[#c0392b] hover:underline disabled:opacity-50"
+          className="text-blood hover:underline disabled:opacity-50"
         >
           yes
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="text-[#8a7d72] hover:underline"
+          className="text-muted hover:underline"
         >
           no
         </button>
@@ -75,7 +83,7 @@ export function RestartButton({
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="font-mono text-xs text-[#8a7d72] transition-colors hover:text-[#e8893f]"
+      className="font-label text-[11px] uppercase tracking-wide text-faint transition-colors hover:text-ember"
     >
       ↻ new run
     </button>
@@ -101,7 +109,7 @@ export function Countdown({
   const remainingMs = deadline - (now + serverOffset);
   if (remainingMs <= 0) {
     return (
-      <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#e8893f]">
+      <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ember">
         resolving soon…
       </span>
     );
@@ -111,7 +119,7 @@ export function Countdown({
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = (totalSeconds % 60).toString().padStart(2, '0');
   return (
-    <span className="font-mono text-[0.65rem] uppercase tracking-widest text-[#8a7d72]">
+    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-muted">
       resolves in {minutes}:{seconds}
     </span>
   );
@@ -133,14 +141,14 @@ export function CandidateActions({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
-          Candidate actions
+        <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-parchment">
+          Vote the next move
         </h2>
         <Countdown deadline={deadline} serverOffset={serverOffset} />
       </div>
 
       {proposals.length === 0 ? (
-        <p className="rounded border border-dashed border-[#3a302b] px-4 py-6 text-center text-sm text-[#8a7d72]">
+        <p className="rounded-xl border border-dashed border-edge px-4 py-6 text-center font-body text-[13.5px] italic leading-snug text-muted">
           No actions proposed yet. Reply to this post with what the party should
           do — it appears here for the hive to vote on.
         </p>
@@ -151,27 +159,29 @@ export function CandidateActions({
             return (
               <li
                 key={proposal.id}
-                className={`flex items-start gap-3 rounded border px-3 py-2.5 ${
-                  leading
-                    ? 'border-[#e8893f] bg-[#2a211b]'
-                    : 'border-[#3a302b] bg-[#241d1a]'
-                }`}
+                className="flex items-start gap-3 rounded-xl border px-3 py-2.5"
+                style={{
+                  borderColor: leading ? '#e8893f' : '#2f2722',
+                  background: leading
+                    ? 'linear-gradient(180deg, #291d12, #1d140d)'
+                    : '#161009',
+                }}
               >
                 <span
-                  className={`flex min-w-11 flex-col items-center font-mono leading-tight ${
-                    leading ? 'text-[#f0a050]' : 'text-[#8a7d72]'
+                  className={`flex min-w-11 flex-col items-center font-label leading-tight ${
+                    leading ? 'text-ember-bright' : 'text-muted'
                   }`}
                 >
-                  <span className="text-sm tabular-nums">
+                  <span className="text-[15px] tabular-nums">
                     ▲ {proposal.score}
                   </span>
                   {leading && (
-                    <span className="text-[0.6rem] uppercase tracking-wide">
+                    <span className="text-[9px] uppercase tracking-[0.14em]">
                       leading
                     </span>
                   )}
                 </span>
-                <span className="line-clamp-3 flex-1 text-sm leading-relaxed text-[#e8ddc8]">
+                <span className="line-clamp-3 flex-1 font-body text-[14px] leading-snug text-ink">
                   {proposal.body}
                 </span>
               </li>
@@ -183,9 +193,9 @@ export function CandidateActions({
       <button
         onClick={onResolveVotes}
         disabled={resolving || proposals.length === 0}
-        className="self-start rounded border border-[#3a302b] px-4 py-2 font-mono text-xs uppercase tracking-widest text-[#8a7d72] transition-colors hover:border-[#e8893f] hover:text-[#e8893f] disabled:opacity-40"
+        className="self-start rounded-lg border border-[#5a3a1e] px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[0.16em] text-ember transition-colors hover:border-ember hover:bg-[#1d130b] disabled:opacity-40"
       >
-        {resolving ? 'resolving…' : '🎲 resolve top-voted action'}
+        {resolving ? 'resolving…' : '⚄ Resolve top action now'}
       </button>
     </section>
   );
@@ -201,7 +211,7 @@ export function Leaderboard({
   if (entries.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+      <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
         Deepest runs
       </h2>
       <ol className="flex flex-col gap-1">
@@ -210,12 +220,15 @@ export function Leaderboard({
           return (
             <li
               key={entry.runNumber}
-              className={`flex items-baseline justify-between gap-3 rounded px-3 py-1.5 font-mono text-sm ${
-                current ? 'bg-[#2a211b] text-[#f0a050]' : 'text-[#a89880]'
-              }`}
+              className="flex items-baseline justify-between gap-3 rounded-lg px-3 py-1.5 font-label text-[13px]"
+              style={{
+                background: current ? 'rgba(232,137,63,0.1)' : 'transparent',
+                color: current ? '#f6b063' : '#a89880',
+              }}
             >
               <span>
-                {index + 1}. Run {entry.runNumber}
+                <span className="tabular-nums">{index + 1}.</span> Run{' '}
+                {entry.runNumber}
                 {current && ' · this run'}
               </span>
               <span className="tabular-nums">depth {entry.depth}</span>
@@ -227,10 +240,28 @@ export function Leaderboard({
   );
 }
 
-const ENTITY_GLYPH: Record<EntityKind, { icon: string; tone: string }> = {
-  foe: { icon: '☠', tone: 'text-[#d98a80]' },
-  npc: { icon: '☻', tone: 'text-[#e8c070]' },
-  object: { icon: '◇', tone: 'text-[#9fb0c0]' },
+const ENTITY_GLYPH: Record<
+  EntityKind,
+  { icon: string; tone: string; border: string; bg: string }
+> = {
+  foe: {
+    icon: '☠',
+    tone: 'text-[#f0594e]',
+    border: '#5a2420',
+    bg: 'linear-gradient(180deg, #241310, #180c0a)',
+  },
+  npc: {
+    icon: '☻',
+    tone: 'text-[#e8c15a]',
+    border: '#5a4a1e',
+    bg: 'linear-gradient(180deg, #221a0e, #171009)',
+  },
+  object: {
+    icon: '◇',
+    tone: 'text-[#7fd6e4]',
+    border: '#1d4a55',
+    bg: 'linear-gradient(180deg, #0e1a1d, #0a1113)',
+  },
 };
 
 export function ThreatPips({ threat }: Readonly<{ threat: number }>) {
@@ -239,7 +270,7 @@ export function ThreatPips({ threat }: Readonly<{ threat: number }>) {
       {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
-          className={n <= threat ? 'text-[#c0392b]' : 'text-[#3a302b]'}
+          className={n <= threat ? 'text-[#f0594e]' : 'text-[#3a2c20]'}
         >
           ●
         </span>
@@ -254,24 +285,29 @@ export function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
     entity.kind === 'foe' &&
     (entity.threat !== undefined || entity.hp !== undefined);
   return (
-    <div className="flex flex-col gap-1.5 rounded border border-[#3a302b] bg-[#241d1a] px-3 py-2.5">
-      <div className="flex items-baseline gap-2">
-        <span className={`text-sm ${glyph.tone}`}>{glyph.icon}</span>
-        <span className="flex-1 text-sm font-semibold text-[#e8ddc8]">
+    <div
+      className="flex flex-col gap-1.5 rounded-xl border px-3 py-2.5"
+      style={{ borderColor: glyph.border, background: glyph.bg }}
+    >
+      <div className="flex items-center gap-2">
+        <span className={`text-[15px] ${glyph.tone}`}>{glyph.icon}</span>
+        <span className="flex-1 font-display text-[14px] font-semibold leading-tight text-ink">
           {entity.name}
         </span>
-        <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
+        <span className="font-label text-[9px] uppercase tracking-[0.14em] text-faint">
           {entity.kind}
         </span>
       </div>
       {entity.blurb && (
-        <p className="text-xs leading-relaxed text-[#8a7d72]">{entity.blurb}</p>
+        <p className="font-body text-[12.5px] italic leading-snug text-muted">
+          {entity.blurb}
+        </p>
       )}
       {showStats && (
-        <div className="flex items-center gap-3 font-mono text-[0.65rem] text-[#8a7d72]">
+        <div className="flex items-center gap-3 font-label text-[11px] text-muted">
           {entity.threat !== undefined && <ThreatPips threat={entity.threat} />}
           {entity.hp !== undefined && (
-            <span className="tabular-nums">{entity.hp} hp</span>
+            <span className="tabular-nums text-[#d08a78]">{entity.hp} HP</span>
           )}
         </div>
       )}
@@ -284,8 +320,8 @@ export function SceneEntities({
 }: Readonly<{ entities: SceneEntity[] }>) {
   if (entities.length === 0) return null;
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="font-mono text-xs uppercase tracking-[0.2em] text-[#8a7d72]">
+    <section className="flex flex-col gap-2.5">
+      <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
         In the room
       </h2>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -301,13 +337,13 @@ export function ThreatStrip({ threats }: Readonly<{ threats: string[] }>) {
   if (threats.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="font-mono text-[0.6rem] uppercase tracking-wider text-[#c0392b]">
+      <span className="font-label text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f0594e]">
         ⚠ dangers
       </span>
       {threats.map((threat) => (
         <span
           key={threat}
-          className="rounded-full border border-[#5a2a25] bg-[#271a18] px-2.5 py-0.5 text-xs text-[#d98a80]"
+          className="rounded-full border border-[#5a2a25] bg-[#241312] px-2.5 py-0.5 font-body text-[12px] text-[#d98a80]"
         >
           {threat}
         </span>
@@ -431,7 +467,7 @@ export function MapNodeMark({
         x={x}
         y={y + 4}
         textAnchor="middle"
-        fontFamily="sans-serif"
+        fontFamily="Oswald, sans-serif"
         fontSize="12"
         fontWeight="600"
         fill={num}
@@ -441,7 +477,7 @@ export function MapNodeMark({
       <text
         x={MAP_LABEL_X}
         y={nameY}
-        fontFamily="sans-serif"
+        fontFamily="Oswald, sans-serif"
         fontSize="13"
         fontWeight="500"
         fill={nameFill}
@@ -452,7 +488,7 @@ export function MapNodeMark({
         <text
           x={MAP_LABEL_X}
           y={y + 14}
-          fontFamily="sans-serif"
+          fontFamily="Oswald, sans-serif"
           fontSize="11"
           fontStyle="italic"
           fill={villainFill}
@@ -519,7 +555,7 @@ export function MapBossMark({
       <text
         x={MAP_LABEL_X}
         y={y + 4}
-        fontFamily="sans-serif"
+        fontFamily="Oswald, sans-serif"
         fontSize="13"
         fontWeight="500"
         fill={nameFill}
@@ -555,21 +591,21 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <p className="font-mono text-[0.6rem] uppercase tracking-wider text-[#5a4f47]">
-          Objective
+        <p className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+          Winning
         </p>
         {boss.defeated ? (
-          <p className="text-sm text-[#a89880]">
+          <p className="mt-0.5 font-body text-[14px] text-parchment">
             Campaign complete — {boss.name} has fallen.
           </p>
         ) : (
-          <p className="text-sm leading-snug text-[#e8ddc8]">
+          <p className="mt-0.5 font-body text-[14px] leading-snug text-ink">
             Descend to{' '}
-            <span className="text-[#c9b896]">
+            <span className="text-parchment">
               {destination?.name ?? 'the final chamber'}
             </span>
             {' · defeat '}
-            <span className="text-[#c0705a]">{boss.name}</span>
+            <span className="text-[#d08a78]">{boss.name}</span>
           </p>
         )}
       </div>
@@ -697,7 +733,7 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
       </div>
 
       {!boss.defeated && (
-        <p className="text-center font-mono text-[0.65rem] text-[#8a7d72]">
+        <p className="text-center font-label text-[11px] uppercase tracking-[0.12em] text-muted">
           At {current?.name ?? 'the start'} · {clearedCount}/{nodes.length}{' '}
           cleared
         </p>
@@ -708,12 +744,14 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
 
 export function StatBlock({ abilities }: Readonly<{ abilities: Abilities }>) {
   return (
-    <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs">
+    <div className="flex flex-wrap gap-x-3 gap-y-1 font-label text-[12px]">
       {ABILITY_ORDER.map((id) => (
-        <span key={id}>
-          <span className="text-[#8a7d72]">{ABILITY_SHORT[id]}</span>{' '}
-          <span className="text-[#e8ddc8]">{abilities[id]}</span>{' '}
-          <span className="text-[#6f6359]">
+        <span key={id} className="tabular-nums">
+          <span className="uppercase tracking-wide text-muted">
+            {ABILITY_SHORT[id]}
+          </span>{' '}
+          <span className="text-ink">{abilities[id]}</span>{' '}
+          <span className="text-faint">
             {signed(abilityMod(abilities[id]))}
           </span>
         </span>
@@ -726,10 +764,17 @@ export function LastCheck({ check }: Readonly<{ check: AbilityCheck }>) {
   const advantage = advantageNote(check.advantage);
   const tone = outcomeTone(check.outcome);
   return (
-    <p className="font-mono text-xs text-[#6f6359]">
-      {ABILITY_SHORT[check.ability]} check{advantage} · rolled {check.die},
-      total {check.total} vs {check.difficulty} ·{' '}
-      <span className={tone}>{check.outcome}</span>
+    <p className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[#2f2722] bg-[#140f0b] px-3 py-2 font-label text-[12px] text-muted">
+      <span className="text-[13px] text-ember-glow">⚄</span>
+      <span className="uppercase tracking-wide text-parchment">
+        {ABILITY_SHORT[check.ability]} check{advantage}
+      </span>
+      <span className="text-faint">·</span>
+      <span className="tabular-nums">
+        rolled {check.die}, total {check.total} vs {check.difficulty}
+      </span>
+      <span className="text-faint">·</span>
+      <span className={`font-semibold uppercase ${tone}`}>{check.outcome}</span>
     </p>
   );
 }
