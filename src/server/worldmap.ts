@@ -1,14 +1,18 @@
 import type { MapState, WorldBible } from '../shared/game';
 import { MAP_SYSTEM_PROMPT, buildMapPrompt } from './ai/prompt';
 import { parseMap } from './ai/parse';
-import { callGemini } from './ai/gemini';
+import { callGemini, WORLD_GEN_TIMEOUT_MS } from './ai/gemini';
 import { loadMap, saveMap } from './data/map';
 
 // Designs a subreddit's campaign journey from its world-bible: a path of themed
 // locations toward the bible's final boss. Any AI failure degrades to the
 // default journey inside parseMap.
 export async function generateMap(bible: WorldBible): Promise<MapState> {
-  const raw = await callGemini(MAP_SYSTEM_PROMPT, buildMapPrompt(bible));
+  const raw = await callGemini(
+    MAP_SYSTEM_PROMPT,
+    buildMapPrompt(bible),
+    WORLD_GEN_TIMEOUT_MS
+  );
   return parseMap(raw);
 }
 

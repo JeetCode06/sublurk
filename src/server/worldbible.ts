@@ -6,7 +6,7 @@ import {
   type SubredditContext,
 } from './ai/prompt';
 import { parseWorldBible } from './ai/parse';
-import { callGemini } from './ai/gemini';
+import { callGemini, WORLD_GEN_TIMEOUT_MS } from './ai/gemini';
 import { loadBible, saveBible } from './data/bible';
 
 // Top posts sampled to seed the world: enough to convey a subreddit's character
@@ -22,7 +22,8 @@ export async function generateWorldBible(
 ): Promise<WorldBible> {
   const raw = await callGemini(
     WORLD_BIBLE_SYSTEM_PROMPT,
-    buildWorldBiblePrompt(seed)
+    buildWorldBiblePrompt(seed),
+    WORLD_GEN_TIMEOUT_MS
   );
   return parseWorldBible(raw);
 }

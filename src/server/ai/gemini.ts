@@ -6,6 +6,16 @@ const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODE
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 400;
 
+// Hot-path calls (turn resolution, room scenes, run intros) must not leave a
+// player waiting on a stalled request, so they are bounded to this budget across
+// all retries; when it runs out, the caller falls back to safe authored content.
+const DEFAULT_TIMEOUT_MS = 10_000;
+
+// World and map generation happen once per subreddit and are cached, and their
+// replies run larger, so they get a longer budget — a stalled world-gen would
+// otherwise degrade to a generic world rather than the community's own.
+export const WORLD_GEN_TIMEOUT_MS = 25_000;
+
 // Gemini's flash models return transient 429/5xx errors under load; a short
 // retry with backoff rides those out instead of dropping the player to a flat
 // fallback scene. Other failures (bad key, blocked reply) are not worth
@@ -18,11 +28,14 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Calls Gemini for a turn's narration. Returns '' on unrecoverable failure so
-// the parser produces a safe fallback result.
+// Calls Gemini for narration or world generation. Every attempt shares one
+// overall deadline so a hung request can't stall the turn: once the budget is
+// spent the loop stops retrying. Returns '' on unrecoverable failure so the
+// parser produces safe authored fallback content.
 export async function callGemini(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
 ): Promise<string> {
   const apiKey = await settings.get('gemini-api-key');
   if (typeof apiKey !== 'string' || apiKey.length === 0) {
@@ -31,8 +44,21 @@ export async function callGemini(
   }
 
   const body = JSON.stringify(buildGeminiRequest(systemPrompt, userPrompt));
+  const deadline = Date.now() + timeoutMs;
+  // Only retry while enough of the budget remains to make another attempt worth
+  // it, so total wait stays within the deadline.
+  const canRetryWithin = (attempt: number): boolean =>
+    attempt < MAX_ATTEMPTS && deadline - Date.now() > BASE_BACKOFF_MS;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      console.error('Gemini request exceeded its time budget');
+      return '';
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), remaining);
     try {
       const response = await fetch(ENDPOINT, {
         method: 'POST',
@@ -41,10 +67,11 @@ export async function callGemini(
           'x-goog-api-key': apiKey,
         },
         body,
+        signal: controller.signal,
       });
 
       if (!response.ok) {
-        if (isTransient(response.status) && attempt < MAX_ATTEMPTS) {
+        if (isTransient(response.status) && canRetryWithin(attempt)) {
           console.error(
             `Gemini returned HTTP ${response.status}; retrying (${attempt}/${MAX_ATTEMPTS})`
           );
@@ -64,7 +91,7 @@ export async function callGemini(
       }
       return text;
     } catch (error) {
-      if (attempt < MAX_ATTEMPTS) {
+      if (canRetryWithin(attempt)) {
         console.error(
           `Gemini request failed: ${error}; retrying (${attempt}/${MAX_ATTEMPTS})`
         );
@@ -73,6 +100,8 @@ export async function callGemini(
       }
       console.error(`Gemini request failed: ${error}`);
       return '';
+    } finally {
+      clearTimeout(timer);
     }
   }
   return '';
