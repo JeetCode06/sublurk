@@ -309,7 +309,7 @@ describe('solo voice', () => {
     expect(solo).toContain('You chose');
     expect(solo).not.toContain('The community chose');
     expect(turnSystemPrompt('solo')).toContain('lone adventurer');
-    expect(turnSystemPrompt('solo')).not.toContain('community');
+    expect(turnSystemPrompt('solo')).not.toContain('A whole community');
     expect(turnSystemPrompt('solo')).toContain('only one lone adventurer');
   });
 
