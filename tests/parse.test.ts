@@ -294,13 +294,14 @@ describe('parseScene suggestions', () => {
     expect(parseScene(raw).suggestions).toEqual(['Look', 'Listen', 'Wait']);
   });
 
-  it('defaults to no suggestions when absent', () => {
+  it('fills in default suggestions when absent', () => {
     const raw = JSON.stringify({
       description: 'A hall.',
       entities: [],
       threats: [],
     });
-    expect(parseScene(raw).suggestions).toEqual([]);
+    expect(parseScene(raw).suggestions).toEqual(FALLBACK_SCENE.suggestions);
+    expect(parseScene(raw).suggestions.length).toBeGreaterThan(0);
   });
 });
 
@@ -312,5 +313,10 @@ describe('parseResolveResult suggestions', () => {
       suggestions: ['Press on', 'Rest'],
     });
     expect(parseResolveResult(raw).suggestions).toEqual(['Press on', 'Rest']);
+  });
+
+  it('fills in default suggestions when absent', () => {
+    const raw = JSON.stringify({ narration: 'ok', outcome: 'success' });
+    expect(parseResolveResult(raw).suggestions).not.toEqual([]);
   });
 });

@@ -38,10 +38,17 @@ function asNullableString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
 }
 
-// A neutral result used when the AI reply can't be parsed: the turn fizzles
-// without harming or advancing the party, so the community can simply try again.
+// Offered whenever no scene- or turn-specific suggestions are available, so the
+// player is never left without a next move to reach for. Kept generic and
+// in-voice, reading as the dungeon's own quiet prompting.
+const DEFAULT_SUGGESTIONS = ['Look closer', 'Press deeper', 'Steel yourself'];
+
+// A neutral result used when the model reply can't be parsed: the turn fizzles
+// without harming or advancing the party, so they can simply try again. It still
+// carries default suggestions so the action chips never vanish mid-run.
 const FALLBACK_RESULT: ResolveResult = {
-  narration: 'The dungeon falls quiet, the moment slipping away unspent.',
+  narration:
+    'For a heartbeat the dungeon goes still, and whatever you tried slips away unspent. Something down here is waiting. Try again.',
   outcome: 'partial',
   hpDelta: 0,
   goldDelta: 0,
@@ -52,7 +59,7 @@ const FALLBACK_RESULT: ResolveResult = {
   roomResolved: false,
   nextRoomHint: null,
   death: false,
-  suggestions: [],
+  suggestions: [...DEFAULT_SUGGESTIONS],
 };
 
 // Pulls the first {...} block out of the reply, tolerating markdown fences or
@@ -87,7 +94,7 @@ export function parseResolveResult(raw: string): ResolveResult {
     roomResolved: asBoolean(value.roomResolved, false),
     nextRoomHint: asNullableString(value.nextRoomHint),
     death: asBoolean(value.death, false),
-    suggestions: asSuggestions(value.suggestions),
+    suggestions: suggestionsOrDefault(value.suggestions),
   };
 }
 
@@ -179,22 +186,31 @@ function asSuggestions(value: unknown): string[] {
   return out;
 }
 
-// Used when a scene can't be generated, so a room is never left blank.
+// The parsed suggestions when the model offered any, else the shared defaults —
+// the action chips must never be empty, whether the reply was thin or unparsed.
+function suggestionsOrDefault(value: unknown): string[] {
+  const parsed = asSuggestions(value);
+  return parsed.length > 0 ? parsed : [...DEFAULT_SUGGESTIONS];
+}
+
+// Used when a scene can't be generated, so a room is never left blank. Written
+// in the Warden's watchful voice and carrying default suggestions, so a failed
+// scene reads as an intentional beat rather than a blank, chip-less board.
 const FALLBACK_DESCRIPTION =
-  'The chamber waits in restless shadow, its purpose not yet clear. Torchlight trembles against the dark, and the way ahead beckons.';
+  'The chamber holds its shape in the dark, watchful and unhurried, as if it has been waiting for you. Somewhere ahead, the way continues down.';
 
 export const FALLBACK_SCENE: Scene = {
   description: FALLBACK_DESCRIPTION,
   entities: [],
   threats: [],
-  suggestions: [],
+  suggestions: [...DEFAULT_SUGGESTIONS],
 };
 
-// Parses the structured scene reply, coercing the AI's entity and threat lists
-// into safe, capped, well-formed data. A missing or unreadable reply falls back
-// to a calm, empty scene so the board always has something valid to render.
+// The cold open used when an intro can't be generated: it still plants the
+// frame — pulled in, no way back but down — so even a fallback opening sets the
+// stakes rather than reading as an error.
 const FALLBACK_INTRO =
-  'The dungeon mouth yawns ahead, dark and waiting. The goal lies far below, past every danger between here and the deep — and the first step is yours. Begin.';
+  'The screen is behind you now, and it will not open again from this side. The only way back is down — past everything the dark has made to keep you. Descend.';
 
 export function parseIntro(raw: string): string {
   const json = extractJson(raw);
@@ -208,6 +224,9 @@ export function parseIntro(raw: string): string {
   }
 }
 
+// Parses the structured scene reply, coercing entities and threats into safe,
+// capped, well-formed data; a missing or unreadable reply becomes FALLBACK_SCENE
+// so the board always has something valid — and chip-bearing — to render.
 export function parseScene(raw: string): Scene {
   const json = extractJson(raw);
   if (json === null) return FALLBACK_SCENE;
@@ -222,7 +241,7 @@ export function parseScene(raw: string): Scene {
       description,
       entities: asEntities(value.entities),
       threats: asThreats(value.threats),
-      suggestions: asSuggestions(value.suggestions),
+      suggestions: suggestionsOrDefault(value.suggestions),
     };
   } catch {
     return FALLBACK_SCENE;
