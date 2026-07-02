@@ -2,20 +2,20 @@ import { Embers } from '../Embers';
 
 const TRUTHS = [
   {
-    title: 'Descend an AI dungeon',
-    body: 'An AI dungeon master forges the dark from your own subreddit, then narrates every torchlit step. No two descents are alike.',
+    title: 'The screen has you',
+    body: 'One tap pulled you through, into a dungeon shaped from this very community. The only way back to your feed is down — all the way to the bottom.',
   },
   {
-    title: 'Propose any action',
-    body: 'There are no menus. Say what you want to do — anything — and the master decides how it plays out.',
+    title: 'Say what you do',
+    body: 'No menus, no buttons. Speak your move — anything at all — and the dungeon answers in kind.',
   },
   {
-    title: 'Dice and AI decide',
-    body: 'Every move is a roll against the odds. The dice decide how well it lands; the story decides what it costs.',
+    title: 'The dice decide',
+    body: 'Every move is a roll against the odds. The dice say how well it lands; the dungeon says what it costs.',
   },
   {
-    title: 'Death is permanent',
-    body: 'When the party bleeds out, the run is over. The leaderboard keeps your depth, and the dungeon waits. Descend again.',
+    title: 'Death is forever',
+    body: 'Fall, and the dungeon keeps you. Your depth is the only mark you leave — a warning for the next fool who taps the button.',
   },
 ];
 

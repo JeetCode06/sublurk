@@ -12,7 +12,7 @@ export const menu = new Hono();
 function resolveToast(outcome: ResolveOutcome): string {
   switch (outcome.status) {
     case 'resolved':
-      return 'The dungeon master has spoken — see the new comment.';
+      return 'The dungeon has spoken — see the new comment.';
     case 'no_game':
       return 'No active game on this post yet.';
     case 'dead':

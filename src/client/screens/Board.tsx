@@ -53,7 +53,7 @@ export function Board({
   const record = leaderboard[0]?.depth ?? null;
   const scene =
     game.room.description ||
-    'The party presses into the dark. The dungeon master is setting the scene…';
+    'The party presses into the dark. The dungeon stirs, deciding what you find…';
 
   const submit = () => {
     const action = draft.trim();

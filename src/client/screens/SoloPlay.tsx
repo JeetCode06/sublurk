@@ -44,7 +44,7 @@ export function SoloPlay({
   const log = game.recentEvents.slice(-3);
   const scene =
     game.room.description ||
-    'You press into the dark. The dungeon master is setting the scene…';
+    'You press into the dark. The dungeon stirs, deciding what you find…';
 
   const submit = () => {
     const action = draft.trim();

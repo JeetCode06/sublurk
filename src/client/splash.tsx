@@ -12,7 +12,7 @@ export const Splash = () => {
 
       <div className="anim-rise relative flex flex-col items-center gap-4">
         <span className="inline-flex items-center rounded-full border border-[#5a3a1e] bg-[#1d130b] px-3.5 py-1 font-label text-[11px] font-semibold uppercase tracking-[0.3em] text-ember">
-          AI Dungeon Crawler
+          It pulls you in
         </span>
 
         <h1
@@ -25,8 +25,8 @@ export const Splash = () => {
         </h1>
 
         <p className="max-w-[350px] font-body text-[15.5px] italic leading-relaxed text-parchment">
-          Descend an AI-narrated dungeon built from your subreddit. Roll dice.
-          Die permanently. Get taunted.
+          One tap, and the screen has you. The only way back is down — through a
+          dungeon that knows your name. Descend. Roll. Try not to die.
         </p>
 
         <button
