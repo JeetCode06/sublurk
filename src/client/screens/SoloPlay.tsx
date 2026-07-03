@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Outcome } from '../../shared/game';
 import { useSolo, type TranscriptEntry } from '../hooks/useGame';
 import {
@@ -9,6 +9,7 @@ import {
   ThreatStrip,
 } from '../components';
 import { RunSummary } from './RunSummary';
+import { DiceOverlay } from '../DiceOverlay';
 
 const OUTCOME_LABEL: Record<Outcome, string> = {
   success: 'Success',
@@ -73,8 +74,11 @@ export function SoloPlay({
 }>) {
   const [draft, setDraft] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
+  const [rollActive, setRollActive] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const { game, loading, resolving, error, transcript } = solo;
+
+  const endRoll = useCallback(() => setRollActive(false), []);
 
   // Keep the newest beat and the input in view as the story grows.
   useEffect(() => {
@@ -103,6 +107,7 @@ export function SoloPlay({
   const submit = () => {
     const action = draft.trim();
     if (action.length === 0 || resolving) return;
+    setRollActive(true);
     void solo.act(action);
     setDraft('');
   };
@@ -235,6 +240,18 @@ export function SoloPlay({
             <CampaignMap map={game.map} />
           </div>
         </div>
+      )}
+
+      {rollActive && (
+        <DiceOverlay
+          rolling={resolving}
+          result={
+            !resolving && !error && game.lastCheck
+              ? { die: game.lastCheck.die, outcome: game.lastCheck.outcome }
+              : null
+          }
+          onDone={endRoll}
+        />
       )}
     </div>
   );

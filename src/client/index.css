@@ -139,3 +139,38 @@ body {
 .anim-flick {
   animation: flick 4s ease-in-out infinite;
 }
+/* The die that tumbles on each action, then lands on its result. */
+@keyframes dice-tumble {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-170deg) scale(1.08);
+  }
+  50% {
+    transform: rotate(-330deg) scale(0.93);
+  }
+  75% {
+    transform: rotate(-540deg) scale(1.07);
+  }
+  100% {
+    transform: rotate(-720deg) scale(1);
+  }
+}
+@keyframes dice-land {
+  0% {
+    transform: scale(1.4);
+  }
+  55% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.dice-tumbling {
+  animation: dice-tumble 0.9s linear infinite;
+}
+.dice-landed {
+  animation: dice-land 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
