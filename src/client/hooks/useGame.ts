@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { GameState, LeaderboardEntry, Proposal } from '../../shared/game';
+import type {
+  GameState,
+  LeaderboardEntry,
+  Outcome,
+  Proposal,
+} from '../../shared/game';
 import type {
   ErrorResponse,
   GameResponse,
@@ -148,12 +153,27 @@ export const useGame = () => {
   return { ...state, submitAction, resolveVotes, restart } as const;
 };
 
+// One beat in the solo run's running transcript. Solo state is replaced whole
+// on every turn and recentEvents is capped, so the client accumulates the full
+// story here instead: the dungeon's scenes, the player's moves, and each result.
+export type TranscriptEntry =
+  | { id: number; kind: 'scene'; text: string }
+  | { id: number; kind: 'action'; text: string }
+  | {
+      id: number;
+      kind: 'result';
+      text: string;
+      outcome: Outcome;
+      roll: { die: number; total: number } | null;
+    };
+
 type SoloHookState = {
   game: GameState | null;
   username: string | null;
   loading: boolean;
   resolving: boolean;
   error: string | null;
+  transcript: TranscriptEntry[];
 };
 
 const SOLO_INITIAL: SoloHookState = {
@@ -162,7 +182,23 @@ const SOLO_INITIAL: SoloHookState = {
   loading: false,
   resolving: false,
   error: null,
+  transcript: [],
 };
+
+// The transcript entries opening a fresh run: the prologue, then the first
+// chamber's scene.
+function openingTranscript(game: GameState): TranscriptEntry[] {
+  const entries: TranscriptEntry[] = [];
+  if (game.intro.length > 0)
+    entries.push({ id: 0, kind: 'scene', text: game.intro });
+  if (game.room.description.length > 0)
+    entries.push({
+      id: entries.length,
+      kind: 'scene',
+      text: game.room.description,
+    });
+  return entries;
+}
 
 // A private, real-time solo run. Unlike useGame there is no polling: each action
 // returns the next state directly, since only the player changes the run.
@@ -189,6 +225,7 @@ export const useSolo = () => {
         loading: false,
         resolving: false,
         error: null,
+        transcript: openingTranscript(data.state),
       });
     } catch {
       setState((prev) => ({ ...prev, loading: false, error: GENERIC_ERROR }));
@@ -209,12 +246,43 @@ export const useSolo = () => {
         setState((prev) => ({ ...prev, resolving: false, error: message }));
         return;
       }
-      setState((prev) => ({
-        ...prev,
-        game: data.state,
-        resolving: false,
-        error: null,
-      }));
+      setState((prev) => {
+        const next = data.state;
+        const prevScene = prev.game?.room.description ?? '';
+        const narration = next.recentEvents.at(-1) ?? '';
+        const check = next.lastCheck ?? null;
+        let id =
+          prev.transcript.reduce((max, e) => Math.max(max, e.id), -1) + 1;
+        const additions: TranscriptEntry[] = [
+          { id: id++, kind: 'action', text: action },
+        ];
+        if (narration.length > 0) {
+          additions.push({
+            id: id++,
+            kind: 'result',
+            text: narration,
+            outcome: check?.outcome ?? 'partial',
+            roll: check ? { die: check.die, total: check.total } : null,
+          });
+        }
+        if (
+          next.room.description.length > 0 &&
+          next.room.description !== prevScene
+        ) {
+          additions.push({
+            id,
+            kind: 'scene',
+            text: next.room.description,
+          });
+        }
+        return {
+          ...prev,
+          game: next,
+          resolving: false,
+          error: null,
+          transcript: [...prev.transcript, ...additions],
+        };
+      });
     } catch {
       setState((prev) => ({ ...prev, resolving: false, error: GENERIC_ERROR }));
     }
