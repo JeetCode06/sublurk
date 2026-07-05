@@ -16,12 +16,23 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 // otherwise degrade to a generic world rather than the community's own.
 export const WORLD_GEN_TIMEOUT_MS = 25_000;
 
-// Gemini's flash models return transient 429/5xx errors under load; a short
-// retry with backoff rides those out instead of dropping the player to a flat
-// fallback scene. Other failures (bad key, blocked reply) are not worth
-// retrying and fall straight through to a safe empty result.
-function isTransient(status: number): boolean {
-  return status === 429 || status >= 500;
+// Server errors (5xx) are brief blips worth retrying. Rate limits are NOT:
+// retrying HTTP 429 within the same window only deepens the limit, so it falls
+// straight through to authored fallback content and lets the quota recover.
+function isRetriableStatus(status: number): boolean {
+  return status >= 500;
+}
+
+// The outbound request can also be throttled by the platform before it ever
+// reaches Gemini, surfacing as a thrown error rather than a status. Retrying that
+// compounds the throttle just as badly, so it is treated the same as a 429.
+function looksRateLimited(error: unknown): boolean {
+  const message = String(error).toLowerCase();
+  return (
+    message.includes('too many requests') ||
+    message.includes('rate limit') ||
+    message.includes('429')
+  );
 }
 
 function delay(ms: number): Promise<void> {
@@ -71,14 +82,20 @@ export async function callGemini(
       });
 
       if (!response.ok) {
-        if (isTransient(response.status) && canRetryWithin(attempt)) {
+        if (isRetriableStatus(response.status) && canRetryWithin(attempt)) {
           console.error(
             `Gemini returned HTTP ${response.status}; retrying (${attempt}/${MAX_ATTEMPTS})`
           );
           await delay(BASE_BACKOFF_MS * 2 ** (attempt - 1));
           continue;
         }
-        console.error(`Gemini returned HTTP ${response.status}`);
+        // A rate limit (429) is not retried: hammering it only prolongs the
+        // throttle. Fall through to the authored fallback instead.
+        console.error(
+          response.status === 429
+            ? 'Gemini rate limit reached (HTTP 429); using fallback'
+            : `Gemini returned HTTP ${response.status}`
+        );
         return '';
       }
 
@@ -91,7 +108,10 @@ export async function callGemini(
       }
       return text;
     } catch (error) {
-      if (canRetryWithin(attempt)) {
+      // A throttled outbound request must not be retried — that only compounds
+      // the limit. Genuine transient failures (network blips, aborts) still get
+      // another attempt within the budget.
+      if (!looksRateLimited(error) && canRetryWithin(attempt)) {
         console.error(
           `Gemini request failed: ${error}; retrying (${attempt}/${MAX_ATTEMPTS})`
         );
