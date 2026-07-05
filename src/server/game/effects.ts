@@ -7,6 +7,8 @@ import type { SceneEntity } from '../../shared/game';
 export type TurnEffects = {
   // Replaces the model's proposed hpDelta — combat damage, or rest healing.
   hpDelta?: number;
+  // Replaces the model's proposed embersDelta — the cost of a shrine offering.
+  embersDelta?: number;
   // The scene's entities after the turn, e.g. foe health after an exchange.
   entities?: SceneEntity[];
   // Forces the room to resolve and the party to descend.

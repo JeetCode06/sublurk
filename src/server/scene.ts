@@ -8,6 +8,7 @@ import {
 } from './ai/prompt';
 import { parseScene, parseIntro } from './ai/parse';
 import { callGemini } from './ai/gemini';
+import { withShrineOffer } from './game/shrine';
 
 // Generates the structured scene for the room the party just entered — prose
 // plus the foes, NPCs, objects, and threats that fill the board — set in the
@@ -58,10 +59,10 @@ export async function withRoomIntro(
 ): Promise<GameState> {
   const opened = await withIntro(state, bible, lane);
   if (opened.phase !== 'awaiting_actions' || opened.room.description !== '') {
-    return opened;
+    return withShrineOffer(opened);
   }
   const scene = await describeRoom(opened, bible, lane);
-  return {
+  return withShrineOffer({
     ...opened,
     room: {
       ...opened.room,
@@ -70,5 +71,5 @@ export async function withRoomIntro(
       threats: scene.threats,
       suggestions: scene.suggestions,
     },
-  };
+  });
 }

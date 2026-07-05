@@ -50,12 +50,21 @@ export function applyTurn(
   rand: RandFn = Math.random,
   effects: TurnEffects | null = null
 ): GameState {
-  // The server can override the party's HP for this turn — combat damage or rest
-  // healing — in which case the model's proposed hpDelta is ignored.
-  const effective =
-    effects?.hpDelta !== undefined
-      ? { ...result, hpDelta: effects.hpDelta }
-      : result;
+  // The server can override the party's HP and embers for this turn — combat
+  // damage, rest healing, or a shrine offering's cost — in which case the model's
+  // proposed deltas are ignored.
+  const effective: ResolveResult =
+    effects === null
+      ? result
+      : {
+          ...result,
+          ...(effects.hpDelta !== undefined
+            ? { hpDelta: effects.hpDelta }
+            : {}),
+          ...(effects.embersDelta !== undefined
+            ? { embersDelta: effects.embersDelta }
+            : {}),
+        };
   const applied = applyResolveResult(state.party, effective);
   const recentEvents = [...state.recentEvents, result.narration]
     .filter((event) => event.length > 0)

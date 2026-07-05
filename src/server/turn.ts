@@ -8,6 +8,7 @@ import type {
 import { prepareRoll, applyTurn } from './game/resolution';
 import { resolveCombat, combatDirective, combatEffects } from './game/combat';
 import { resolveRest, restDirective, restEffects } from './game/healing';
+import { resolveShrine, shrineDirective, shrineEffects } from './game/shrine';
 import type { TurnEffects } from './game/effects';
 import { rankProposals, RECAP_MARKER } from './game/voting';
 import { turnSystemPrompt, buildTurnPrompt, type Lane } from './ai/prompt';
@@ -24,12 +25,14 @@ import { ensureWorldBible } from './worldbible';
 // the Reddit API boundary.
 type PostId = `t3_${string}`;
 
-// A turn spent in a combat or rest room resolves server-side before the AI is
-// called. This packages that into the narration directive the model must follow
-// and the state adjustments applyTurn applies; ordinary rooms produce neither.
+// A turn spent in a combat, rest, or shrine (shop) room resolves server-side
+// before the AI is called. This packages that into the narration directive the
+// model must follow and the state adjustments applyTurn applies; ordinary rooms,
+// and a shrine the party doesn't engage, produce neither.
 function resolveTurnEffects(
   state: GameState,
-  roll: AbilityCheck
+  roll: AbilityCheck,
+  action: string
 ): { directive: string | null; effects: TurnEffects | null } {
   const combat = resolveCombat(state, roll);
   if (combat) {
@@ -41,6 +44,13 @@ function resolveTurnEffects(
   const rest = resolveRest(state, roll);
   if (rest) {
     return { directive: restDirective(rest), effects: restEffects(rest) };
+  }
+  const shrine = resolveShrine(state, action);
+  if (shrine) {
+    return {
+      directive: shrineDirective(shrine),
+      effects: shrineEffects(shrine),
+    };
   }
   return { directive: null, effects: null };
 }
@@ -54,7 +64,7 @@ export async function runTurn(
   lane: Lane = 'community'
 ): Promise<GameState> {
   const roll = prepareRoll(state);
-  const { directive, effects } = resolveTurnEffects(state, roll);
+  const { directive, effects } = resolveTurnEffects(state, roll, action);
   const raw = await callGemini(
     turnSystemPrompt(lane),
     buildTurnPrompt(state, action, roll, bible, lane, directive)
