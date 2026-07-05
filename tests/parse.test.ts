@@ -116,6 +116,7 @@ describe('parseScene', () => {
       blurb: 'eyes in the dark',
       threat: 3,
       hp: 18,
+      maxHp: 18,
     });
     expect(scene.threats).toEqual(['dripping ceiling']);
   });
@@ -151,6 +152,7 @@ describe('parseScene', () => {
       blurb: '',
       threat: 5,
       hp: 40,
+      maxHp: 40,
     });
     expect(scene.entities[1]).toEqual({
       kind: 'object',

@@ -76,14 +76,16 @@ export type Party = {
 export type EntityKind = 'foe' | 'npc' | 'object';
 
 // One thing present in the current scene — a foe, an NPC, or an object — shown
-// as a card on the board. Foes may carry a threat level and remaining hp so the
-// UI can draw a bar; non-combat entities leave those unset.
+// as a card on the board. Foes carry a threat level and both current and max hp
+// so the UI can draw a health bar that drops as they take damage; non-combat
+// entities leave those unset.
 export type SceneEntity = {
   kind: EntityKind;
   name: string;
   blurb: string;
   threat?: number;
   hp?: number;
+  maxHp?: number;
 };
 
 export type Room = {

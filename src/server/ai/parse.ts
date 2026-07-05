@@ -112,6 +112,12 @@ function clampInt(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.round(value)));
 }
 
+// A foe the model left without hp still needs a pool for the combat loop; scale
+// a sensible default off its threat so a nastier-looking foe takes more to fell.
+function defaultFoeHp(threat: number): number {
+  return clampInt(6 + threat * 4, MIN_FOE_HP, MAX_FOE_HP);
+}
+
 function asEntityKind(value: unknown): EntityKind | null {
   return value === 'foe' || value === 'npc' || value === 'object'
     ? value
@@ -134,11 +140,19 @@ function asEntity(value: unknown): SceneEntity | null {
     blurb: typeof source.blurb === 'string' ? source.blurb.trim() : '',
   };
   if (kind === 'foe') {
-    const threat = asNumber(source.threat, 0);
-    const hp = asNumber(source.hp, 0);
-    if (threat > 0)
-      entity.threat = clampInt(threat, MIN_FOE_THREAT, MAX_FOE_THREAT);
-    if (hp > 0) entity.hp = clampInt(hp, MIN_FOE_HP, MAX_FOE_HP);
+    const rawThreat = asNumber(source.threat, 0);
+    const threat =
+      rawThreat > 0
+        ? clampInt(rawThreat, MIN_FOE_THREAT, MAX_FOE_THREAT)
+        : MIN_FOE_THREAT;
+    const rawHp = asNumber(source.hp, 0);
+    const hp =
+      rawHp > 0
+        ? clampInt(rawHp, MIN_FOE_HP, MAX_FOE_HP)
+        : defaultFoeHp(threat);
+    entity.threat = threat;
+    entity.hp = hp;
+    entity.maxHp = hp;
   }
   return entity;
 }

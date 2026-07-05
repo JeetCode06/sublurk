@@ -1,6 +1,7 @@
 import { reddit } from '@devvit/web/server';
 import type { GameState, Proposal, WorldBible } from '../shared/game';
 import { prepareRoll, applyTurn } from './game/resolution';
+import { resolveCombat, combatDirective } from './game/combat';
 import { rankProposals, RECAP_MARKER } from './game/voting';
 import { turnSystemPrompt, buildTurnPrompt, type Lane } from './ai/prompt';
 import { parseResolveResult } from './ai/parse';
@@ -25,11 +26,22 @@ export async function runTurn(
   lane: Lane = 'community'
 ): Promise<GameState> {
   const roll = prepareRoll(state);
+  const combat = resolveCombat(state, roll);
   const raw = await callGemini(
     turnSystemPrompt(lane),
-    buildTurnPrompt(state, action, roll, bible, lane)
+    buildTurnPrompt(
+      state,
+      action,
+      roll,
+      bible,
+      lane,
+      combat ? combatDirective(combat) : null
+    )
   );
-  return { ...applyTurn(state, parseResolveResult(raw)), lastCheck: roll };
+  return {
+    ...applyTurn(state, parseResolveResult(raw), Math.random, combat),
+    lastCheck: roll,
+  };
 }
 
 // Reads the post's comments and ranks them into the current candidate actions.

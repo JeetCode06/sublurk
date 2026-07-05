@@ -156,7 +156,8 @@ export function buildTurnPrompt(
   action: string,
   check: AbilityCheck,
   bible: WorldBible,
-  lane: Lane = 'community'
+  lane: Lane = 'community',
+  combatNote: string | null = null
 ): string {
   const { party, room, recentEvents } = state;
   const solo = lane === 'solo';
@@ -174,6 +175,7 @@ export function buildTurnPrompt(
     recentEvents.length > 0 ? `Recently: ${recentEvents.join(' ')}` : firstMove,
     `${solo ? 'You chose' : 'The community chose'}: "${action}"`,
     `${solo ? 'You' : 'The party'} made a ${ABILITY_LABELS[check.ability]} check${advantagePhrase(check.advantage)} and rolled a ${check.outcome} (rolled ${check.die}, total ${check.total} vs difficulty ${check.difficulty}).`,
+    combatNote ?? '',
     pressureLine(state),
     `Narrate this outcome and return the JSON.`,
   ];

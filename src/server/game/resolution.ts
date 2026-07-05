@@ -12,6 +12,7 @@ import { checkDisadvantageFrom } from './conditions';
 import { createRoom, createFinalBossRoom } from './rooms';
 import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
+import type { CombatResult } from './combat';
 
 const RECENT_EVENTS_LIMIT = 6;
 
@@ -46,9 +47,15 @@ export function prepareRoll(
 export function applyTurn(
   state: GameState,
   result: ResolveResult,
-  rand: RandFn = Math.random
+  rand: RandFn = Math.random,
+  combat: CombatResult | null = null
 ): GameState {
-  const applied = applyResolveResult(state.party, result);
+  // In combat the server decides the party's health: they take the foes'
+  // counterattack, not whatever hpDelta the model proposed.
+  const effective = combat
+    ? { ...result, hpDelta: -combat.partyDamage }
+    : result;
+  const applied = applyResolveResult(state.party, effective);
   const recentEvents = [...state.recentEvents, result.narration]
     .filter((event) => event.length > 0)
     .slice(-RECENT_EVENTS_LIMIT);
@@ -60,13 +67,16 @@ export function applyTurn(
   // Track consecutive failures in this room. Once they hit the limit the party
   // is forced onward even on a failed roll, so the room cannot loop forever.
   const failures = result.outcome === 'fail' ? state.roomFailures + 1 : 0;
-  const resolved = result.roomResolved || failures >= STUCK_LIMIT;
+  // A room is genuinely cleared when the model resolves it or every foe falls;
+  // the stuck-limit forcing the party onward is not a clear and pays nothing.
+  const genuineClear = result.roomResolved || (combat?.allFoesDead ?? false);
+  const resolved = genuineClear || failures >= STUCK_LIMIT;
 
   if (resolved) {
     const depth = state.party.depth + 1;
     // Clearing a room pays gold scaled to its difficulty, so deeper, harder
     // rooms pay more; being forced out by the stuck-limit pays nothing.
-    const gold = result.roomResolved
+    const gold = genuineClear
       ? applied.party.gold + state.room.difficulty
       : applied.party.gold;
     const clearedParty = { ...applied.party, depth, gold };
@@ -101,10 +111,16 @@ export function applyTurn(
     };
   }
 
+  // Mid-encounter: hold the room, but bank any combat damage dealt to its foes
+  // so their health carries into the next exchange.
   return {
     ...state,
     party: applied.party,
-    room: { ...state.room, suggestions: result.suggestions },
+    room: {
+      ...state.room,
+      ...(combat ? { entities: combat.updatedEntities } : {}),
+      suggestions: result.suggestions,
+    },
     phase: 'awaiting_actions',
     recentEvents,
     roomFailures: failures,

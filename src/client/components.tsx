@@ -287,7 +287,11 @@ export function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
   return (
     <div
       className="flex flex-col gap-1.5 rounded-xl border px-3 py-2.5"
-      style={{ borderColor: glyph.border, background: glyph.bg }}
+      style={{
+        borderColor: glyph.border,
+        background: glyph.bg,
+        opacity: entity.kind === 'foe' && entity.hp === 0 ? 0.5 : 1,
+      }}
     >
       <div className="flex items-center gap-2">
         <span className={`text-[15px] ${glyph.tone}`}>{glyph.icon}</span>
@@ -304,11 +308,29 @@ export function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
         </p>
       )}
       {showStats && (
-        <div className="flex items-center gap-3 font-label text-[11px] text-muted">
-          {entity.threat !== undefined && <ThreatPips threat={entity.threat} />}
-          {entity.hp !== undefined && (
-            <span className="tabular-nums text-[#d08a78]">{entity.hp} HP</span>
-          )}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-3 font-label text-[11px] text-muted">
+            {entity.threat !== undefined && (
+              <ThreatPips threat={entity.threat} />
+            )}
+            {entity.hp !== undefined && entity.maxHp !== undefined && (
+              <span className="tabular-nums text-[#d08a78]">
+                {entity.hp}/{entity.maxHp} HP
+              </span>
+            )}
+          </div>
+          {entity.hp !== undefined &&
+            entity.maxHp !== undefined &&
+            entity.maxHp > 0 && (
+              <div className="h-1.5 overflow-hidden rounded-full bg-[#2a1512]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#b3302b] to-[#f0594e] transition-[width] duration-500"
+                  style={{
+                    width: `${Math.max(0, Math.min(100, (entity.hp / entity.maxHp) * 100))}%`,
+                  }}
+                />
+              </div>
+            )}
         </div>
       )}
     </div>
