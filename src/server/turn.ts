@@ -1,7 +1,14 @@
 import { reddit } from '@devvit/web/server';
-import type { GameState, Proposal, WorldBible } from '../shared/game';
+import type {
+  AbilityCheck,
+  GameState,
+  Proposal,
+  WorldBible,
+} from '../shared/game';
 import { prepareRoll, applyTurn } from './game/resolution';
-import { resolveCombat, combatDirective } from './game/combat';
+import { resolveCombat, combatDirective, combatEffects } from './game/combat';
+import { resolveRest, restDirective, restEffects } from './game/healing';
+import type { TurnEffects } from './game/effects';
 import { rankProposals, RECAP_MARKER } from './game/voting';
 import { turnSystemPrompt, buildTurnPrompt, type Lane } from './ai/prompt';
 import { parseResolveResult } from './ai/parse';
@@ -17,6 +24,27 @@ import { ensureWorldBible } from './worldbible';
 // the Reddit API boundary.
 type PostId = `t3_${string}`;
 
+// A turn spent in a combat or rest room resolves server-side before the AI is
+// called. This packages that into the narration directive the model must follow
+// and the state adjustments applyTurn applies; ordinary rooms produce neither.
+function resolveTurnEffects(
+  state: GameState,
+  roll: AbilityCheck
+): { directive: string | null; effects: TurnEffects | null } {
+  const combat = resolveCombat(state, roll);
+  if (combat) {
+    return {
+      directive: combatDirective(combat),
+      effects: combatEffects(combat),
+    };
+  }
+  const rest = resolveRest(state, roll);
+  if (rest) {
+    return { directive: restDirective(rest), effects: restEffects(rest) };
+  }
+  return { directive: null, effects: null };
+}
+
 // Runs one turn through the full pipeline: roll, narrate, validate, apply.
 // Does not persist — the caller decides when to save.
 export async function runTurn(
@@ -26,20 +54,13 @@ export async function runTurn(
   lane: Lane = 'community'
 ): Promise<GameState> {
   const roll = prepareRoll(state);
-  const combat = resolveCombat(state, roll);
+  const { directive, effects } = resolveTurnEffects(state, roll);
   const raw = await callGemini(
     turnSystemPrompt(lane),
-    buildTurnPrompt(
-      state,
-      action,
-      roll,
-      bible,
-      lane,
-      combat ? combatDirective(combat) : null
-    )
+    buildTurnPrompt(state, action, roll, bible, lane, directive)
   );
   return {
-    ...applyTurn(state, parseResolveResult(raw), Math.random, combat),
+    ...applyTurn(state, parseResolveResult(raw), Math.random, effects),
     lastCheck: roll,
   };
 }

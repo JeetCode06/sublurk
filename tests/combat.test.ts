@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   resolveCombat,
   combatDirective,
+  combatEffects,
   type CombatResult,
 } from '../src/server/game/combat';
 import type {
@@ -193,5 +194,24 @@ describe('combatDirective', () => {
       fight(makeState([foe('Lurker', 18, 3)]), check('fail', 3))
     );
     expect(text).toContain('misses Lurker');
+  });
+});
+
+describe('combatEffects', () => {
+  it('banks foe health and the counterattack, paying only on a clear', () => {
+    const wound = combatEffects(
+      fight(makeState([foe('Brute', 20, 4)]), check('success', 15))
+    );
+    expect(wound.hpDelta).toBe(-7); // foe survives and strikes back (3 + 4)
+    expect(wound.entities?.[0]?.hp).toBe(14);
+    expect(wound.resolve).toBe(false);
+    expect(wound.reward).toBe(false);
+
+    const kill = combatEffects(
+      fight(makeState([foe('Runt', 5, 3)]), check('success', 15))
+    );
+    expect(kill.hpDelta).toBe(0); // no survivors left to counterattack
+    expect(kill.resolve).toBe(true);
+    expect(kill.reward).toBe(true);
   });
 });

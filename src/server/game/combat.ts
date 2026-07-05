@@ -1,5 +1,6 @@
 import type { AbilityCheck, GameState, SceneEntity } from '../../shared/game';
 import { abilityModifier, combatAbility } from './abilities';
+import type { TurnEffects } from './effects';
 
 // The mechanical result of one combat exchange, decided entirely server-side so
 // a fight never depends on the model. The narration prompt is handed a matching
@@ -109,4 +110,18 @@ export function combatDirective(combat: CombatResult): string {
     beats.push('The surviving foes strike back, wounding the party.');
   }
   return `COMBAT RESULT (this is exactly what happened — narrate only this; invent no other wounds, deaths, or survivors): ${beats.join(' ')}`;
+}
+
+// Translates a resolved exchange into the server-authoritative adjustments
+// applyTurn applies: the party takes the counterattack, the wounded foes are
+// banked, and clearing the board — and only that — pays embers.
+export function combatEffects(combat: CombatResult): TurnEffects {
+  return {
+    // With every foe down there is no counterattack; guarding this also avoids a
+    // negative zero from negating zero damage.
+    hpDelta: combat.allFoesDead ? 0 : -combat.partyDamage,
+    entities: combat.updatedEntities,
+    resolve: combat.allFoesDead,
+    reward: combat.allFoesDead,
+  };
 }

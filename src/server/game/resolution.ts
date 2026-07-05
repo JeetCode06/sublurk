@@ -12,7 +12,7 @@ import { checkDisadvantageFrom } from './conditions';
 import { createRoom, createFinalBossRoom } from './rooms';
 import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
-import type { CombatResult } from './combat';
+import type { TurnEffects } from './effects';
 
 const RECENT_EVENTS_LIMIT = 6;
 
@@ -48,13 +48,14 @@ export function applyTurn(
   state: GameState,
   result: ResolveResult,
   rand: RandFn = Math.random,
-  combat: CombatResult | null = null
+  effects: TurnEffects | null = null
 ): GameState {
-  // In combat the server decides the party's health: they take the foes'
-  // counterattack, not whatever hpDelta the model proposed.
-  const effective = combat
-    ? { ...result, hpDelta: -combat.partyDamage }
-    : result;
+  // The server can override the party's HP for this turn — combat damage or rest
+  // healing — in which case the model's proposed hpDelta is ignored.
+  const effective =
+    effects?.hpDelta !== undefined
+      ? { ...result, hpDelta: effects.hpDelta }
+      : result;
   const applied = applyResolveResult(state.party, effective);
   const recentEvents = [...state.recentEvents, result.narration]
     .filter((event) => event.length > 0)
@@ -67,16 +68,17 @@ export function applyTurn(
   // Track consecutive failures in this room. Once they hit the limit the party
   // is forced onward even on a failed roll, so the room cannot loop forever.
   const failures = result.outcome === 'fail' ? state.roomFailures + 1 : 0;
-  // A room is genuinely cleared when the model resolves it or every foe falls;
-  // the stuck-limit forcing the party onward is not a clear and pays nothing.
-  const genuineClear = result.roomResolved || (combat?.allFoesDead ?? false);
-  const resolved = genuineClear || failures >= STUCK_LIMIT;
+  // A room ends when the model resolves it or the server forces it (every foe
+  // fell, or a rest completed); the stuck-limit still forces a way out.
+  const forced = effects?.resolve ?? false;
+  const resolved = result.roomResolved || forced || failures >= STUCK_LIMIT;
 
   if (resolved) {
     const depth = state.party.depth + 1;
-    // Clearing a room pays gold scaled to its difficulty, so deeper, harder
-    // rooms pay more; being forced out by the stuck-limit pays nothing.
-    const gold = genuineClear
+    // Overcoming a room pays embers scaled to its difficulty; a rest and a
+    // stuck-limit exit are not victories and pay nothing.
+    const paid = result.roomResolved || (effects?.reward ?? false);
+    const gold = paid
       ? applied.party.gold + state.room.difficulty
       : applied.party.gold;
     const clearedParty = { ...applied.party, depth, gold };
@@ -118,7 +120,7 @@ export function applyTurn(
     party: applied.party,
     room: {
       ...state.room,
-      ...(combat ? { entities: combat.updatedEntities } : {}),
+      ...(effects?.entities ? { entities: effects.entities } : {}),
       suggestions: result.suggestions,
     },
     phase: 'awaiting_actions',
