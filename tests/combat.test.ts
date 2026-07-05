@@ -46,7 +46,7 @@ function makeState(
     party: {
       hp: 50,
       maxHp: 50,
-      gold: 0,
+      embers: 0,
       depth,
       inventory: [],
       conditions: [],

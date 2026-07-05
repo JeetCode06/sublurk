@@ -16,7 +16,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     party: {
       hp: 50,
       maxHp: 50,
-      gold: 0,
+      embers: 0,
       depth: 0,
       inventory: [],
       conditions: [],
@@ -56,7 +56,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     narration: 'something happens',
     outcome: 'success',
     hpDelta: 0,
-    goldDelta: 0,
+    embersDelta: 0,
     inventoryAdd: [],
     inventoryRemove: [],
     statusAdd: [],

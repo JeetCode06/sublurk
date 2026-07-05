@@ -78,10 +78,10 @@ export function applyTurn(
     // Overcoming a room pays embers scaled to its difficulty; a rest and a
     // stuck-limit exit are not victories and pay nothing.
     const paid = result.roomResolved || (effects?.reward ?? false);
-    const gold = paid
-      ? applied.party.gold + state.room.difficulty
-      : applied.party.gold;
-    const clearedParty = { ...applied.party, depth, gold };
+    const embers = paid
+      ? applied.party.embers + state.room.difficulty
+      : applied.party.embers;
+    const clearedParty = { ...applied.party, depth, embers };
 
     // Resolving the room at the final location is the campaign's climax —
     // defeating the boss wins the run.

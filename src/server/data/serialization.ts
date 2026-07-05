@@ -1,4 +1,4 @@
-import type { GameState } from '../../shared/game';
+import type { GameState, Party } from '../../shared/game';
 import { coerceMap } from '../game/map';
 import { CLASSES } from '../game/classes';
 import { coerceAbilities } from '../game/abilities';
@@ -6,6 +6,17 @@ import { coerceConditions } from '../game/conditions';
 
 export function serializeGame(state: GameState): string {
   return JSON.stringify(state);
+}
+
+// Older saves stored this currency as "gold"; carry that balance across the
+// rename so a run already in progress keeps its embers rather than resetting to
+// zero. The stored party is treated as untrusted, since either field may be
+// missing depending on when it was saved.
+function coerceEmbers(party: Party): number {
+  const record = party as unknown as { embers?: unknown; gold?: unknown };
+  if (typeof record.embers === 'number') return record.embers;
+  if (typeof record.gold === 'number') return record.gold;
+  return 0;
 }
 
 // Returns null on corrupt or schema-mismatched data instead of throwing,
@@ -32,6 +43,7 @@ export function deserializeGame(raw: string): GameState | null {
         map: coerceMap(state.map),
         party: {
           ...state.party,
+          embers: coerceEmbers(state.party),
           abilities: coerceAbilities(
             state.party.abilities,
             CLASSES[state.party.classId].abilities

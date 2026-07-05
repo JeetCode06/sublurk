@@ -14,7 +14,7 @@ const valid = JSON.stringify({
   narration: 'The torch flares to life.',
   outcome: 'success',
   hpDelta: -3,
-  goldDelta: 10,
+  embersDelta: 10,
   inventoryAdd: ['torch'],
   inventoryRemove: [],
   statusAdd: ['lit'],
@@ -48,7 +48,7 @@ describe('parseResolveResult', () => {
   it('fills missing fields with safe defaults', () => {
     const result = parseResolveResult('{}');
     expect(result.hpDelta).toBe(0);
-    expect(result.goldDelta).toBe(0);
+    expect(result.embersDelta).toBe(0);
     expect(result.inventoryAdd).toEqual([]);
     expect(result.roomResolved).toBe(false);
     expect(result.death).toBe(false);

@@ -27,9 +27,14 @@ function check(outcome: Outcome): AbilityCheck {
 }
 
 function makeState(
-  opts: { hp?: number; gold?: number; depth?: number; roomType?: RoomType } = {}
+  opts: {
+    hp?: number;
+    embers?: number;
+    depth?: number;
+    roomType?: RoomType;
+  } = {}
 ): GameState {
-  const { hp = 20, gold = 0, depth = 0, roomType = 'rest' } = opts;
+  const { hp = 20, embers = 0, depth = 0, roomType = 'rest' } = opts;
   return {
     runNumber: 1,
     phase: 'awaiting_actions',
@@ -39,7 +44,7 @@ function makeState(
     party: {
       hp,
       maxHp: 50,
-      gold,
+      embers,
       depth,
       inventory: [],
       conditions: [],
@@ -74,7 +79,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     narration: 'the party rests',
     outcome: 'success',
     hpDelta: 0,
-    goldDelta: 0,
+    embersDelta: 0,
     inventoryAdd: [],
     inventoryRemove: [],
     statusAdd: [],
@@ -131,12 +136,12 @@ describe('restDirective', () => {
 
 describe('applyTurn with a rest', () => {
   it('heals the party, advances, and pays no embers', () => {
-    const state = makeState({ hp: 20, gold: 5, depth: 2 });
+    const state = makeState({ hp: 20, embers: 5, depth: 2 });
     const rest = resolveRest(state, check('success'));
     if (rest === null) throw new Error('expected a rest');
     const next = applyTurn(state, makeResult(), () => 0, restEffects(rest));
     expect(next.party.hp).toBe(43); // 20 + 23
-    expect(next.party.gold).toBe(5); // resting is not a victory
+    expect(next.party.embers).toBe(5); // resting is not a victory
     expect(next.party.depth).toBe(3); // moved on
   });
 

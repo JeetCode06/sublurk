@@ -16,7 +16,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     party: {
       hp: 50,
       maxHp: 50,
-      gold: 0,
+      embers: 0,
       depth: 0,
       inventory: [],
       conditions: [],
@@ -56,7 +56,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     narration: 'something happens',
     outcome: 'success',
     hpDelta: 0,
-    goldDelta: 0,
+    embersDelta: 0,
     inventoryAdd: [],
     inventoryRemove: [],
     statusAdd: [],
@@ -117,22 +117,22 @@ describe('applyTurn', () => {
     expect(next.room).not.toBe(start.room);
   });
 
-  it('awards gold scaled to difficulty when a room is genuinely cleared', () => {
+  it('awards embers scaled to difficulty when a room is genuinely cleared', () => {
     const next = applyTurn(
       makeState(),
       makeResult({ roomResolved: true }),
       () => 0
     );
-    expect(next.party.gold).toBe(12); // room difficulty 12
+    expect(next.party.embers).toBe(12); // room difficulty 12
   });
 
-  it('awards no gold when the party is only forced onward', () => {
+  it('awards no embers when the party is only forced onward', () => {
     const next = applyTurn(
       makeState({ roomFailures: STUCK_LIMIT - 1 }),
       makeResult({ outcome: 'fail', roomResolved: false })
     );
     expect(next.party.depth).toBe(1);
-    expect(next.party.gold).toBe(0);
+    expect(next.party.embers).toBe(0);
   });
 
   it('keeps the same room when it is not resolved', () => {

@@ -74,3 +74,22 @@ describe('roomFailures migration', () => {
     expect(restored?.roomFailures).toBe(0);
   });
 });
+
+describe('embers migration', () => {
+  it('carries a legacy gold balance over to embers', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    const party = legacy.party as Record<string, unknown>;
+    delete party.embers;
+    party.gold = 42;
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.party.embers).toBe(42);
+  });
+
+  it('defaults embers to zero when a save has neither field', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    const party = legacy.party as Record<string, unknown>;
+    delete party.embers;
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.party.embers).toBe(0);
+  });
+});

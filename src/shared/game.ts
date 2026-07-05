@@ -64,7 +64,7 @@ export type AbilityCheck = {
 export type Party = {
   hp: number;
   maxHp: number;
-  gold: number;
+  embers: number;
   depth: number;
   inventory: string[];
   conditions: ConditionId[];
@@ -158,7 +158,7 @@ export type ResolveResult = {
   narration: string;
   outcome: Outcome;
   hpDelta: number;
-  goldDelta: number;
+  embersDelta: number;
   inventoryAdd: string[];
   inventoryRemove: string[];
   statusAdd: string[];

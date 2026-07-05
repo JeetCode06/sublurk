@@ -82,7 +82,7 @@ export function Board({
           </div>
           <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
           <div className="flex flex-wrap gap-x-4 gap-y-1 font-label text-[12px] text-muted">
-            <span>◈ {game.party.gold} gold</span>
+            <span>◈ {game.party.embers} embers</span>
             {game.party.inventory.length > 0 && (
               <span>⚸ {game.party.inventory.join(', ')}</span>
             )}

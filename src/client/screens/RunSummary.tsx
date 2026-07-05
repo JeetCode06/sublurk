@@ -74,7 +74,7 @@ export function RunSummary({
   const stats = [
     { label: 'Depth', value: String(game.party.depth) },
     { label: 'Cleared', value: `${cleared}/${game.map.nodes.length}` },
-    { label: 'Gold', value: String(game.party.gold) },
+    { label: 'Embers', value: String(game.party.embers) },
     { label: 'Run', value: String(game.runNumber) },
   ];
 

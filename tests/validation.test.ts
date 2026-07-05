@@ -6,7 +6,7 @@ function makeParty(overrides: Partial<Party> = {}): Party {
   return {
     hp: 50,
     maxHp: 50,
-    gold: 100,
+    embers: 100,
     depth: 0,
     inventory: [],
     conditions: [],
@@ -22,7 +22,7 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     narration: '',
     outcome: 'success',
     hpDelta: 0,
-    goldDelta: 0,
+    embersDelta: 0,
     inventoryAdd: [],
     inventoryRemove: [],
     statusAdd: [],
@@ -78,12 +78,12 @@ describe('applyResolveResult', () => {
     expect(party.hp).toBe(35);
   });
 
-  it('never lets gold go negative', () => {
+  it('never lets embers go negative', () => {
     const { party } = applyResolveResult(
-      makeParty({ gold: 10 }),
-      makeResult({ goldDelta: -50 })
+      makeParty({ embers: 10 }),
+      makeResult({ embersDelta: -50 })
     );
-    expect(party.gold).toBe(0);
+    expect(party.embers).toBe(0);
   });
 
   it('adds and removes inventory items', () => {

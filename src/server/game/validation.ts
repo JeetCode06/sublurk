@@ -8,7 +8,7 @@ export type AppliedResult = {
 };
 
 const MAX_HP_DELTA = 25;
-const MAX_GOLD_DELTA = 100;
+const MAX_EMBERS_DELTA = 100;
 const MAX_INVENTORY = 20;
 
 function clamp(value: number, min: number, max: number): number {
@@ -56,9 +56,15 @@ export function applyResolveResult(
     adjustments.push(`hpDelta ${result.hpDelta} clamped to ${hpDelta}`);
   }
 
-  const goldDelta = clamp(result.goldDelta, -MAX_GOLD_DELTA, MAX_GOLD_DELTA);
-  if (goldDelta !== result.goldDelta) {
-    adjustments.push(`goldDelta ${result.goldDelta} clamped to ${goldDelta}`);
+  const embersDelta = clamp(
+    result.embersDelta,
+    -MAX_EMBERS_DELTA,
+    MAX_EMBERS_DELTA
+  );
+  if (embersDelta !== result.embersDelta) {
+    adjustments.push(
+      `embersDelta ${result.embersDelta} clamped to ${embersDelta}`
+    );
   }
 
   const conditionDrain = conditionHpTick(party.conditions);
@@ -67,7 +73,7 @@ export function applyResolveResult(
   }
 
   const hp = clamp(party.hp + hpDelta - conditionDrain, 0, party.maxHp);
-  const gold = Math.max(0, party.gold + goldDelta);
+  const embers = Math.max(0, party.embers + embersDelta);
 
   const inv = applyInventory(
     party.inventory,
@@ -83,7 +89,7 @@ export function applyResolveResult(
   );
 
   return {
-    party: { ...party, hp, gold, inventory: inv.items, conditions },
+    party: { ...party, hp, embers, inventory: inv.items, conditions },
     died: hp <= 0,
     adjustments,
   };

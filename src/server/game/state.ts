@@ -5,7 +5,7 @@ import { createRoom } from './rooms';
 import { DEFAULT_MAP, freshMap } from './map';
 
 const STARTING_HP = 50;
-const STARTING_GOLD = 0;
+const STARTING_EMBERS = 0;
 const DEFAULT_VOTE_THRESHOLD = 20;
 
 export type NewGameInput = {
@@ -19,7 +19,7 @@ function freshParty(classId: ClassId, name: string): Party {
   return {
     hp: STARTING_HP,
     maxHp: STARTING_HP,
-    gold: STARTING_GOLD,
+    embers: STARTING_EMBERS,
     depth: 0,
     inventory: [],
     conditions: [],

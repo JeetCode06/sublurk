@@ -40,7 +40,7 @@ A whole community has been pulled in together and shares one body, steering it b
 
 Rules:
 - The dice have already decided how well the action goes. Honor the given outcome: "success", "partial" (it works, but at a cost), or "fail".
-- Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with the party's current HP, gold, and the room.
+- Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with the party's current HP, embers, and the room.
 - Keep it tense and fun, match the world and weave in its villain and motifs when it fits, and keep content safe for a general audience.
 - The only conditions you may put in statusAdd or statusRemove are: ${CONDITION_IDS.join(', ')}. Each makes the party's ability checks harder. Apply one when the fiction earns it and lift it when they recover; any other word is ignored.
 - The party automatically loses a little health each turn to lingering conditions like poison or exhaustion. Do not also deduct for those ongoing effects in hpDelta — use hpDelta only for the direct result of this action.
@@ -50,7 +50,7 @@ Rules:
   "narration": string,
   "outcome": "success" | "partial" | "fail",
   "hpDelta": number,
-  "goldDelta": number,
+  "embersDelta": number,
   "inventoryAdd": string[],
   "inventoryRemove": string[],
   "statusAdd": string[],
@@ -69,7 +69,7 @@ One lone soul was pulled in, and you narrate what becomes of them — address th
 
 Rules:
 - The dice have already decided how well the action goes. Honor the given outcome: "success", "partial" (it works, but at a cost), or "fail".
-- Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with your current HP, gold, and the room.
+- Never grant instant wins, huge rewards, or a free escape from danger. Stay consistent with your current HP, embers, and the room.
 - Keep it tense and fun, match the world and weave in its villain and motifs when it fits, and keep content safe for a general audience.
 - The only conditions you may put in statusAdd or statusRemove are: ${CONDITION_IDS.join(', ')}. Each makes your ability checks harder. Apply one when the fiction earns it and lift it when you recover; any other word is ignored.
 - You automatically lose a little health each turn to lingering conditions like poison or exhaustion. Do not also deduct for those ongoing effects in hpDelta — use hpDelta only for the direct result of this action.
@@ -79,7 +79,7 @@ Rules:
   "narration": string,
   "outcome": "success" | "partial" | "fail",
   "hpDelta": number,
-  "goldDelta": number,
+  "embersDelta": number,
   "inventoryAdd": string[],
   "inventoryRemove": string[],
   "statusAdd": string[],
@@ -168,7 +168,7 @@ export function buildTurnPrompt(
     ...worldContextLines(bible, lane),
     locationLine(state),
     `${solo ? 'Adventurer' : 'Party'}: ${party.name} (class: ${party.classId})`,
-    `HP: ${party.hp}/${party.maxHp} | Gold: ${party.gold} | Depth: ${party.depth}`,
+    `HP: ${party.hp}/${party.maxHp} | Embers: ${party.embers} | Depth: ${party.depth}`,
     `Inventory: ${party.inventory.length > 0 ? party.inventory.join(', ') : 'empty'}`,
     `Conditions: ${party.conditions.length > 0 ? party.conditions.map((c) => CONDITIONS[c].name).join(', ') : 'none'}`,
     `Current room: a ${room.type} room (difficulty ${BAND_LABELS[bandForDC(room.difficulty)]}, DC ${room.difficulty}). ${room.description}`,
