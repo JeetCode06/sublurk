@@ -25,16 +25,25 @@ function CommunityGlyph() {
 }
 
 export function ModeSelect({
+  onBack,
   onSolo,
   onCommunity,
   onInstall,
 }: Readonly<{
+  onBack: () => void;
   onSolo: () => void;
   onCommunity: () => void;
   onInstall: () => void;
 }>) {
   return (
     <TorchlitScreen>
+      <button
+        type="button"
+        onClick={onBack}
+        className="mb-4 self-start font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+      >
+        ‹ Back
+      </button>
       <header className="text-center">
         <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
           Choose your mode
@@ -88,7 +97,7 @@ export function ModeSelect({
               />
             </span>
             <span className="rounded-md border border-[#5a3a1e] px-2 py-0.5 font-label text-[11px] tracking-wide text-ember-glow">
-              ⚄ 2d6
+              ⚄ d20
             </span>
           </div>
         </button>
@@ -119,8 +128,8 @@ export function ModeSelect({
             </span>
           </div>
           <p className="mt-3 font-body text-[13.5px] italic leading-snug text-[#b6c9cc]">
-            The entire subreddit pilots one hero. Comment your move, upvote the
-            best, watch the top action resolve.
+            Your whole sub, pulled under together to pilot one hero. Comment
+            your move, upvote the best, watch the top action resolve.
           </p>
           <div className="mt-3.5 flex items-center gap-2">
             <span className="font-label text-[11px] uppercase tracking-[0.18em] text-teal">

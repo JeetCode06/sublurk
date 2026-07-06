@@ -61,6 +61,7 @@ export const App = () => {
   if (view === 'mode_select') {
     return (
       <ModeSelect
+        onBack={() => setView('intro')}
         onSolo={() => setView('character_select')}
         onCommunity={() => {
           setMode('community');
