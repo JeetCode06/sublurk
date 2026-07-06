@@ -209,6 +209,33 @@ api.post('/action', async (c) => {
   }
 });
 
+api.get('/solo/game', async (c) => {
+  const { userId } = context;
+  if (!userId) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: 'Sign in to play a solo run' },
+      401
+    );
+  }
+  try {
+    const state = await loadSoloGame(userId);
+    if (!state) {
+      // No run to resume; the client shows character select instead.
+      return c.json({ type: 'none' } as const);
+    }
+    return c.json<GameResponse>({
+      type: 'game',
+      state,
+      username: await currentUsername(),
+    });
+  } catch (error) {
+    return c.json<ErrorResponse>(
+      { status: 'error', message: errorMessage(error) },
+      400
+    );
+  }
+});
+
 api.post('/solo/start', async (c) => {
   const { postId, subredditName, userId } = context;
   if (!postId) {

@@ -11,6 +11,24 @@ import {
 import { RunSummary } from './RunSummary';
 import { DiceOverlay } from '../DiceOverlay';
 
+// A folded-map glyph for the button that opens the campaign map.
+function MapIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 4 3 6.2v13.8l6-2.2 6 2.2 6-2.2V3.8l-6 2.2-6-2.2Z" />
+      <path d="M9 4v13.8M15 6.2V20" />
+    </svg>
+  );
+}
+
 const OUTCOME_LABEL: Record<Outcome, string> = {
   success: 'Success',
   partial: 'Partial',
@@ -67,10 +85,12 @@ export function SoloPlay({
   solo,
   classId,
   onExit,
+  onNewRun,
 }: Readonly<{
   solo: ReturnType<typeof useSolo>;
   classId: string;
   onExit: () => void;
+  onNewRun: () => void;
 }>) {
   const [draft, setDraft] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
@@ -88,7 +108,7 @@ export function SoloPlay({
   if (loading || !game) {
     return (
       <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
-        {loading ? 'Pulling you under…' : (error ?? 'No solo run yet.')}
+        {loading ? 'Down into the dark…' : (error ?? 'No solo run yet.')}
       </div>
     );
   }
@@ -112,8 +132,6 @@ export function SoloPlay({
     setDraft('');
   };
 
-  const depthLabel =
-    game.party.depth === 0 ? 'The Threshold' : `Depth ${game.party.depth}`;
   const hasBoard =
     game.room.entities.length > 0 || game.room.threats.length > 0;
 
@@ -122,20 +140,34 @@ export function SoloPlay({
       <div className="mx-auto flex min-h-screen w-full max-w-[470px] flex-col">
         <header className="sticky top-0 z-20 border-b border-edge bg-[#0a0705]/95 px-5 pb-3 pt-5 backdrop-blur">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={onExit}
-              className="font-label text-[10px] uppercase tracking-[0.18em] text-faint transition hover:text-ember"
-            >
-              ‹ Modes
-            </button>
-            <button
-              type="button"
-              onClick={() => setMapOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.12em] text-ember-glow transition hover:brightness-110"
-            >
-              <span aria-hidden="true">⚑</span> {depthLabel}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onExit}
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-faint transition hover:text-ember"
+              >
+                ‹ Modes
+              </button>
+              <button
+                type="button"
+                onClick={onNewRun}
+                className="font-label text-[10px] uppercase tracking-[0.18em] text-faint transition hover:text-ember"
+              >
+                ⟳ New run
+              </button>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-label text-[10px] uppercase tracking-[0.18em] text-faint">
+                Depth {game.party.depth}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMapOpen(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.12em] text-ember-glow transition hover:brightness-110"
+              >
+                <MapIcon /> Map
+              </button>
+            </div>
           </div>
           <h1 className="font-display text-[22px] font-bold leading-none text-[#f6b063]">
             {game.party.name}
@@ -166,9 +198,6 @@ export function SoloPlay({
 
           {hasBoard && (
             <section className="flex flex-col gap-3 rounded-2xl border border-[#2a2018] bg-[#100b08] p-3.5">
-              <p className="font-label text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
-                In the room
-              </p>
               <SceneEntities entities={game.room.entities} />
               <ThreatStrip threats={game.room.threats} />
             </section>

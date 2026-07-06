@@ -121,12 +121,15 @@ function classSigil(id: ClassId) {
 export function CharacterSelect({
   onBack,
   onBegin,
+  hasActiveRun,
 }: Readonly<{
   onBack: () => void;
   onBegin: (classId: string) => void;
+  hasActiveRun: boolean;
 }>) {
   const [selected, setSelected] = useState<ClassId>('warrior');
   const [themed, setThemed] = useState<Record<ClassId, string> | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const klass = CLASS_INFO[selected];
   const accent = CLASS_ACCENT[selected];
   const { strong, weak } = classAffinitySummary(selected);
@@ -325,7 +328,10 @@ export function CharacterSelect({
       <div className="mt-6 flex flex-col items-center gap-3">
         <button
           type="button"
-          onClick={() => onBegin(selected)}
+          onClick={() => {
+            if (hasActiveRun) setConfirming(true);
+            else onBegin(selected);
+          }}
           className="w-full rounded-xl px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] transition hover:brightness-110"
           style={{ background: accent.main, color: '#150d06' }}
         >
@@ -336,9 +342,40 @@ export function CharacterSelect({
           onClick={onBack}
           className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
         >
-          ‹ Back to modes
+          {hasActiveRun ? '‹ Back to your run' : '‹ Back to modes'}
         </button>
       </div>
+
+      {confirming && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0a0705]/85 px-6 backdrop-blur-sm">
+          <div className="w-full max-w-[360px] rounded-2xl border border-edge bg-[#140f0b] p-6">
+            <p className="font-body text-[15px] italic leading-relaxed text-parchment">
+              A soul already wanders below. Choose another and the first stays
+              with me, their descent ended where it stands.
+            </p>
+            <div className="mt-5 flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirming(false);
+                  onBegin(selected);
+                }}
+                className="w-full rounded-xl px-5 py-3 font-label text-[13px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110"
+                style={{ background: accent.main }}
+              >
+                Leave them behind
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirming(false)}
+                className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+              >
+                Never mind
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </TorchlitScreen>
   );
 }

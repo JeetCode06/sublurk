@@ -62,7 +62,10 @@ export const App = () => {
     return (
       <ModeSelect
         onBack={() => setView('intro')}
-        onSolo={() => setView('character_select')}
+        onSolo={() => {
+          setMode('solo');
+          setView('play');
+        }}
         onCommunity={() => {
           setMode('community');
           setView('play');
@@ -76,14 +79,16 @@ export const App = () => {
     return <InstallScreen onBack={() => setView('mode_select')} />;
   }
 
+  // Reached from within a run via New run: a run already exists, so the back
+  // button returns to it and beginning a new one warns before overwriting it.
   if (view === 'character_select') {
     return (
       <CharacterSelect
-        onBack={() => setView('mode_select')}
+        hasActiveRun={!!solo.game}
+        onBack={() => setView('play')}
         onBegin={(classId) => {
           setSoloClass(classId);
           void solo.start(classId);
-          setMode('solo');
           setView('play');
         }}
       />
@@ -91,6 +96,30 @@ export const App = () => {
   }
 
   if (mode === 'solo') {
+    // Still checking for a saved run to resume.
+    if (solo.loading && !solo.game) {
+      return (
+        <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
+          Down into the dark…
+        </div>
+      );
+    }
+    // No run to resume: choose who falls before the descent begins.
+    if (!solo.game) {
+      return (
+        <CharacterSelect
+          hasActiveRun={false}
+          onBack={() => {
+            setMode(null);
+            setView('mode_select');
+          }}
+          onBegin={(classId) => {
+            setSoloClass(classId);
+            void solo.start(classId);
+          }}
+        />
+      );
+    }
     return (
       <SoloPlay
         solo={solo}
@@ -99,6 +128,7 @@ export const App = () => {
           setMode(null);
           setView('mode_select');
         }}
+        onNewRun={() => setView('character_select')}
       />
     );
   }

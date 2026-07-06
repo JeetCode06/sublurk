@@ -179,7 +179,7 @@ type SoloHookState = {
 const SOLO_INITIAL: SoloHookState = {
   game: null,
   username: null,
-  loading: false,
+  loading: true,
   resolving: false,
   error: null,
   transcript: [],
@@ -200,10 +200,58 @@ function openingTranscript(game: GameState): TranscriptEntry[] {
   return entries;
 }
 
+// The transcript for a resumed run. The full history isn't persisted, so this
+// rebuilds enough context from the saved state — the last few beats and the
+// current room — for the player to pick up where they left off.
+function resumeTranscript(game: GameState): TranscriptEntry[] {
+  const entries: TranscriptEntry[] = game.recentEvents
+    .slice(-3)
+    .filter((text) => text.length > 0)
+    .map((text, id) => ({ id, kind: 'scene' as const, text }));
+  const desc = game.room.description;
+  if (desc.length > 0 && game.recentEvents.at(-1) !== desc) {
+    entries.push({ id: entries.length, kind: 'scene', text: desc });
+  }
+  return entries;
+}
+
 // A private, real-time solo run. Unlike useGame there is no polling: each action
 // returns the next state directly, since only the player changes the run.
 export const useSolo = () => {
   const [state, setState] = useState<SoloHookState>(SOLO_INITIAL);
+
+  // On mount, look for a saved run to resume. A missing run just clears the
+  // loading state, and the app then offers character select.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/solo/game');
+        const data = (await res.json()) as
+          | GameResponse
+          | { type: 'none' }
+          | ErrorResponse;
+        if (!active) return;
+        if (res.ok && 'type' in data && data.type === 'game') {
+          setState({
+            game: data.state,
+            username: data.username,
+            loading: false,
+            resolving: false,
+            error: null,
+            transcript: resumeTranscript(data.state),
+          });
+        } else {
+          setState((prev) => ({ ...prev, loading: false }));
+        }
+      } catch {
+        if (active) setState((prev) => ({ ...prev, loading: false }));
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const start = useCallback(async (classId: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
