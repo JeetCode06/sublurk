@@ -11,13 +11,10 @@ import {
   signed,
 } from '../lib';
 
-const CLASS_ORDER: ClassId[] = [
-  'warrior',
-  'witch',
-  'healer',
-  'trickster',
-  'adventurer',
-];
+// The three crawlers offered on the character screen. The data layer knows other
+// classes, but a tight, distinct roster (a bruiser, a caster, a rogue) reads far
+// better than a long shelf of similar ones.
+const CLASS_ORDER: ClassId[] = ['warrior', 'witch', 'trickster'];
 
 const CLASS_ROLE: Record<ClassId, string> = {
   warrior: 'Bruiser',
@@ -161,61 +158,56 @@ export function CharacterSelect({
     <TorchlitScreen>
       <header className="text-center">
         <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
-          Pick 1 of 5
+          Pick 1 of {CLASS_ORDER.length}
         </div>
         <h1 className="mt-3 font-display text-[28px] font-bold leading-tight text-ink">
           Choose your crawler
         </h1>
         <p className="mt-2 font-body text-[15px] italic text-muted">
-          Five fools volunteered. Pick the one you&apos;ll mourn.
+          The fools volunteered. Pick the one you&apos;ll mourn.
         </p>
       </header>
 
-      {/* Class picker — a firelit row you can scroll through. */}
-      <div className="-mx-5 mt-7 overflow-x-auto px-5 pb-1">
-        <div className="flex gap-2.5" style={{ width: 'max-content' }}>
-          {CLASS_ORDER.map((id) => {
-            const info = CLASS_INFO[id];
-            const display = themed?.[id] ?? info.name;
-            const a = CLASS_ACCENT[id];
-            const isSelected = id === selected;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setSelected(id)}
-                className="flex w-[92px] shrink-0 flex-col items-center gap-2 rounded-xl border p-3 text-center transition duration-200"
+      {/* Class picker — three crawlers, no scrolling. */}
+      <div className="mt-7 grid grid-cols-3 gap-2.5">
+        {CLASS_ORDER.map((id) => {
+          const info = CLASS_INFO[id];
+          const display = themed?.[id] ?? info.name;
+          const a = CLASS_ACCENT[id];
+          const isSelected = id === selected;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSelected(id)}
+              className="flex flex-col items-center gap-2 rounded-xl border p-3 text-center transition duration-200"
+              style={{
+                borderColor: isSelected ? a.main : '#2c241e',
+                background: isSelected ? a.bg : '#161009',
+              }}
+            >
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-lg"
                 style={{
-                  borderColor: isSelected ? a.main : '#2c241e',
-                  background: isSelected ? a.bg : '#161009',
+                  color: isSelected ? a.light : '#6f6358',
+                  background: isSelected ? 'rgba(0,0,0,0.25)' : '#1d160f',
+                  boxShadow: isSelected ? `0 0 14px ${a.dim}` : 'none',
                 }}
               >
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{
-                    color: isSelected ? a.light : '#6f6358',
-                    background: isSelected ? 'rgba(0,0,0,0.25)' : '#1d160f',
-                    boxShadow: isSelected ? `0 0 14px ${a.dim}` : 'none',
-                  }}
-                >
-                  {classSigil(id)}
-                </span>
-                <span
-                  className="block truncate font-display text-[13px] font-semibold leading-none"
-                  style={{
-                    color: isSelected ? a.light : '#9a8a7a',
-                    maxWidth: '76px',
-                  }}
-                >
-                  {display}
-                </span>
-                <span className="font-label text-[9.5px] uppercase tracking-[0.16em] text-faint">
-                  {CLASS_ROLE[id]}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                {classSigil(id)}
+              </span>
+              <span
+                className="block w-full truncate font-display text-[13px] font-semibold leading-none"
+                style={{ color: isSelected ? a.light : '#9a8a7a' }}
+              >
+                {display}
+              </span>
+              <span className="font-label text-[9.5px] uppercase tracking-[0.16em] text-faint">
+                {CLASS_ROLE[id]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Selected crawler dossier */}
