@@ -74,14 +74,12 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
   return (
     <TorchlitScreen>
       <header className="text-center">
-        <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
-          Take it home
-        </div>
-        <h1 className="mt-3 font-display text-[28px] font-bold leading-tight text-ink">
+        <h1 className="font-display text-[28px] font-bold leading-tight text-ink">
           Play in your community
         </h1>
-        <p className="mt-2 font-body text-[15px] italic text-muted">
-          The dungeon forges itself from whatever subreddit it lives in.
+        <p className="mt-3 font-body text-[15px] italic leading-snug text-muted">
+          The game reads your subreddit&apos;s own posts and builds a dungeon
+          themed to your community. No two subs fall into the same place.
         </p>
       </header>
 
@@ -160,9 +158,6 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
             {result.text}
           </p>
         )}
-        <p className="mt-2 font-body text-[11px] text-faint">
-          One request per community, up to 3 a day.
-        </p>
       </section>
 
       <button

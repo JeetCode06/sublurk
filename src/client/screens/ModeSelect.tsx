@@ -9,17 +9,10 @@ function SoloGlyph() {
   );
 }
 
-function CommunityGlyph() {
+function ModerateGlyph() {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-      <circle cx="8" cy="8.5" r="2.7" fill="#05181d" />
-      <circle cx="16" cy="8.5" r="2.7" fill="#05181d" />
-      <path d="M3 18c0-2.8 2.2-4.6 5-4.6s5 1.8 5 4.6Z" fill="#05181d" />
-      <path
-        d="M11 18c0-2.8 2.2-4.6 5-4.6s5 1.8 5 4.6Z"
-        fill="#05181d"
-        opacity="0.85"
-      />
+      <path d="M12 3 5 6v5c0 4 3 6.6 7 8 4-1.4 7-4 7-8V6Z" fill="#05181d" />
     </svg>
   );
 }
@@ -27,12 +20,10 @@ function CommunityGlyph() {
 export function ModeSelect({
   onBack,
   onSolo,
-  onCommunity,
   onInstall,
 }: Readonly<{
   onBack: () => void;
   onSolo: () => void;
-  onCommunity: () => void;
   onInstall: () => void;
 }>) {
   return (
@@ -46,13 +37,13 @@ export function ModeSelect({
       </button>
       <header className="text-center">
         <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
-          Choose your mode
+          Two ways in
         </div>
         <h1 className="mt-3 font-display text-[30px] font-bold leading-tight text-ink">
-          How will you descend?
+          How will you play?
         </h1>
         <p className="mt-2 font-body text-[15px] italic text-muted">
-          Two ways into the dark. Choose your poison.
+          Descend it yourself, or bring it to a sub you moderate.
         </p>
       </header>
 
@@ -84,7 +75,7 @@ export function ModeSelect({
           </div>
           <p className="mt-3 font-body text-[13.5px] italic leading-snug text-parchment">
             Just you, your dice, and a dungeon that wants you dead. Type what
-            you do — live with what you rolled.
+            you do, live with what you rolled.
           </p>
           <div className="mt-3.5 flex items-center gap-2.5">
             <span className="text-blood">♥</span>
@@ -102,10 +93,10 @@ export function ModeSelect({
           </div>
         </button>
 
-        {/* COMMUNITY — the teal, vote-driven lane */}
+        {/* MODERATE — bring it to a community you run */}
         <button
           type="button"
-          onClick={onCommunity}
+          onClick={onInstall}
           className="group rounded-2xl border border-[#1d4a55] bg-[#07191e] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-teal hover:bg-[#0a2128] focus:outline-none focus-visible:border-teal"
         >
           <div className="flex items-center gap-3.5">
@@ -116,48 +107,29 @@ export function ModeSelect({
                 boxShadow: '0 0 18px rgba(92,196,214,.26)',
               }}
             >
-              <CommunityGlyph />
+              <ModerateGlyph />
             </span>
             <span className="flex-1">
               <span className="block font-display text-[22px] font-bold leading-none text-teal-bright">
-                COMMUNITY
+                Moderate a sub?
               </span>
               <span className="mt-1 block font-label text-[11px] font-medium uppercase tracking-[0.22em] text-teal">
-                Async · whole sub
+                Bring it home
               </span>
             </span>
           </div>
           <p className="mt-3 font-body text-[13.5px] italic leading-snug text-[#b6c9cc]">
-            Your whole sub, pulled under together to pilot one hero. Comment
-            your move, upvote the best, watch the top action resolve.
+            Run it in a community you moderate. The dungeon rebuilds itself from
+            that sub&apos;s own posts, themed to whatever your people talk
+            about.
           </p>
           <div className="mt-3.5 flex items-center gap-2">
             <span className="font-label text-[11px] uppercase tracking-[0.18em] text-teal">
-              ▲ vote
-            </span>
-            <span className="flex flex-1 items-end gap-1">
-              {[6, 10, 7, 12, 5].map((h, i) => (
-                <span
-                  key={i}
-                  className="flex-1 rounded-sm bg-[#1d4a55]"
-                  style={{ height: `${h}px` }}
-                />
-              ))}
-            </span>
-            <span className="rounded-md border border-[#1d4a55] px-2 py-0.5 font-label text-[11px] tracking-wide text-[#9fe0ec]">
-              ⌁ comments
+              Install →
             </span>
           </div>
         </button>
       </div>
-
-      <button
-        type="button"
-        onClick={onInstall}
-        className="mt-7 self-center font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
-      >
-        Bring it to your community →
-      </button>
     </TorchlitScreen>
   );
 }

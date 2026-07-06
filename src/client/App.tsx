@@ -66,10 +66,6 @@ export const App = () => {
           setMode('solo');
           setView('play');
         }}
-        onCommunity={() => {
-          setMode('community');
-          setView('play');
-        }}
         onInstall={() => setView('install')}
       />
     );
