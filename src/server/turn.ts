@@ -62,16 +62,21 @@ export async function runTurn(
   action: string,
   bible: WorldBible,
   lane: Lane = 'community'
-): Promise<GameState> {
+): Promise<{ state: GameState; aiResponded: boolean }> {
   const roll = prepareRoll(state);
   const { directive, effects } = resolveTurnEffects(state, roll, action);
   const raw = await callGemini(
     turnSystemPrompt(lane),
     buildTurnPrompt(state, action, roll, bible, lane, directive)
   );
+  // An empty reply means the narrator was unreachable (usually rate-limited) and
+  // the turn ran on authored fallback content — a wash the caller can surface.
   return {
-    ...applyTurn(state, parseResolveResult(raw), Math.random, effects),
-    lastCheck: roll,
+    state: {
+      ...applyTurn(state, parseResolveResult(raw), Math.random, effects),
+      lastCheck: roll,
+    },
+    aiResponded: raw.length > 0,
   };
 }
 
@@ -115,7 +120,7 @@ export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
 
   const bible = await ensureWorldBible();
   const nextState = withDeadline(
-    await withRoomIntro(await runTurn(state, winner.body, bible), bible)
+    await withRoomIntro((await runTurn(state, winner.body, bible)).state, bible)
   );
   await saveGame(nextState);
 

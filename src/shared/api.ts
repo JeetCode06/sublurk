@@ -5,6 +5,9 @@ export type GameResponse = {
   state: GameState;
   username: string;
   note?: string;
+  // True when the narrator was unreachable and the turn fell back — the client
+  // shows an "out of energy" cooldown instead of a broken retry loop.
+  degraded?: boolean;
 };
 
 export type ProposalsResponse = {

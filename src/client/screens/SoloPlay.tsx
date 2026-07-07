@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Outcome } from '../../shared/game';
-import { useSolo, type TranscriptEntry } from '../hooks/useGame';
+import { useSolo, COOLDOWN_MS, type TranscriptEntry } from '../hooks/useGame';
 import {
   CampaignMap,
   HealthBar,
@@ -95,15 +95,26 @@ export function SoloPlay({
   const [draft, setDraft] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
   const [rollActive, setRollActive] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const endRef = useRef<HTMLDivElement>(null);
-  const { game, loading, resolving, error, transcript } = solo;
+  const { game, loading, resolving, error, transcript, cooldownUntil } = solo;
 
   const endRoll = useCallback(() => setRollActive(false), []);
+
+  const cooldownLeft = cooldownUntil ? Math.max(0, cooldownUntil - now) : 0;
+  const onCooldown = cooldownLeft > 0;
 
   // Keep the newest beat and the input in view as the story grows.
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [transcript.length]);
+
+  // Tick the countdown while the dark gathers itself.
+  useEffect(() => {
+    if (!onCooldown) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [onCooldown]);
 
   if (loading || !game) {
     return (
@@ -126,7 +137,7 @@ export function SoloPlay({
 
   const submit = () => {
     const action = draft.trim();
-    if (action.length === 0 || resolving) return;
+    if (action.length === 0 || resolving || onCooldown) return;
     setRollActive(true);
     void solo.act(action);
     setDraft('');
@@ -209,39 +220,62 @@ export function SoloPlay({
           {error && (
             <p className="mb-2 font-body text-[13px] text-[#f0594e]">{error}</p>
           )}
-          {game.room.suggestions.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {game.room.suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => setDraft(suggestion)}
-                  disabled={resolving}
-                  className="rounded-full border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-ember hover:text-ink disabled:opacity-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
+          {onCooldown ? (
+            <div className="py-1.5 text-center">
+              <p className="font-body text-[13.5px] italic text-muted">
+                The dark has spent itself on you. Its strength gathers again.
+              </p>
+              <div className="mx-auto mt-2.5 flex max-w-[240px] items-center gap-2.5">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#2a1d12]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#8a5a2e] to-[#f7b061] transition-[width] duration-500"
+                    style={{
+                      width: `${((COOLDOWN_MS - cooldownLeft) / COOLDOWN_MS) * 100}%`,
+                    }}
+                  />
+                </div>
+                <span className="font-label text-[12px] tabular-nums text-ember-glow">
+                  {Math.ceil(cooldownLeft / 1000)}s
+                </span>
+              </div>
             </div>
+          ) : (
+            <>
+              {game.room.suggestions.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {game.room.suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => setDraft(suggestion)}
+                      disabled={resolving}
+                      className="rounded-full border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-ember hover:text-ink disabled:opacity-50"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submit();
+                  }}
+                  disabled={resolving}
+                  placeholder="Search the altar, draw a blade, light a torch…"
+                  className="flex-1 rounded-xl border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
+                />
+                <button
+                  onClick={submit}
+                  disabled={resolving || draft.trim().length === 0}
+                  className="rounded-xl bg-ember px-5 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#150d06] transition hover:brightness-110 disabled:opacity-40"
+                >
+                  {resolving ? '…' : 'Act'}
+                </button>
+              </div>
+            </>
           )}
-          <div className="flex gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') submit();
-              }}
-              disabled={resolving}
-              placeholder="Search the altar, draw a blade, light a torch…"
-              className="flex-1 rounded-xl border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
-            />
-            <button
-              onClick={submit}
-              disabled={resolving || draft.trim().length === 0}
-              className="rounded-xl bg-ember px-5 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#150d06] transition hover:brightness-110 disabled:opacity-40"
-            >
-              {resolving ? '…' : 'Act'}
-            </button>
-          </div>
         </footer>
       </div>
 
@@ -275,7 +309,7 @@ export function SoloPlay({
         <DiceOverlay
           rolling={resolving}
           result={
-            !resolving && !error && game.lastCheck
+            !resolving && !error && !onCooldown && game.lastCheck
               ? { die: game.lastCheck.die, outcome: game.lastCheck.outcome }
               : null
           }

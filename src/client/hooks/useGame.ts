@@ -174,7 +174,14 @@ type SoloHookState = {
   resolving: boolean;
   error: string | null;
   transcript: TranscriptEntry[];
+  // When the narrator is spent (rate-limited), the timestamp until which acting
+  // is paused, shown to the player as an "out of energy" cooldown.
+  cooldownUntil: number | null;
 };
+
+// How long the dark takes to gather itself after an unreachable turn. Long
+// enough for a per-minute rate limit to ease, framed as recovering energy.
+export const COOLDOWN_MS = 30_000;
 
 const SOLO_INITIAL: SoloHookState = {
   game: null,
@@ -183,6 +190,7 @@ const SOLO_INITIAL: SoloHookState = {
   resolving: false,
   error: null,
   transcript: [],
+  cooldownUntil: null,
 };
 
 // The transcript entries opening a fresh run: the prologue, then the first
@@ -240,6 +248,7 @@ export const useSolo = () => {
             resolving: false,
             error: null,
             transcript: resumeTranscript(data.state),
+            cooldownUntil: null,
           });
         } else {
           setState((prev) => ({ ...prev, loading: false }));
@@ -274,6 +283,7 @@ export const useSolo = () => {
         resolving: false,
         error: null,
         transcript: openingTranscript(data.state),
+        cooldownUntil: null,
       });
     } catch {
       setState((prev) => ({ ...prev, loading: false, error: GENERIC_ERROR }));
@@ -294,8 +304,20 @@ export const useSolo = () => {
         setState((prev) => ({ ...prev, resolving: false, error: message }));
         return;
       }
+      const degraded = data.degraded === true;
       setState((prev) => {
         const next = data.state;
+        if (degraded) {
+          // The narrator was unreachable: a wash turn. Don't record it, just
+          // pause acting so the player waits rather than retrying into the wall.
+          return {
+            ...prev,
+            game: next,
+            resolving: false,
+            error: null,
+            cooldownUntil: Date.now() + COOLDOWN_MS,
+          };
+        }
         const prevScene = prev.game?.room.description ?? '';
         const narration = next.recentEvents.at(-1) ?? '';
         const check = next.lastCheck ?? null;
@@ -329,6 +351,7 @@ export const useSolo = () => {
           resolving: false,
           error: null,
           transcript: [...prev.transcript, ...additions],
+          cooldownUntil: null,
         };
       });
     } catch {

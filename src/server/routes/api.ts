@@ -187,7 +187,7 @@ api.post('/action', async (c) => {
 
     const bible = await ensureWorldBible();
     const nextState = withDeadline(
-      await withRoomIntro(await runTurn(state, action, bible), bible)
+      await withRoomIntro((await runTurn(state, action, bible)).state, bible)
     );
     await saveGame(nextState);
     await rememberOutcome(nextState);
@@ -323,11 +323,8 @@ api.post('/solo/action', async (c) => {
     }
 
     const bible = await ensureWorldBible();
-    const nextState = await withRoomIntro(
-      await runTurn(state, action, bible, 'solo'),
-      bible,
-      'solo'
-    );
+    const turn = await runTurn(state, action, bible, 'solo');
+    const nextState = await withRoomIntro(turn.state, bible, 'solo');
     await saveSoloGame(userId, nextState);
     await rememberOutcome(nextState, userId);
 
@@ -335,6 +332,7 @@ api.post('/solo/action', async (c) => {
       type: 'game',
       state: nextState,
       username: await currentUsername(),
+      degraded: !turn.aiResponded,
     });
   } catch (error) {
     return c.json<ErrorResponse>(
