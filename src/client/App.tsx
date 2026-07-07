@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame, useSolo } from './hooks/useGame';
 import { Board } from './screens/Board';
 import { CharacterSelect } from './screens/CharacterSelect';
@@ -15,7 +15,8 @@ export type View =
   | 'character_select'
   | 'install'
   | 'play';
-export type Mode = 'solo' | 'community';
+
+type PostKind = 'community' | 'solo';
 
 const INTRO_SEEN_KEY = 'hivemind:intro-seen';
 
@@ -38,15 +39,76 @@ function markIntroSeen(): void {
   }
 }
 
+function Loader({ text }: Readonly<{ text: string }>) {
+  return (
+    <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
+      {text}
+    </div>
+  );
+}
+
 export const App = () => {
+  const [postKind, setPostKind] = useState<PostKind | null>(null);
   const [view, setView] = useState<View>(() =>
     introSeen() ? 'mode_select' : 'intro'
   );
-  const [mode, setMode] = useState<Mode | null>(null);
   const [soloClass, setSoloClass] = useState<string>(SOLO_DEFAULT_CLASS);
-  const community = useGame();
+  const community = useGame(postKind === 'community');
   const solo = useSolo();
 
+  // Discover what kind of post this is: a community post opens straight to the
+  // shared board, a discovery post starts the solo flow.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/context');
+        const data = (await res.json()) as { kind?: unknown };
+        if (active) {
+          setPostKind(data.kind === 'community' ? 'community' : 'solo');
+        }
+      } catch {
+        if (active) setPostKind('solo');
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Still resolving what kind of post this is.
+  if (postKind === null) {
+    return <Loader text="Lighting the torches…" />;
+  }
+
+  // A community post is the shared board, full stop.
+  if (postKind === 'community') {
+    if (community.loading) return <Loader text="Lighting the torches…" />;
+    if (!community.game) {
+      return (
+        <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-parchment">
+          <p>
+            {community.error ?? 'The dungeon is sealed. Reload to try again.'}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <Board
+        game={community.game}
+        resolving={community.resolving}
+        error={community.error}
+        note={community.note}
+        proposals={community.proposals}
+        serverOffset={community.serverOffset}
+        leaderboard={community.leaderboard}
+        onResolveVotes={community.resolveVotes}
+        onRestart={community.restart}
+      />
+    );
+  }
+
+  // Otherwise, the solo discovery flow.
   if (view === 'intro') {
     return (
       <IntroScreen
@@ -58,25 +120,12 @@ export const App = () => {
     );
   }
 
-  if (view === 'mode_select') {
-    return (
-      <ModeSelect
-        onBack={() => setView('intro')}
-        onSolo={() => {
-          setMode('solo');
-          setView('play');
-        }}
-        onInstall={() => setView('install')}
-      />
-    );
-  }
-
   if (view === 'install') {
     return <InstallScreen onBack={() => setView('mode_select')} />;
   }
 
-  // Reached from within a run via New run: a run already exists, so the back
-  // button returns to it and beginning a new one warns before overwriting it.
+  // New run from within a run: a run exists, so back returns to it and beginning
+  // a new one warns before overwriting it.
   if (view === 'character_select') {
     return (
       <CharacterSelect
@@ -91,24 +140,17 @@ export const App = () => {
     );
   }
 
-  if (mode === 'solo') {
+  if (view === 'play') {
     // Still checking for a saved run to resume.
     if (solo.loading && !solo.game) {
-      return (
-        <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
-          Down into the dark…
-        </div>
-      );
+      return <Loader text="Down into the dark…" />;
     }
     // No run to resume: choose who falls before the descent begins.
     if (!solo.game) {
       return (
         <CharacterSelect
           hasActiveRun={false}
-          onBack={() => {
-            setMode(null);
-            setView('mode_select');
-          }}
+          onBack={() => setView('mode_select')}
           onBegin={(classId) => {
             setSoloClass(classId);
             void solo.start(classId);
@@ -120,44 +162,18 @@ export const App = () => {
       <SoloPlay
         solo={solo}
         classId={soloClass}
-        onExit={() => {
-          setMode(null);
-          setView('mode_select');
-        }}
+        onExit={() => setView('mode_select')}
         onNewRun={() => setView('character_select')}
       />
     );
   }
 
-  if (community.loading) {
-    return (
-      <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
-        Lighting the torches…
-      </div>
-    );
-  }
-
-  if (!community.game) {
-    return (
-      <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-parchment">
-        <p>
-          {community.error ?? 'The dungeon is sealed. Reload to try again.'}
-        </p>
-      </div>
-    );
-  }
-
+  // Default: the mode select.
   return (
-    <Board
-      game={community.game}
-      resolving={community.resolving}
-      error={community.error}
-      note={community.note}
-      proposals={community.proposals}
-      serverOffset={community.serverOffset}
-      leaderboard={community.leaderboard}
-      onResolveVotes={community.resolveVotes}
-      onRestart={community.restart}
+    <ModeSelect
+      onBack={() => setView('intro')}
+      onSolo={() => setView('play')}
+      onInstall={() => setView('install')}
     />
   );
 };

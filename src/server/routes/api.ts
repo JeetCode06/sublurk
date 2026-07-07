@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { context, reddit } from '@devvit/web/server';
 import type {
   ClassNamesResponse,
+  ContextResponse,
   ErrorResponse,
   GameResponse,
   LeaderboardResponse,
@@ -18,6 +19,7 @@ import { CLASSES } from '../game/classes';
 import { freshMap } from '../game/map';
 import { classForSubreddit, themeForSubreddit } from '../game/theming';
 import { runTurn, resolveTurnFromComments, readProposals } from '../turn';
+import { postKind } from '../core/post';
 import { withDeadline, turnStartedAt } from '../schedule';
 import { withRoomIntro } from '../scene';
 import { ensureWorldBible } from '../worldbible';
@@ -75,6 +77,12 @@ api.get('/classes', async (c) => {
       500
     );
   }
+});
+
+// Tells the client whether this post is the shared community board or a private
+// solo run, so the app routes to the right experience on open.
+api.get('/context', async (c) => {
+  return c.json<ContextResponse>({ type: 'context', kind: await postKind() });
 });
 
 api.get('/game', async (c) => {

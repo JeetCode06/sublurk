@@ -26,11 +26,18 @@
   "menu": {
     "items": [
       {
-        "label": "Create a new post",
-        "description": "hivemind-crawl",
+        "label": "Post a community game",
+        "description": "The whole sub plays one crawler together",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/post-create"
+        "endpoint": "/internal/menu/post-create-community"
+      },
+      {
+        "label": "Post a solo demo",
+        "description": "A private run anyone who finds it can play",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create-solo"
       },
       {
         "label": "Reset world",

@@ -52,12 +52,14 @@ async function fetchLeaderboard(): Promise<LeaderboardEntry[] | null> {
   }
 }
 
-export const useGame = () => {
+export const useGame = (active: boolean) => {
   const [state, setState] = useState<GameHookState>(INITIAL);
 
   // Initial load: create the game if needed and read the player's name. The
-  // poll below keeps the game fresh after this.
+  // poll below keeps the game fresh after this. Only runs on a community post,
+  // so a solo post never spins up (or generates a scene for) a community game.
   useEffect(() => {
+    if (!active) return;
     const load = async () => {
       try {
         const res = await fetch('/api/game');
@@ -79,12 +81,13 @@ export const useGame = () => {
       }
     };
     void load();
-  }, []);
+  }, [active]);
 
   // Poll for live state. Votes change outside our app and the scheduler resolves
   // turns on its own, so we re-read the game, proposals, and leaderboard on an
   // interval (Devvit has no websockets).
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
     const poll = async () => {
       try {
@@ -114,7 +117,7 @@ export const useGame = () => {
       cancelled = true;
       clearInterval(id);
     };
-  }, []);
+  }, [active]);
 
   const post = useCallback(async (path: string, payload?: unknown) => {
     setState((prev) => ({ ...prev, resolving: true, error: null, note: null }));

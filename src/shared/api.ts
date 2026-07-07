@@ -10,6 +10,13 @@ export type GameResponse = {
   degraded?: boolean;
 };
 
+// Tells the client what kind of post it opened in: the shared community board,
+// or a private solo run.
+export type ContextResponse = {
+  type: 'context';
+  kind: 'community' | 'solo';
+};
+
 export type ProposalsResponse = {
   type: 'proposals';
   proposals: Proposal[];

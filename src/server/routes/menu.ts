@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { UiResponse } from '@devvit/web/shared';
 import { context } from '@devvit/web/server';
 import { createPost } from '../core/post';
@@ -22,10 +22,9 @@ function resolveToast(outcome: ResolveOutcome): string {
   }
 }
 
-menu.post('/post-create', async (c) => {
+async function createPostResponse(c: Context, kind: 'community' | 'solo') {
   try {
-    const post = await createPost();
-
+    const post = await createPost(kind);
     return c.json<UiResponse>(
       {
         navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${post.id}`,
@@ -34,14 +33,12 @@ menu.post('/post-create', async (c) => {
     );
   } catch (error) {
     console.error(`Error creating post: ${error}`);
-    return c.json<UiResponse>(
-      {
-        showToast: 'Failed to create post',
-      },
-      400
-    );
+    return c.json<UiResponse>({ showToast: 'Failed to create post' }, 400);
   }
-});
+}
+
+menu.post('/post-create-community', (c) => createPostResponse(c, 'community'));
+menu.post('/post-create-solo', (c) => createPostResponse(c, 'solo'));
 
 menu.post('/resolve-turn', async (c) => {
   try {
