@@ -156,7 +156,6 @@ export const App = () => {
       proposals={community.proposals}
       serverOffset={community.serverOffset}
       leaderboard={community.leaderboard}
-      onAct={community.submitAction}
       onResolveVotes={community.resolveVotes}
       onRestart={community.restart}
     />
