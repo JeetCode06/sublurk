@@ -1,13 +1,13 @@
 import { Embers } from '../Embers';
 
-// The Warden's opening address. The four things a player must know — that they're
-// trapped, that they act in free text, that dice decide, and that death is
-// permanent — are woven into one voice rather than listed, so the first screen
-// already sounds like the dungeon that narrates the rest of the run.
+// The Warden's opening address. The four things a new player must know (they are
+// trapped, they act in plain words, dice decide, death is permanent) are woven
+// into one plain-spoken voice rather than listed, so the first screen already
+// sounds like the dungeon that narrates the rest of the run.
 const ADDRESS = [
-  'Now you are here, inside me. I am the Warden — I keep what the screen takes, and it has taken so many before you. The only door is the one you fell through, and it is already shut.',
-  'Say what you do — anything at all — and I will answer. But wanting is not doing: every move is a wager against the dark, the dice decide how it lands, and I decide what it costs.',
-  'The only way back to your feed is down — all the way to the bottom, past the thing that runs this place. Fall short, and you are mine to keep. How deep you reach is the only mark you leave: a warning for the next fool who taps.',
+  'You are in the dungeon now. So am I. They call me the Warden, and I keep what the dungeon takes. It has taken more than you could count. The way you came in is already gone, and there is no door behind you.',
+  'There are no buttons down here. Say what you do, in your own words, and the dungeon answers. But saying a thing is not doing it. Every move is a roll of the dice, and I decide what it costs you.',
+  'The only way back to your feed is down. Every floor below this one is mine, and I have filled them with things that want to keep you. Reach the bottom and you walk free. Fall before then, and you belong to me. All that is left of you will be how far you got, scratched into the wall for the next one who taps.',
 ];
 
 export function IntroScreen({ onEnter }: Readonly<{ onEnter: () => void }>) {
@@ -15,10 +15,7 @@ export function IntroScreen({ onEnter }: Readonly<{ onEnter: () => void }>) {
     <div className="torchlit relative min-h-screen w-full overflow-x-hidden">
       <Embers />
       <div className="anim-rise relative mx-auto flex w-full max-w-[460px] flex-col px-6 py-12">
-        <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
-          The screen has you
-        </div>
-        <h1 className="mt-4 font-display text-[26px] font-bold leading-tight text-ink">
+        <h1 className="font-display text-[26px] font-bold leading-tight text-ink">
           You tapped, and the glass gave way.
         </h1>
 
@@ -29,7 +26,7 @@ export function IntroScreen({ onEnter }: Readonly<{ onEnter: () => void }>) {
         </div>
 
         <p className="mt-6 font-body text-[16px] italic leading-snug text-ember-glow">
-          Come, little mote. Let us see how far you get.
+          Come on, then. Let&rsquo;s see how far you get.
         </p>
 
         <button
