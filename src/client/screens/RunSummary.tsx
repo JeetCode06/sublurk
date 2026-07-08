@@ -50,6 +50,7 @@ export function RunSummary({
   onExit,
   leaderboard,
   currentRun,
+  canRestart = true,
 }: Readonly<{
   game: GameState;
   restarting: boolean;
@@ -57,6 +58,7 @@ export function RunSummary({
   onExit?: () => void;
   leaderboard?: LeaderboardEntry[];
   currentRun?: number;
+  canRestart?: boolean;
 }>) {
   const won = game.phase === 'won';
   const color = won ? '#f0c050' : '#d6453f';
@@ -142,14 +144,22 @@ export function RunSummary({
         )}
 
         <div className="mt-2 flex w-full flex-col gap-3">
-          <button
-            type="button"
-            onClick={onRestart}
-            disabled={restarting}
-            className="w-full rounded-xl bg-ember px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110 disabled:opacity-50"
-          >
-            {restartLabel}
-          </button>
+          {canRestart ? (
+            <button
+              type="button"
+              onClick={onRestart}
+              disabled={restarting}
+              className="w-full rounded-xl bg-ember px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110 disabled:opacity-50"
+            >
+              {restartLabel}
+            </button>
+          ) : (
+            <p className="rounded-xl border border-[#2f2722] bg-[#140f0b] px-4 py-3.5 font-body text-[13.5px] italic leading-snug text-muted">
+              {won
+                ? 'The campaign is won. A moderator can send a new party down when the sub is ready.'
+                : 'The run is over. The dungeon waits for a moderator to send the next soul down.'}
+            </p>
+          )}
           {onExit && (
             <button
               type="button"

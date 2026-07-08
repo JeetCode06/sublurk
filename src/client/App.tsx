@@ -6,6 +6,7 @@ import { IntroScreen } from './screens/IntroScreen';
 import { ModeSelect } from './screens/ModeSelect';
 import { InstallScreen } from './screens/InstallScreen';
 import { SoloPlay } from './screens/SoloPlay';
+import { CommunityIntro } from './screens/CommunityIntro';
 
 export const SOLO_DEFAULT_CLASS = 'adventurer';
 
@@ -19,6 +20,7 @@ export type View =
 type PostKind = 'community' | 'solo';
 
 const INTRO_SEEN_KEY = 'hivemind:intro-seen';
+const COMMUNITY_INTRO_SEEN_KEY = 'hivemind:community-intro-seen';
 
 // Whether this visitor has already seen the how-it-works intro. Storage can be
 // unavailable in some embedded contexts, so any failure is treated as "not
@@ -39,6 +41,24 @@ function markIntroSeen(): void {
   }
 }
 
+// Whether this visitor has seen the community briefing. Same storage caveat as
+// the solo intro: any failure just shows it again, which is harmless.
+function communityIntroSeen(): boolean {
+  try {
+    return localStorage.getItem(COMMUNITY_INTRO_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markCommunityIntroSeen(): void {
+  try {
+    localStorage.setItem(COMMUNITY_INTRO_SEEN_KEY, '1');
+  } catch {
+    // Ignore: the briefing will simply show again next time.
+  }
+}
+
 function Loader({ text }: Readonly<{ text: string }>) {
   return (
     <div className="torchlit flex min-h-screen items-center justify-center px-6 text-center font-body text-[15px] italic text-muted">
@@ -50,6 +70,9 @@ function Loader({ text }: Readonly<{ text: string }>) {
 export const App = () => {
   const [postKind, setPostKind] = useState<PostKind | null>(null);
   const [isMod, setIsMod] = useState(false);
+  const [showCommunityIntro, setShowCommunityIntro] = useState(
+    () => !communityIntroSeen()
+  );
   const [view, setView] = useState<View>(() =>
     introSeen() ? 'mode_select' : 'intro'
   );
@@ -85,6 +108,18 @@ export const App = () => {
 
   // A community post is the shared board, full stop.
   if (postKind === 'community') {
+    // First-time visitors get the Warden's community briefing; it can be
+    // reopened from the board via "How it works".
+    if (showCommunityIntro) {
+      return (
+        <CommunityIntro
+          onEnter={() => {
+            markCommunityIntroSeen();
+            setShowCommunityIntro(false);
+          }}
+        />
+      );
+    }
     if (community.loading) return <Loader text="Lighting the torches…" />;
     if (!community.game) {
       return (
@@ -107,6 +142,7 @@ export const App = () => {
         onResolveVotes={community.resolveVotes}
         onRestart={community.restart}
         isMod={isMod}
+        onHowItWorks={() => setShowCommunityIntro(true)}
       />
     );
   }

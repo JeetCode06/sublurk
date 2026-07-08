@@ -41,6 +41,7 @@ export function Board({
   onResolveVotes,
   onRestart,
   isMod,
+  onHowItWorks,
 }: Readonly<{
   game: GameState;
   resolving: boolean;
@@ -52,6 +53,7 @@ export function Board({
   onResolveVotes: () => void;
   onRestart: () => void;
   isMod: boolean;
+  onHowItWorks: () => void;
 }>) {
   const [mapOpen, setMapOpen] = useState(false);
 
@@ -63,6 +65,7 @@ export function Board({
         onRestart={onRestart}
         leaderboard={leaderboard}
         currentRun={game.runNumber}
+        canRestart={isMod}
       />
     );
   }
@@ -178,6 +181,13 @@ export function Board({
             <p className="font-body text-[13.5px] text-[#f0594e]">{error}</p>
           )}
           {note && <p className="font-body text-[13.5px] text-ember">{note}</p>}
+          <button
+            type="button"
+            onClick={onHowItWorks}
+            className="self-center font-label text-[10px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
+          >
+            How it works
+          </button>
         </footer>
       </div>
 
