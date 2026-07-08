@@ -71,6 +71,13 @@ export type Party = {
   classId: ClassId;
   name: string;
   abilities: Abilities;
+  // Class signature usage. Optional so older saves and test fixtures stay valid;
+  // use-sites default them. killingBlowUsed is per-run (Fighter); rerollDepth
+  // (Rogue) and curseDepth (Wizard) hold the depth a per-floor signature was last
+  // spent, so it recharges each floor.
+  killingBlowUsed?: boolean;
+  rerollDepth?: number;
+  curseDepth?: number;
 };
 
 export type EntityKind = 'foe' | 'npc' | 'object';

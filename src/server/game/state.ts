@@ -26,6 +26,9 @@ function freshParty(classId: ClassId, name: string): Party {
     classId,
     name,
     abilities: { ...CLASSES[classId].abilities },
+    killingBlowUsed: false,
+    rerollDepth: -1,
+    curseDepth: -1,
   };
 }
 

@@ -2,6 +2,7 @@ import type {
   AbilityCheck,
   Advantage,
   GameState,
+  Party,
   ResolveResult,
 } from '../../shared/game';
 import type { RandFn } from './dice';
@@ -13,6 +14,12 @@ import { createRoom, createFinalBossRoom } from './rooms';
 import { advanceMapForDepth, atFinalBoss, markBossDefeated } from './map';
 import { applyResolveResult } from './validation';
 import type { TurnEffects } from './effects';
+import {
+  maybeSurvive,
+  CURSE_DIFFICULTY_DROP,
+  rerollNote,
+  curseNote,
+} from './signatures';
 
 const RECENT_EVENTS_LIMIT = 6;
 
@@ -42,13 +49,63 @@ export function prepareRoll(
   return rollCheck(ability, score, state.room.difficulty, advantage, rand);
 }
 
+// The full pre-AI roll for a turn, applying the signatures that fire before the
+// narrator speaks: a Wizard curses the floor's foe to ease a combat or boss
+// check, and a Rogue rerolls a failed check and keeps the new roll. Returns the
+// kept check, the party with any per-floor signature marked spent, and a note
+// for whatever fired (null if none).
+export function rollTurn(
+  state: GameState,
+  rand: RandFn = Math.random
+): { check: AbilityCheck; party: Party; note: string | null } {
+  const { party, room } = state;
+  const isCombat = room.type === 'combat' || room.type === 'boss';
+
+  let rollState = state;
+  let nextParty = party;
+  let note: string | null = null;
+  if (
+    party.classId === 'witch' &&
+    isCombat &&
+    (party.curseDepth ?? -1) !== party.depth
+  ) {
+    nextParty = { ...party, curseDepth: party.depth };
+    rollState = {
+      ...state,
+      party: nextParty,
+      room: {
+        ...room,
+        difficulty: Math.max(1, room.difficulty - CURSE_DIFFICULTY_DROP),
+      },
+    };
+    note = curseNote(party.name);
+  }
+
+  const check = prepareRoll(rollState, rand);
+
+  if (
+    nextParty.classId === 'trickster' &&
+    check.outcome === 'fail' &&
+    (nextParty.rerollDepth ?? -1) !== nextParty.depth
+  ) {
+    return {
+      check: prepareRoll(rollState, rand),
+      party: { ...nextParty, rerollDepth: nextParty.depth },
+      note: rerollNote(nextParty.name),
+    };
+  }
+
+  return { check, party: nextParty, note };
+}
+
 // Runs after the AI: validates its result, then advances the run by continuing
 // the room, moving to the next one, or ending the run on death.
 export function applyTurn(
   state: GameState,
   result: ResolveResult,
   rand: RandFn = Math.random,
-  effects: TurnEffects | null = null
+  effects: TurnEffects | null = null,
+  signatureNote: string | null = null
 ): GameState {
   // The server can override the party's HP and embers for this turn — combat
   // damage, rest healing, or a shrine offering's cost — in which case the model's
@@ -66,12 +123,21 @@ export function applyTurn(
             : {}),
         };
   const applied = applyResolveResult(state.party, effective);
-  const recentEvents = [...state.recentEvents, result.narration]
+  // A Fighter shrugs off one killing blow per run before the death is final.
+  const survival = maybeSurvive(applied.party, applied.died);
+  const party = survival.party;
+
+  // The turn's beat is the AI narration plus any signature that fired, so a
+  // reroll, curse, or last stand is visible rather than a silent stat change.
+  const beat = [result.narration, signatureNote, survival.note]
+    .filter((s): s is string => s !== null && s.length > 0)
+    .join(' ');
+  const recentEvents = [...state.recentEvents, beat]
     .filter((event) => event.length > 0)
     .slice(-RECENT_EVENTS_LIMIT);
 
-  if (applied.died) {
-    return { ...state, party: applied.party, phase: 'dead', recentEvents };
+  if (survival.died) {
+    return { ...state, party, phase: 'dead', recentEvents };
   }
 
   // Track consecutive failures in this room. Once they hit the limit the party
@@ -87,10 +153,8 @@ export function applyTurn(
     // Overcoming a room pays embers scaled to its difficulty; a rest and a
     // stuck-limit exit are not victories and pay nothing.
     const paid = result.roomResolved || (effects?.reward ?? false);
-    const embers = paid
-      ? applied.party.embers + state.room.difficulty
-      : applied.party.embers;
-    const clearedParty = { ...applied.party, depth, embers };
+    const embers = paid ? party.embers + state.room.difficulty : party.embers;
+    const clearedParty = { ...party, depth, embers };
 
     // Resolving the room at the final location is the campaign's climax —
     // defeating the boss wins the run.
@@ -126,7 +190,7 @@ export function applyTurn(
   // so their health carries into the next exchange.
   return {
     ...state,
-    party: applied.party,
+    party,
     room: {
       ...state.room,
       ...(effects?.entities ? { entities: effects.entities } : {}),
