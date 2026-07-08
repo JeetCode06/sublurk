@@ -40,6 +40,7 @@ export function Board({
   leaderboard,
   onResolveVotes,
   onRestart,
+  isMod,
 }: Readonly<{
   game: GameState;
   resolving: boolean;
@@ -50,6 +51,7 @@ export function Board({
   leaderboard: LeaderboardEntry[];
   onResolveVotes: () => void;
   onRestart: () => void;
+  isMod: boolean;
 }>) {
   const [mapOpen, setMapOpen] = useState(false);
 
@@ -87,7 +89,9 @@ export function Board({
               >
                 <MapIcon /> Map
               </button>
-              <RestartButton resolving={resolving} onRestart={onRestart} />
+              {isMod && (
+                <RestartButton resolving={resolving} onRestart={onRestart} />
+              )}
             </div>
           </div>
           <div className="flex items-end justify-between gap-3">
@@ -164,6 +168,7 @@ export function Board({
             deadline={game.nextResolveAt}
             serverOffset={serverOffset}
             onResolveVotes={onResolveVotes}
+            canResolve={isMod}
           />
         </main>
 

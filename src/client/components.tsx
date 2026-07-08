@@ -131,12 +131,14 @@ export function CandidateActions({
   deadline,
   serverOffset,
   onResolveVotes,
+  canResolve,
 }: Readonly<{
   proposals: Proposal[];
   resolving: boolean;
   deadline: number;
   serverOffset: number | null;
   onResolveVotes: () => void;
+  canResolve: boolean;
 }>) {
   return (
     <section className="flex flex-col gap-3">
@@ -190,13 +192,15 @@ export function CandidateActions({
         </ul>
       )}
 
-      <button
-        onClick={onResolveVotes}
-        disabled={resolving || proposals.length === 0}
-        className="self-start rounded-lg border border-[#5a3a1e] px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[0.16em] text-ember transition-colors hover:border-ember hover:bg-[#1d130b] disabled:opacity-40"
-      >
-        {resolving ? 'resolving…' : '⚄ Resolve top action now'}
-      </button>
+      {canResolve && (
+        <button
+          onClick={onResolveVotes}
+          disabled={resolving || proposals.length === 0}
+          className="self-start rounded-lg border border-[#5a3a1e] px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[0.16em] text-ember transition-colors hover:border-ember hover:bg-[#1d130b] disabled:opacity-40"
+        >
+          {resolving ? 'resolving…' : '⚄ Resolve top action now'}
+        </button>
+      )}
     </section>
   );
 }

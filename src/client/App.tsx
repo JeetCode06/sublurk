@@ -49,6 +49,7 @@ function Loader({ text }: Readonly<{ text: string }>) {
 
 export const App = () => {
   const [postKind, setPostKind] = useState<PostKind | null>(null);
+  const [isMod, setIsMod] = useState(false);
   const [view, setView] = useState<View>(() =>
     introSeen() ? 'mode_select' : 'intro'
   );
@@ -63,9 +64,10 @@ export const App = () => {
     void (async () => {
       try {
         const res = await fetch('/api/context');
-        const data = (await res.json()) as { kind?: unknown };
+        const data = (await res.json()) as { kind?: unknown; isMod?: unknown };
         if (active) {
           setPostKind(data.kind === 'community' ? 'community' : 'solo');
+          setIsMod(data.isMod === true);
         }
       } catch {
         if (active) setPostKind('solo');
@@ -104,6 +106,7 @@ export const App = () => {
         leaderboard={community.leaderboard}
         onResolveVotes={community.resolveVotes}
         onRestart={community.restart}
+        isMod={isMod}
       />
     );
   }

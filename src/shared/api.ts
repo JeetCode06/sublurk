@@ -11,10 +11,11 @@ export type GameResponse = {
 };
 
 // Tells the client what kind of post it opened in: the shared community board,
-// or a private solo run.
+// or a private solo run. isMod gates moderator-only board controls.
 export type ContextResponse = {
   type: 'context';
   kind: 'community' | 'solo';
+  isMod: boolean;
 };
 
 export type ProposalsResponse = {

@@ -47,6 +47,20 @@ async function currentUsername(): Promise<string> {
   return username ?? 'adventurer';
 }
 
+// Whether the calling user moderates this subreddit. Used to gate board-only
+// controls (resolving a turn, starting a new run) to mods. Any failure is
+// treated as "not a mod" so the safe default is the least privilege.
+async function isCurrentUserMod(): Promise<boolean> {
+  const { subredditName, userId } = context;
+  if (!subredditName || !userId) return false;
+  try {
+    const mods = await reddit.getModerators({ subredditName }).all();
+    return mods.some((mod) => mod.id === userId);
+  } catch {
+    return false;
+  }
+}
+
 // The nemesis's remembered line for a new run, from past outcomes in this scope
 // (the subreddit's shared history, or a solo player's own).
 async function rememberedTaunt(userId?: string): Promise<string> {
@@ -82,7 +96,11 @@ api.get('/classes', async (c) => {
 // Tells the client whether this post is the shared community board or a private
 // solo run, so the app routes to the right experience on open.
 api.get('/context', async (c) => {
-  return c.json<ContextResponse>({ type: 'context', kind: await postKind() });
+  return c.json<ContextResponse>({
+    type: 'context',
+    kind: await postKind(),
+    isMod: await isCurrentUserMod(),
+  });
 });
 
 api.get('/game', async (c) => {
