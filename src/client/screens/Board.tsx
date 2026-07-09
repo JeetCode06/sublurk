@@ -188,6 +188,19 @@ export function Board({
           >
             How it works
           </button>
+          <p className="text-center font-body text-[10.5px] leading-relaxed text-faint">
+            Mechanics adapted from the System Reference Document 5.1 by Wizards
+            of the Coast LLC, licensed under{' '}
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/legalcode"
+              target="_blank"
+              rel="noreferrer"
+              className="underline transition hover:text-muted"
+            >
+              CC BY 4.0
+            </a>
+            .
+          </p>
         </footer>
       </div>
 

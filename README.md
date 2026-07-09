@@ -1,12 +1,13 @@
 # Hivemind Crawl
 
-A subreddit plays one Dungeons & Dragons party — together, by voting.
+Tap a post, fall through the screen, and talk your way out of a dungeon.
 
-Built for Reddit's **Games with a Hook** hackathon. The whole community controls a single
-adventuring party: an AI Dungeon Master narrates the scene, players propose their next
-move in the comments, the community upvotes, and the top-voted comment becomes the
-party's action. Server-side dice and the AI resolve it. One shared pool of HP. Permadeath.
-A new run when the party falls.
+Built for Reddit's **Games with a Hook** hackathon. Play it two ways. **Solo**, you descend
+alone: type what you do in plain words and the Warden, the voice of the dungeon itself,
+answers. **Community**, a whole subreddit steers one hero together: players propose moves in
+the comments, the community upvotes, and the top-voted comment becomes the party's action.
+Server-side dice decide, the Warden narrates. One shared pool of HP. Permadeath. The only way
+back to your feed is down, past the thing waiting at the bottom.
 
 ## The hook
 
@@ -17,11 +18,15 @@ campaign map that ends at a final boss. r/coffee crawls a different dungeon than
 
 ## How it works
 
-- **One party, many players.** The party's class, ability scores, HP, gold, inventory, and
-  conditions live in shared state. Comments are proposed actions; upvotes are the vote.
-- **AI Dungeon Master.** Google Gemini narrates outcomes and authors the world, but never
-  decides the dice — the server rolls. Everything the AI returns is coerced to a strict
-  schema before it touches game state, so the model can flavor the world but can't break it.
+- **Two lanes, one dungeon.** A solo run is private and immediate. A community run is
+  asynchronous and shared: the party's class, ability scores, HP, embers, inventory, and
+  conditions live in shared state, comments are proposed actions, and upvotes are the vote.
+- **The Warden.** Google Gemini narrates outcomes and authors the world, but never decides
+  the dice — the server rolls. Everything the AI returns is coerced to a strict schema before
+  it touches game state, so the model can flavor the world but can't break it.
+- **Classes that play differently.** A Fighter shrugs off one killing blow per run; a Rogue
+  rerolls a failed action each floor; a Wizard curses a foe to ease a fight. Room affinities
+  grant advantage or impose disadvantage on top.
 - **Real tabletop mechanics.** Actions resolve as D&D-style ability checks against the SRD
   difficulty ladder. A class's strengths grant advantage; conditions like _poisoned_ or
   _frightened_ impose disadvantage; advantage and disadvantage cancel.
@@ -35,7 +40,7 @@ campaign map that ends at a final boss. r/coffee crawls a different dungeon than
 - [React 19](https://react.dev/) + [Vite](https://vite.dev/) — webview UI
 - [Tailwind CSS 4](https://tailwindcss.com/) — styles
 - [TypeScript](https://www.typescriptlang.org/) (strict) — type safety
-- Google Gemini — the Dungeon Master
+- Google Gemini — the Warden
 
 ## Commands
 

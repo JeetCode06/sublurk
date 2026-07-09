@@ -43,7 +43,7 @@ export function ModeSelect({
           How will you play?
         </h1>
         <p className="mt-2 font-body text-[15px] italic text-muted">
-          Descend yourself, or bring it to a sub you moderate.
+          Descend it yourself, or bring it to a sub you moderate.
         </p>
       </header>
 
@@ -130,6 +130,20 @@ export function ModeSelect({
           </div>
         </button>
       </div>
+
+      <p className="mt-8 text-center font-body text-[10.5px] leading-relaxed text-faint">
+        Mechanics adapted from the System Reference Document 5.1 by Wizards of
+        the Coast LLC, licensed under{' '}
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/legalcode"
+          target="_blank"
+          rel="noreferrer"
+          className="underline transition hover:text-muted"
+        >
+          CC BY 4.0
+        </a>
+        .
+      </p>
     </TorchlitScreen>
   );
 }
