@@ -1,4 +1,10 @@
-import type { ClassId, GameState, LeaderboardEntry, Proposal } from './game';
+import type {
+  ClassId,
+  GameState,
+  LeaderboardEntry,
+  Proposal,
+  SoloEntry,
+} from './game';
 
 export type GameResponse = {
   type: 'game';
@@ -8,6 +14,12 @@ export type GameResponse = {
   // True when the narrator was unreachable and the turn fell back — the client
   // shows an "out of energy" cooldown instead of a broken retry loop.
   degraded?: boolean;
+};
+
+// The best solo descents across every player, one entry each.
+export type SoloLeaderboardResponse = {
+  type: 'solo_leaderboard';
+  entries: SoloEntry[];
 };
 
 // Tells the client what kind of post it opened in: the shared community board,

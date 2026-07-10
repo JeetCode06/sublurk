@@ -6,6 +6,7 @@ import type {
   WorldBible,
 } from '../shared/game';
 import { rollTurn, applyTurn } from './game/resolution';
+import { appendHistory } from './game/history';
 import { resolveCombat, combatDirective, combatEffects } from './game/combat';
 import { resolveRest, restDirective, restEffects } from './game/healing';
 import { resolveShrine, shrineDirective, shrineEffects } from './game/shrine';
@@ -72,18 +73,35 @@ export async function runTurn(
   );
   // An empty reply means the narrator was unreachable (usually rate-limited) and
   // the turn ran on authored fallback content — a wash the caller can surface.
+  const aiResponded = raw.length > 0;
+  const next = applyTurn(
+    rolled,
+    parseResolveResult(raw),
+    Math.random,
+    effects,
+    sigNote
+  );
+  // A wash turn is not part of the story, so it costs neither a beat nor a roll.
+  const beat = next.recentEvents.at(-1) ?? '';
+  const recorded = aiResponded
+    ? appendHistory({ ...next, rolls: (next.rolls ?? 0) + 1 }, [
+        { kind: 'action', text: action },
+        ...(beat.length > 0
+          ? [
+              {
+                kind: 'result' as const,
+                text: beat,
+                outcome: roll.outcome,
+                roll: { die: roll.die, total: roll.total },
+              },
+            ]
+          : []),
+      ])
+    : next;
+
   return {
-    state: {
-      ...applyTurn(
-        rolled,
-        parseResolveResult(raw),
-        Math.random,
-        effects,
-        sigNote
-      ),
-      lastCheck: roll,
-    },
-    aiResponded: raw.length > 0,
+    state: { ...recorded, lastCheck: roll },
+    aiResponded,
   };
 }
 

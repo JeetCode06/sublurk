@@ -8,10 +8,16 @@ import type {
   LeaderboardResponse,
   ModRequestResponse,
   ProposalsResponse,
+  SoloLeaderboardResponse,
 } from '../../shared/api';
 import type { ClassId, GameState } from '../../shared/game';
 import { loadGame, saveGame, loadSoloGame, saveSoloGame } from '../data/games';
-import { recordRun, topRuns } from '../data/leaderboard';
+import {
+  recordRun,
+  topRuns,
+  recordSoloBest,
+  topSoloRuns,
+} from '../data/leaderboard';
 import { loadLore, appendRun } from '../data/lore';
 import { tauntFromLore, recordFromState } from '../game/lore';
 import { createInitialState, startNewRun } from '../game/state';
@@ -235,6 +241,20 @@ api.post('/action', async (c) => {
   }
 });
 
+api.get('/solo/leaderboard', async (c) => {
+  try {
+    return c.json<SoloLeaderboardResponse>({
+      type: 'solo_leaderboard',
+      entries: await topSoloRuns(10),
+    });
+  } catch {
+    return c.json<SoloLeaderboardResponse>({
+      type: 'solo_leaderboard',
+      entries: [],
+    });
+  }
+});
+
 api.get('/solo/game', async (c) => {
   const { userId } = context;
   if (!userId) {
@@ -353,6 +373,16 @@ api.post('/solo/action', async (c) => {
     const nextState = await withRoomIntro(turn.state, bible, 'solo');
     await saveSoloGame(userId, nextState);
     await rememberOutcome(nextState, userId);
+
+    // A finished run takes its place on the board, but only if it beat this
+    // player's own best.
+    if (nextState.phase === 'dead' || nextState.phase === 'won') {
+      await recordSoloBest(
+        await currentUsername(),
+        nextState.party.depth,
+        nextState.rolls ?? 0
+      );
+    }
 
     return c.json<GameResponse>({
       type: 'game',

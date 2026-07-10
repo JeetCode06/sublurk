@@ -4,6 +4,7 @@ import type {
   LeaderboardEntry,
   Outcome,
   Proposal,
+  SoloEntry,
 } from '../../shared/game';
 import type {
   ErrorResponse,
@@ -180,6 +181,8 @@ type SoloHookState = {
   // When the narrator is spent (rate-limited), the timestamp until which acting
   // is paused, shown to the player as an "out of energy" cooldown.
   cooldownUntil: number | null;
+  // The best descents across every player, loaded when a run ends.
+  soloLeaderboard: SoloEntry[];
 };
 
 // How long the dark takes to gather itself after an unreachable turn. Long
@@ -194,36 +197,15 @@ const SOLO_INITIAL: SoloHookState = {
   error: null,
   transcript: [],
   cooldownUntil: null,
+  soloLeaderboard: [],
 };
 
 // The transcript entries opening a fresh run: the prologue, then the first
 // chamber's scene.
-function openingTranscript(game: GameState): TranscriptEntry[] {
-  const entries: TranscriptEntry[] = [];
-  if (game.intro.length > 0)
-    entries.push({ id: 0, kind: 'scene', text: game.intro });
-  if (game.room.description.length > 0)
-    entries.push({
-      id: entries.length,
-      kind: 'scene',
-      text: game.room.description,
-    });
-  return entries;
-}
-
-// The transcript for a resumed run. The full history isn't persisted, so this
-// rebuilds enough context from the saved state — the last few beats and the
-// current room — for the player to pick up where they left off.
-function resumeTranscript(game: GameState): TranscriptEntry[] {
-  const entries: TranscriptEntry[] = game.recentEvents
-    .slice(-3)
-    .filter((text) => text.length > 0)
-    .map((text, id) => ({ id, kind: 'scene' as const, text }));
-  const desc = game.room.description;
-  if (desc.length > 0 && game.recentEvents.at(-1) !== desc) {
-    entries.push({ id: entries.length, kind: 'scene', text: desc });
-  }
-  return entries;
+// The run's story, straight from the server's persisted history. The server is
+// the source of truth, so a resumed run replays exactly what happened.
+function toTranscript(game: GameState): TranscriptEntry[] {
+  return (game.history ?? []).map((entry, id) => ({ ...entry, id }));
 }
 
 // A private, real-time solo run. Unlike useGame there is no polling: each action
@@ -250,8 +232,9 @@ export const useSolo = () => {
             loading: false,
             resolving: false,
             error: null,
-            transcript: resumeTranscript(data.state),
+            transcript: toTranscript(data.state),
             cooldownUntil: null,
+            soloLeaderboard: [],
           });
         } else {
           setState((prev) => ({ ...prev, loading: false }));
@@ -264,6 +247,30 @@ export const useSolo = () => {
       active = false;
     };
   }, []);
+
+  // A finished run earns a place on the board, so load it once the run ends.
+  const phase = state.game?.phase ?? null;
+  useEffect(() => {
+    if (phase !== 'dead' && phase !== 'won') return;
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/solo/leaderboard');
+        const data = (await res.json()) as { entries?: SoloEntry[] };
+        if (active && Array.isArray(data.entries)) {
+          setState((prev) => ({
+            ...prev,
+            soloLeaderboard: data.entries ?? [],
+          }));
+        }
+      } catch {
+        // A missing board is not worth interrupting the death screen for.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [phase]);
 
   const start = useCallback(async (classId: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -285,8 +292,9 @@ export const useSolo = () => {
         loading: false,
         resolving: false,
         error: null,
-        transcript: openingTranscript(data.state),
+        transcript: toTranscript(data.state),
         cooldownUntil: null,
+        soloLeaderboard: [],
       });
     } catch {
       setState((prev) => ({ ...prev, loading: false, error: GENERIC_ERROR }));
@@ -308,55 +316,17 @@ export const useSolo = () => {
         return;
       }
       const degraded = data.degraded === true;
-      setState((prev) => {
-        const next = data.state;
-        if (degraded) {
-          // The narrator was unreachable: a wash turn. Don't record it, just
-          // pause acting so the player waits rather than retrying into the wall.
-          return {
-            ...prev,
-            game: next,
-            resolving: false,
-            error: null,
-            cooldownUntil: Date.now() + COOLDOWN_MS,
-          };
-        }
-        const prevScene = prev.game?.room.description ?? '';
-        const narration = next.recentEvents.at(-1) ?? '';
-        const check = next.lastCheck ?? null;
-        let id =
-          prev.transcript.reduce((max, e) => Math.max(max, e.id), -1) + 1;
-        const additions: TranscriptEntry[] = [
-          { id: id++, kind: 'action', text: action },
-        ];
-        if (narration.length > 0) {
-          additions.push({
-            id: id++,
-            kind: 'result',
-            text: narration,
-            outcome: check?.outcome ?? 'partial',
-            roll: check ? { die: check.die, total: check.total } : null,
-          });
-        }
-        if (
-          next.room.description.length > 0 &&
-          next.room.description !== prevScene
-        ) {
-          additions.push({
-            id,
-            kind: 'scene',
-            text: next.room.description,
-          });
-        }
-        return {
-          ...prev,
-          game: next,
-          resolving: false,
-          error: null,
-          transcript: [...prev.transcript, ...additions],
-          cooldownUntil: null,
-        };
-      });
+      setState((prev) => ({
+        ...prev,
+        game: data.state,
+        resolving: false,
+        error: null,
+        // A wash turn is not recorded, so the story stays as it was and the
+        // player waits out the cooldown instead of retrying into the wall.
+        ...(degraded
+          ? { cooldownUntil: Date.now() + COOLDOWN_MS }
+          : { transcript: toTranscript(data.state), cooldownUntil: null }),
+      }));
     } catch {
       setState((prev) => ({ ...prev, resolving: false, error: GENERIC_ERROR }));
     }

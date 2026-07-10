@@ -51,6 +51,8 @@ export function createInitialState(
     voteThreshold: DEFAULT_VOTE_THRESHOLD,
     roomFailures: 0,
     nemesisLine: '',
+    history: [],
+    rolls: 0,
   };
 }
 
@@ -71,5 +73,7 @@ export function startNewRun(
     nextResolveAt: 0,
     roomFailures: 0,
     nemesisLine: '',
+    history: [],
+    rolls: 0,
   };
 }

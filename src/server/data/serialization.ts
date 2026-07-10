@@ -40,6 +40,8 @@ export function deserializeGame(raw: string): GameState | null {
           typeof state.nemesisLine === 'string' ? state.nemesisLine : '',
         roomFailures:
           typeof state.roomFailures === 'number' ? state.roomFailures : 0,
+        history: Array.isArray(state.history) ? state.history : [],
+        rolls: typeof state.rolls === 'number' ? state.rolls : 0,
         map: coerceMap(state.map),
         party: {
           ...state.party,

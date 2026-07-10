@@ -158,6 +158,12 @@ export type GameState = {
   // run-summary screen.
   nemesisLine: string;
   lastCheck?: AbilityCheck;
+  // The run's full story, appended as it happens. Optional so older saves and
+  // test fixtures stay valid; use-sites default it to an empty list.
+  history?: HistoryEntry[];
+  // How many rolls this run has taken. Ranks the solo leaderboard: at equal
+  // depth, the player who got there in fewer rolls placed better.
+  rolls?: number;
 };
 
 // Produced by the AI each turn, then validated and clamped server-side before it is applied.
@@ -189,6 +195,26 @@ export type Proposal = {
 export type LeaderboardEntry = {
   runNumber: number;
   depth: number;
+};
+
+// One beat of a run's story, kept server-side so a resumed run replays its whole
+// history rather than the last few events.
+export type HistoryEntry =
+  | { kind: 'scene'; text: string }
+  | { kind: 'action'; text: string }
+  | {
+      kind: 'result';
+      text: string;
+      outcome: Outcome;
+      roll: { die: number; total: number } | null;
+    };
+
+// A player's best solo descent. One entry per player: deeper is better, and
+// fewer rolls breaks a tie.
+export type SoloEntry = {
+  username: string;
+  depth: number;
+  rolls: number;
 };
 
 // --- v2: campaign world ---

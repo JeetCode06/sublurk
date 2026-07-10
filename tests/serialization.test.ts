@@ -66,6 +66,17 @@ describe('serialization', () => {
   });
 });
 
+describe('history and rolls migration', () => {
+  it('backfills history and rolls on a save that predates them', () => {
+    const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
+    delete legacy.history;
+    delete legacy.rolls;
+    const restored = deserializeGame(JSON.stringify(legacy));
+    expect(restored?.history).toEqual([]);
+    expect(restored?.rolls).toBe(0);
+  });
+});
+
 describe('roomFailures migration', () => {
   it('backfills roomFailures on a save that predates it', () => {
     const legacy = JSON.parse(serializeGame(sample)) as Record<string, unknown>;
