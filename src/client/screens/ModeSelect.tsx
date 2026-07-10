@@ -43,7 +43,7 @@ export function ModeSelect({
           How will you play?
         </h1>
         <p className="mt-2 font-body text-[15px] italic text-muted">
-          Descend it yourself, or bring it to a sub you moderate.
+          Descend yourself, or bring it to a sub you moderate.
         </p>
       </header>
 

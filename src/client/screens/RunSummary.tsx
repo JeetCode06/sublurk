@@ -1,4 +1,4 @@
-import type { GameState, LeaderboardEntry } from '../../shared/game';
+import type { GameState, LeaderboardEntry, SoloEntry } from '../../shared/game';
 import { Leaderboard } from '../components';
 
 function villainMark(color: string) {
@@ -51,6 +51,8 @@ export function RunSummary({
   leaderboard,
   currentRun,
   canRestart = true,
+  soloLeaderboard,
+  username,
 }: Readonly<{
   game: GameState;
   restarting: boolean;
@@ -58,6 +60,8 @@ export function RunSummary({
   onExit?: () => void;
   leaderboard?: LeaderboardEntry[];
   currentRun?: number;
+  soloLeaderboard?: SoloEntry[];
+  username?: string | null;
   canRestart?: boolean;
 }>) {
   const won = game.phase === 'won';
@@ -133,6 +137,37 @@ export function RunSummary({
             </div>
           ))}
         </div>
+
+        {soloLeaderboard && soloLeaderboard.length > 0 && (
+          <div className="w-full text-left">
+            <p className="mb-2 font-label text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+              Deepest descents
+            </p>
+            <ol className="flex flex-col gap-1">
+              {soloLeaderboard.map((entry, i) => {
+                const isYou = entry.username === username;
+                return (
+                  <li
+                    key={entry.username}
+                    className={`flex items-baseline gap-2 rounded-lg px-2.5 py-1.5 font-body text-[13px] ${
+                      isYou ? 'bg-[#1d130b] text-ember-glow' : 'text-parchment'
+                    }`}
+                  >
+                    <span className="w-5 shrink-0 font-label text-[11px] tabular-nums text-faint">
+                      {i + 1}
+                    </span>
+                    <span className="flex-1 truncate">
+                      {isYou ? 'You' : entry.username}
+                    </span>
+                    <span className="font-label text-[11px] tabular-nums text-muted">
+                      depth {entry.depth} · {entry.rolls} rolls
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        )}
 
         {leaderboard && leaderboard.length > 0 && (
           <div className="w-full text-left">

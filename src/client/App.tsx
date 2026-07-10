@@ -76,7 +76,6 @@ export const App = () => {
   const [view, setView] = useState<View>(() =>
     introSeen() ? 'mode_select' : 'intro'
   );
-  const [soloClass, setSoloClass] = useState<string>(SOLO_DEFAULT_CLASS);
   const community = useGame(postKind === 'community');
   const solo = useSolo();
 
@@ -168,10 +167,9 @@ export const App = () => {
   if (view === 'character_select') {
     return (
       <CharacterSelect
-        hasActiveRun={!!solo.game}
+        hasActiveRun={solo.game?.phase === 'awaiting_actions'}
         onBack={() => setView('play')}
         onBegin={(classId) => {
-          setSoloClass(classId);
           void solo.start(classId);
           setView('play');
         }}
@@ -191,7 +189,6 @@ export const App = () => {
           hasActiveRun={false}
           onBack={() => setView('mode_select')}
           onBegin={(classId) => {
-            setSoloClass(classId);
             void solo.start(classId);
           }}
         />
@@ -200,7 +197,6 @@ export const App = () => {
     return (
       <SoloPlay
         solo={solo}
-        classId={soloClass}
         onExit={() => setView('mode_select')}
         onNewRun={() => setView('character_select')}
       />

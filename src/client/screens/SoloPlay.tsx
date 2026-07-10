@@ -83,12 +83,10 @@ function TranscriptBeat({ entry }: Readonly<{ entry: TranscriptEntry }>) {
 
 export function SoloPlay({
   solo,
-  classId,
   onExit,
   onNewRun,
 }: Readonly<{
   solo: ReturnType<typeof useSolo>;
-  classId: string;
   onExit: () => void;
   onNewRun: () => void;
 }>) {
@@ -129,8 +127,10 @@ export function SoloPlay({
       <RunSummary
         game={game}
         restarting={resolving}
-        onRestart={() => void solo.start(classId)}
+        onRestart={onNewRun}
         onExit={onExit}
+        soloLeaderboard={solo.soloLeaderboard}
+        username={solo.username}
       />
     );
   }
