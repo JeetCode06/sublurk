@@ -23,8 +23,8 @@ export const Splash = () => {
         </h1>
 
         <p className="max-w-[350px] font-body text-[15.5px] italic leading-relaxed text-parchment">
-          One tap, and the screen has you. The only way back is down — through a
-          dungeon that knows your name. Descend. Roll. Try not to die.
+          You tapped, and the glass gave way. The only way back is down, past
+          everything the dark keeps here. Descend. Roll. Try not to die.
         </p>
 
         <button
