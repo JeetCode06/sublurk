@@ -1,6 +1,6 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "hivemind-crawl",
+  "name": "sublurk",
   "permissions": {
     "redis": true,
     "http": {

@@ -19,8 +19,8 @@ export type View =
 
 type PostKind = 'community' | 'solo';
 
-const INTRO_SEEN_KEY = 'hivemind:intro-seen';
-const COMMUNITY_INTRO_SEEN_KEY = 'hivemind:community-intro-seen';
+const INTRO_SEEN_KEY = 'sublurk:intro-seen';
+const COMMUNITY_INTRO_SEEN_KEY = 'sublurk:community-intro-seen';
 
 // Whether this visitor has already seen the how-it-works intro. Storage can be
 // unavailable in some embedded contexts, so any failure is treated as "not

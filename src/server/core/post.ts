@@ -8,7 +8,7 @@ const postKindKey = (postId: string): string => `crawl:post:${postId}:kind`;
 // solo demo, so the app knows on open which experience to show. The stamp is
 // permanent: a post is one thing for its whole life.
 export const createPost = async (kind: PostKind) => {
-  const post = await reddit.submitCustomPost({ title: 'hivemind-crawl' });
+  const post = await reddit.submitCustomPost({ title: 'Sublurk' });
   await redis.set(postKindKey(post.id), kind);
   return post;
 };

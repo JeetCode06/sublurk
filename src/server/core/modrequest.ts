@@ -73,11 +73,11 @@ export function buildModRequestMessage(params: {
   installUrl?: string;
 }): { subject: string; body: string } {
   const { subreddit, username, installUrl = INSTALL_URL } = params;
-  const subject = `A member suggested adding Hivemind Crawl to r/${subreddit}`;
+  const subject = `A member suggested adding Sublurk to r/${subreddit}`;
   const body = [
     `Hi r/${subreddit} mods,`,
     '',
-    `u/${username}, a member of your community, plays **Hivemind Crawl** — a co-op dungeon crawler where the whole subreddit votes on one party's next move and an AI dungeon master narrates what happens — and thought it would be a good fit here.`,
+    `u/${username}, a member of your community, plays **Sublurk** — a co-op dungeon crawler where the whole subreddit votes on one party's next move and an AI dungeon master narrates what happens — and thought it would be a good fit here.`,
     '',
     `If you'd like to try it, you can add it from the Reddit Apps directory: ${installUrl}`,
     '',

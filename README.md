@@ -1,4 +1,4 @@
-# Hivemind Crawl
+# Sublurk
 
 Tap a post, fall through the screen, and talk your way out of a dungeon.
 

@@ -19,9 +19,7 @@ export const Splash = () => {
           className="font-display text-[46px] font-black leading-[0.92] tracking-[0.03em] text-[#f7b061]"
           style={{ textShadow: '0 0 34px rgba(247,176,97,.34)' }}
         >
-          HIVEMIND
-          <br />
-          CRAWL
+          SUBLURK
         </h1>
 
         <p className="max-w-[350px] font-body text-[15.5px] italic leading-relaxed text-parchment">
