@@ -1,11 +1,37 @@
 import './index.css';
 
 import { navigateTo, requestExpandedMode } from '@devvit/web/client';
-import { StrictMode } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Embers } from './Embers';
 
+type Lane = 'loading' | 'solo' | 'community' | 'both';
+
 export const Splash = () => {
+  const [lane, setLane] = useState<Lane>('loading');
+
+  // The splash is its own inline entrypoint with no game state, so ask the
+  // server which kind of post this is and show only the matching label. If the
+  // request can't complete, fall back to showing both.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const res = await fetch('/api/context');
+        const data = (await res.json()) as { kind?: unknown };
+        if (!active) return;
+        setLane(
+          data.kind === 'solo' || data.kind === 'community' ? data.kind : 'both'
+        );
+      } catch {
+        if (active) setLane('both');
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="torchlit relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
       <Embers />
@@ -35,10 +61,19 @@ export const Splash = () => {
           Enter the dungeon
         </button>
 
-        <div className="mt-1 flex items-center gap-2.5 font-label text-[10.5px] uppercase tracking-[0.24em]">
-          <span className="text-ember">Solo</span>
-          <span className="h-1 w-1 rounded-full bg-faint" />
-          <span className="text-teal">Community</span>
+        {/* Fixed height so the loading state doesn't shift the layout. */}
+        <div className="mt-1 flex h-4 items-center gap-2.5 font-label text-[10.5px] uppercase tracking-[0.24em]">
+          {lane === 'both' && (
+            <>
+              <span className="text-ember">Solo</span>
+              <span className="h-1 w-1 rounded-full bg-faint" />
+              <span className="text-teal">Community</span>
+            </>
+          )}
+          {lane === 'solo' && <span className="text-ember">Solo run</span>}
+          {lane === 'community' && (
+            <span className="text-teal">Community run</span>
+          )}
         </div>
       </div>
 

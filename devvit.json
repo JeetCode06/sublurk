@@ -1,10 +1,12 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "sublurk",
+  "name": "sublurk-app",
   "permissions": {
     "redis": true,
     "http": {
-      "domains": ["generativelanguage.googleapis.com"]
+      "domains": [
+        "generativelanguage.googleapis.com"
+      ]
     }
   },
   "post": {
@@ -81,6 +83,6 @@
     "build": "vite build"
   },
   "dev": {
-    "subreddit": "hivemind_crawl_dev"
+    "subreddit": "sublurk_app_dev"
   }
 }
