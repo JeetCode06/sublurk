@@ -30,6 +30,7 @@ import { withDeadline, turnStartedAt } from '../schedule';
 import { withRoomIntro } from '../scene';
 import { ensureWorldBible } from '../worldbible';
 import { ensureMap } from '../worldmap';
+import { SOLO_WORLD_BIBLE, SOLO_MAP, SOLO_THEME } from '../soloworld';
 import {
   normalizeSubredditName,
   evaluateModRequest,
@@ -84,19 +85,13 @@ async function rememberOutcome(
 }
 
 // The subreddit's themed name for each hero archetype, for the character screen.
-api.get('/classes', async (c) => {
-  try {
-    const bible = await ensureWorldBible();
-    return c.json<ClassNamesResponse>({
-      type: 'classNames',
-      names: bible.classNames,
-    });
-  } catch (error) {
-    return c.json<ErrorResponse>(
-      { status: 'error', message: errorMessage(error) },
-      500
-    );
-  }
+api.get('/classes', (c) => {
+  // Solo is the only caller (the character screen), and its world is fixed, so
+  // the crawler names come straight from the solo bible.
+  return c.json<ClassNamesResponse>({
+    type: 'classNames',
+    names: SOLO_WORLD_BIBLE.classNames,
+  });
 });
 
 // Tells the client whether this post is the shared community board or a private
@@ -300,24 +295,20 @@ api.post('/solo/start', async (c) => {
     const body = await c.req.json<{ classId?: unknown }>();
     const requested = typeof body.classId === 'string' ? body.classId : '';
     const classId: ClassId =
-      requested in CLASSES
-        ? (requested as ClassId)
-        : classForSubreddit(subredditName);
+      requested in CLASSES ? (requested as ClassId) : 'adventurer';
 
-    const bible = await ensureWorldBible();
-    const map = await ensureMap(bible);
     const state = await withRoomIntro(
       {
         ...createInitialState({
           postId,
           subredditName,
           classId,
-          theme: themeForSubreddit(subredditName),
+          theme: SOLO_THEME,
         }),
-        map: freshMap(map),
+        map: freshMap(SOLO_MAP),
         nemesisLine: await rememberedTaunt(userId),
       },
-      bible,
+      SOLO_WORLD_BIBLE,
       'solo'
     );
     await saveSoloGame(userId, state);
@@ -368,9 +359,8 @@ api.post('/solo/action', async (c) => {
       });
     }
 
-    const bible = await ensureWorldBible();
-    const turn = await runTurn(state, action, bible, 'solo');
-    const nextState = await withRoomIntro(turn.state, bible, 'solo');
+    const turn = await runTurn(state, action, SOLO_WORLD_BIBLE, 'solo');
+    const nextState = await withRoomIntro(turn.state, SOLO_WORLD_BIBLE, 'solo');
     await saveSoloGame(userId, nextState);
     await rememberOutcome(nextState, userId);
 
