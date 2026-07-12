@@ -30,7 +30,7 @@ describe('bandForRoom', () => {
   });
 
   it('caps at the hardest band', () => {
-    expect(bandForRoom('boss', 99)).toBe('formidable');
+    expect(bandForRoom('boss', 99)).toBe('hard');
   });
 });
 

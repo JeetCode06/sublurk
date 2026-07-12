@@ -156,14 +156,26 @@ export function applyTurn(
     const embers = paid ? party.embers + state.room.difficulty : party.embers;
     const clearedParty = { ...party, depth, embers };
 
-    // Resolving the room at the final location is the campaign's climax —
-    // defeating the boss wins the run.
+    // Resolving the room at the final location is the campaign's climax. The
+    // boss is only beaten by actually overcoming the room — a real success or
+    // the server confirming every foe fell. Reaching this point solely because
+    // the stuck-limit forced a way out means the boss overwhelmed the party, so
+    // a forced exit at the climax is death, not a hollow victory.
     if (atFinalBoss(state.map)) {
+      if (result.roomResolved || forced) {
+        return {
+          ...state,
+          party: clearedParty,
+          map: markBossDefeated(state.map),
+          phase: 'won',
+          recentEvents,
+          roomFailures: 0,
+        };
+      }
       return {
         ...state,
-        party: clearedParty,
-        map: markBossDefeated(state.map),
-        phase: 'won',
+        party,
+        phase: 'dead',
         recentEvents,
         roomFailures: 0,
       };

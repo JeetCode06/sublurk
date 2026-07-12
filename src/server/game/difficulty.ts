@@ -67,9 +67,24 @@ export function nextBand(band: DifficultyBand): DifficultyBand {
   return shiftBand(band, 1);
 }
 
-// A room's difficulty band: its base challenge raised by how deep the party is.
+// Difficulty never rises past this. A party's best possible total is about 23
+// (a 20 on the die plus a +3 modifier), so a DC above ~20 would make even a
+// great roll deal nothing on a check — turning fights into a natural-20 lottery
+// rather than merely hard. Depth still ramps rooms up to this ceiling.
+const MAX_BAND: DifficultyBand = 'hard';
+
+function capBand(band: DifficultyBand): DifficultyBand {
+  const cap = BANDS_ASCENDING.indexOf(MAX_BAND);
+  const idx = BANDS_ASCENDING.indexOf(band);
+  return BANDS_ASCENDING[Math.min(idx, cap)]!;
+}
+
+// A room's difficulty band: its base challenge raised by how deep the party is,
+// never past the ceiling above.
 export function bandForRoom(roomType: RoomType, depth: number): DifficultyBand {
-  return shiftBand(BASE_BAND[roomType], Math.floor(depth / DEPTH_PER_STEP));
+  return capBand(
+    shiftBand(BASE_BAND[roomType], Math.floor(depth / DEPTH_PER_STEP))
+  );
 }
 
 // The nearest band for a given DC, for display and for telling the AI the stakes

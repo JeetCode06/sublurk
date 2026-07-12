@@ -1,6 +1,6 @@
 import type { Room, RoomType } from '../../shared/game';
 import type { RandFn } from './dice';
-import { bandForRoom, dcForBand, nextBand } from './difficulty';
+import { bandForRoom, dcForBand } from './difficulty';
 
 type RoomArchetype = {
   type: RoomType;
@@ -61,7 +61,7 @@ export function createFinalBossRoom(depth: number): Room {
   return {
     type: 'boss',
     description: '',
-    difficulty: dcForBand(nextBand(bandForRoom('boss', depth))),
+    difficulty: dcForBand(bandForRoom('boss', depth)),
     entities: [],
     threats: [],
     suggestions: [],

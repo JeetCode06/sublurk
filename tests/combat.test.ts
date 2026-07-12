@@ -119,12 +119,18 @@ describe('resolveCombat', () => {
     expect(combat.updatedEntities[0]?.hp).toBe(15);
   });
 
-  it('misses on a failed check but still takes the foe counterattack', () => {
+  it('grazes for a little on a non-critical miss and still takes the counterattack', () => {
     const combat = fight(makeState([foe('Lurker', 18, 3)]), check('fail', 3));
-    expect(combat.playerDamage).toBe(0);
-    expect(combat.updatedEntities[0]?.hp).toBe(18);
+    expect(combat.playerDamage).toBe(3); // graze
+    expect(combat.updatedEntities[0]?.hp).toBe(15);
     expect(combat.allFoesDead).toBe(false);
     expect(combat.partyDamage).toBe(6); // 3 base + 3 threat
+  });
+
+  it('deals nothing on a natural 1', () => {
+    const combat = fight(makeState([foe('Lurker', 18, 3)]), check('fail', 1));
+    expect(combat.playerDamage).toBe(0);
+    expect(combat.updatedEntities[0]?.hp).toBe(18);
   });
 
   it('doubles damage on a natural 20', () => {
@@ -189,9 +195,9 @@ describe('combatDirective', () => {
     expect(text).toContain('way onward opens');
   });
 
-  it('describes a miss', () => {
+  it('describes a whiff on a natural 1', () => {
     const text = combatDirective(
-      fight(makeState([foe('Lurker', 18, 3)]), check('fail', 3))
+      fight(makeState([foe('Lurker', 18, 3)]), check('fail', 1))
     );
     expect(text).toContain('misses Lurker');
   });

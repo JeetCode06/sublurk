@@ -234,3 +234,26 @@ describe('applyTurn stuck handling', () => {
     expect(next.roomFailures).toBe(0);
   });
 });
+
+describe('final boss resolution', () => {
+  const base = makeState();
+  const bossState = (overrides: Partial<GameState> = {}): GameState => ({
+    ...base,
+    room: { ...base.room, type: 'boss' },
+    map: { ...base.map, currentNodeIndex: base.map.nodes.length - 1 },
+    ...overrides,
+  });
+
+  it('wins when the boss room is actually resolved', () => {
+    const next = applyTurn(bossState(), makeResult({ roomResolved: true }));
+    expect(next.phase).toBe('won');
+  });
+
+  it('does not hand a win to a failing party forced out by the stuck-limit', () => {
+    const next = applyTurn(
+      bossState({ roomFailures: STUCK_LIMIT - 1 }),
+      makeResult({ outcome: 'fail', roomResolved: false })
+    );
+    expect(next.phase).toBe('dead');
+  });
+});

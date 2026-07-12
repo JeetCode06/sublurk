@@ -17,6 +17,9 @@ export type CombatResult = {
 // A hit's floor before ability and depth; partial hits do half and a natural 20
 // doubles. Kept low so a fight is a few exchanges, not one swing.
 const BASE_PLAYER_DAMAGE = 5;
+// A glancing blow on a non-critical miss. Small, but enough that attrition never
+// stalls to zero against a tough foe.
+const GRAZE_DAMAGE = 3;
 // A foe's base bite before its threat and depth. Modest, so combat is
 // attritional against the party's larger pool rather than a coin-flip death.
 const BASE_FOE_ATTACK = 3;
@@ -39,9 +42,12 @@ function playerDamageFor(
   combatMod: number,
   depth: number
 ): number {
-  if (check.outcome === 'fail') return 0;
   const base =
     BASE_PLAYER_DAMAGE + Math.max(0, combatMod) + Math.floor(depth / 3);
+  // A miss still grazes for a little, so a long fight always inches forward and
+  // a high-difficulty boss can't become mathematically unwinnable. A natural 1
+  // is a true whiff and does nothing.
+  if (check.outcome === 'fail') return check.die === 1 ? 0 : GRAZE_DAMAGE;
   const scaled = check.outcome === 'partial' ? Math.ceil(base / 2) : base;
   return check.die === 20 ? scaled * 2 : scaled;
 }
