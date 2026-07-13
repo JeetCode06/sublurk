@@ -1,12 +1,5 @@
 import type { ClassId } from '../../shared/game';
-
-const CLASS_IDS: ClassId[] = [
-  'warrior',
-  'witch',
-  'healer',
-  'trickster',
-  'adventurer',
-];
+import { CLASS_IDS } from '../../shared/classes';
 
 function hashString(value: string): number {
   let hash = 0;
@@ -21,8 +14,4 @@ function hashString(value: string): number {
 export function classForSubreddit(subredditName: string): ClassId {
   const index = hashString(subredditName) % CLASS_IDS.length;
   return CLASS_IDS[index] ?? 'adventurer';
-}
-
-export function themeForSubreddit(subredditName: string): string {
-  return `the shifting catacombs beneath r/${subredditName}`;
 }

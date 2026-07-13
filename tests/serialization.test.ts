@@ -10,7 +10,6 @@ const sample = createInitialState({
   postId: 't3_abc',
   subredditName: 'r/witchcraft',
   classId: 'witch',
-  theme: 'mossy catacombs',
 });
 
 describe('serialization', () => {

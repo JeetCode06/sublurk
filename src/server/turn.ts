@@ -19,12 +19,19 @@ import { loadGame, saveGame } from './data/games';
 import { withDeadline, turnStartedAt } from './schedule';
 import { withRoomIntro } from './scene';
 import { recordRun } from './data/leaderboard';
+import { appendRun } from './data/lore';
+import { recordFromState } from './game/lore';
 import { ensureWorldBible } from './worldbible';
 
 // A Reddit post fullname (t3_...). GameState stores postId as a plain string
 // to keep the shared contract free of Devvit types, so we re-tag it here at
 // the Reddit API boundary.
 type PostId = `t3_${string}`;
+
+// Player-authored text is injected into the narration prompt, so it is capped:
+// long pastes bloat every turn's tokens, and a wall of text is the usual
+// carrier for prompt-injection attempts. Plenty for any real action.
+const MAX_ACTION_LENGTH = 300;
 
 // A turn spent in a combat, rest, or shrine (shop) room resolves server-side
 // before the AI is called. This packages that into the narration directive the
@@ -57,13 +64,16 @@ function resolveTurnEffects(
 }
 
 // Runs one turn through the full pipeline: roll, narrate, validate, apply.
-// Does not persist — the caller decides when to save.
+// Does not persist — the caller decides when to save. When the narrator is
+// unreachable the turn is a true wash: the input state is returned untouched
+// (no damage, no spent signatures, no roll), so the player can simply retry.
 export async function runTurn(
   state: GameState,
-  action: string,
+  rawAction: string,
   bible: WorldBible,
   lane: Lane = 'community'
 ): Promise<{ state: GameState; aiResponded: boolean }> {
+  const action = rawAction.slice(0, MAX_ACTION_LENGTH);
   const { check: roll, party: rolledParty, note: sigNote } = rollTurn(state);
   const rolled = { ...state, party: rolledParty };
   const { directive, effects } = resolveTurnEffects(rolled, roll, action);
@@ -71,49 +81,54 @@ export async function runTurn(
     turnSystemPrompt(lane),
     buildTurnPrompt(rolled, action, roll, bible, lane, directive)
   );
-  // An empty reply means the narrator was unreachable (usually rate-limited) and
-  // the turn ran on authored fallback content — a wash the caller can surface.
-  const aiResponded = raw.length > 0;
+  // An empty reply means the narrator was unreachable (usually rate-limited).
+  // Nothing may change on such a turn — applying the pre-rolled combat damage
+  // or spending a signature while telling the player "nothing happened" would
+  // desync the story from the state.
+  if (raw.length === 0) {
+    return { state, aiResponded: false };
+  }
+
   const next = applyTurn(
     rolled,
     parseResolveResult(raw),
     Math.random,
     effects,
-    sigNote
+    sigNote,
+    roll.outcome
   );
-  // A wash turn is not part of the story, so it costs neither a beat nor a roll.
   const beat = next.recentEvents.at(-1) ?? '';
-  const recorded = aiResponded
-    ? appendHistory({ ...next, rolls: (next.rolls ?? 0) + 1 }, [
-        { kind: 'action', text: action },
-        ...(beat.length > 0
-          ? [
-              {
-                kind: 'result' as const,
-                text: beat,
-                outcome: roll.outcome,
-                roll: { die: roll.die, total: roll.total },
-              },
-            ]
-          : []),
-      ])
-    : next;
+  const recorded = appendHistory({ ...next, rolls: (next.rolls ?? 0) + 1 }, [
+    { kind: 'action', text: action },
+    ...(beat.length > 0
+      ? [
+          {
+            kind: 'result' as const,
+            text: beat,
+            outcome: roll.outcome,
+            roll: { die: roll.die, total: roll.total },
+          },
+        ]
+      : []),
+  ]);
 
   return {
     state: { ...recorded, lastCheck: roll },
-    aiResponded,
+    aiResponded: true,
   };
 }
 
 // Reads the post's comments and ranks them into the current candidate actions.
 // Only comments posted since the turn opened count, so old comments don't win
-// every turn. The first entry is the action that resolves.
+// every turn. Fetched newest-first so the time filter can't be starved by a
+// post's older popular comments; rankProposals then orders them by score.
+// The first entry is the action that resolves.
 export async function readProposals(
   postId: string,
   since: number
 ): Promise<Proposal[]> {
   const comments = await reddit
-    .getComments({ postId: postId as PostId, sort: 'top', limit: 100 })
+    .getComments({ postId: postId as PostId, sort: 'new', limit: 100 })
     .all();
   return rankProposals(
     comments
@@ -130,27 +145,49 @@ export type ResolveOutcome =
   | { status: 'resolved'; state: GameState; action: string }
   | { status: 'no_game' }
   | { status: 'dead' }
-  | { status: 'no_proposals' };
+  | { status: 'won' }
+  | { status: 'no_proposals' }
+  | { status: 'ai_unavailable' };
 
 // Resolves the current turn from the post's comments: the top-voted comment
-// becomes the party's action. Posts the dungeon master's recap and persists.
+// becomes the party's action. Posts the dungeon master's recap, records the
+// run's standing and (on a terminal turn) its lore, and persists.
 export async function resolveTurnFromComments(): Promise<ResolveOutcome> {
   const state = await loadGame();
   if (!state) return { status: 'no_game' };
   if (state.phase === 'dead') return { status: 'dead' };
+  if (state.phase === 'won') return { status: 'won' };
 
   const proposals = await readProposals(state.postId, turnStartedAt(state));
   const winner = proposals[0] ?? null;
-  if (!winner) return { status: 'no_proposals' };
+  if (!winner) {
+    // Open a fresh voting window: without this, a long-idle board's stale
+    // deadline would let the next comment resolve almost instantly, unvoted.
+    await saveGame(withDeadline(state));
+    return { status: 'no_proposals' };
+  }
 
   const bible = await ensureWorldBible();
-  const nextState = withDeadline(
-    await withRoomIntro((await runTurn(state, winner.body, bible)).state, bible)
-  );
+  const turn = await runTurn(state, winner.body, bible);
+  if (!turn.aiResponded) {
+    // The narrator was unreachable, so the turn did not happen. Change nothing:
+    // the deadline stays due, so the next scheduler tick retries this same
+    // winner rather than consuming the community's vote on a wash.
+    return { status: 'ai_unavailable' };
+  }
+
+  const nextState = withDeadline(await withRoomIntro(turn.state, bible));
   await saveGame(nextState);
 
-  if (nextState.party.depth > state.party.depth) {
+  const terminal = nextState.phase === 'dead' || nextState.phase === 'won';
+  if (nextState.party.depth > state.party.depth || terminal) {
     await recordRun(nextState);
+  }
+  // Record the run's ending here, on the resolver itself, so the nemesis
+  // remembers regardless of whether the cron, the mod menu, or the in-app
+  // button resolved the final turn.
+  if (terminal) {
+    await appendRun(recordFromState(nextState));
   }
 
   // Best-effort recap: a failure to post must not fail the resolved turn.

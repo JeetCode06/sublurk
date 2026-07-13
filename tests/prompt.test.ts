@@ -20,7 +20,6 @@ const state = createInitialState({
   postId: 't3_abc',
   subredditName: 'r/witchcraft',
   classId: 'witch',
-  theme: 'mossy catacombs',
 });
 
 const roll: AbilityCheck = {

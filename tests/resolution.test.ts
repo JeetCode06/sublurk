@@ -11,7 +11,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     runNumber: 1,
     phase: 'awaiting_actions',
     postId: 't3_test',
-    theme: 'catacombs',
     nemesisLine: '',
     party: {
       hp: 50,
@@ -31,7 +30,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       entities: [],
       threats: [],
       suggestions: [],
-      situation: {},
     },
     map: {
       nodes: [
@@ -45,7 +43,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     intro: '',
     recentEvents: [],
     nextResolveAt: 0,
-    voteThreshold: 20,
     roomFailures: 0,
     ...overrides,
   };
@@ -62,7 +59,6 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     statusAdd: [],
     statusRemove: [],
     roomResolved: false,
-    nextRoomHint: null,
     death: false,
     suggestions: [],
     ...overrides,
@@ -232,6 +228,20 @@ describe('applyTurn stuck handling', () => {
     );
     expect(next.party.depth).toBe(1);
     expect(next.roomFailures).toBe(0);
+  });
+
+  it('counts failures from the dice, not the model’s claimed outcome', () => {
+    // A fallback or lying reply claims 'partial', but the server rolled a fail:
+    // the counter must still advance so the room cannot loop forever.
+    const next = applyTurn(
+      makeState({ roomFailures: 1 }),
+      makeResult({ outcome: 'partial', roomResolved: false }),
+      Math.random,
+      null,
+      null,
+      'fail'
+    );
+    expect(next.roomFailures).toBe(2);
   });
 });
 

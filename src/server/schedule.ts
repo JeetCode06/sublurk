@@ -1,7 +1,7 @@
 import type { GameState } from '../shared/game';
 
-// How long a turn stays open for votes before it auto-resolves. Short by
-// default so a lone judge can see the whole loop quickly (design §4.3 / §12).
+// How long a turn stays open for votes before it auto-resolves. Short so a
+// first-time visitor can see the whole loop quickly in one sitting.
 export const TURN_CADENCE_MS = 2 * 60 * 1000;
 
 // Stamps the next resolution deadline onto a turn that is open for actions, so

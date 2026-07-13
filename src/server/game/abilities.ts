@@ -1,4 +1,10 @@
 import type { Abilities, AbilityId, RoomType } from '../../shared/game';
+import { ABILITY_IDS, abilityModifier } from '../../shared/abilities';
+
+// The ability vocabulary lives in shared/abilities so the client stat displays
+// use the same source of truth; re-exported here for the engine's callers.
+export { ABILITY_IDS, ABILITY_LABELS } from '../../shared/abilities';
+export { abilityModifier };
 
 // Which ability a room's challenge tests — combat is muscle, puzzles are
 // intellect, traps are reflexes, social rooms are presence.
@@ -22,41 +28,6 @@ export function abilityForRoomType(roomType: RoomType): AbilityId {
 // for not being a bruiser. Ties fall to Strength.
 export function combatAbility(abilities: Abilities): AbilityId {
   return abilities.dex > abilities.str ? 'dex' : 'str';
-}
-
-export const ABILITY_IDS: AbilityId[] = [
-  'str',
-  'dex',
-  'con',
-  'int',
-  'wis',
-  'cha',
-];
-
-export const ABILITY_LABELS: Record<AbilityId, string> = {
-  str: 'Strength',
-  dex: 'Dexterity',
-  con: 'Constitution',
-  int: 'Intelligence',
-  wis: 'Wisdom',
-  cha: 'Charisma',
-};
-
-// An average human in every ability — the safe fallback when a party's scores
-// are missing or unreadable.
-export const DEFAULT_ABILITIES: Abilities = {
-  str: 10,
-  dex: 10,
-  con: 10,
-  int: 10,
-  wis: 10,
-  cha: 10,
-};
-
-// Standard tabletop modifier: every two points above or below 10 shifts the
-// bonus by one. Score 10 is +0, 16 is +3, 8 is -1.
-export function abilityModifier(score: number): number {
-  return Math.floor((score - 10) / 2);
 }
 
 // Forces parsed-but-untrusted ability data into a complete set, repairing each

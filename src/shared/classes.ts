@@ -24,7 +24,7 @@ export const CLASS_INFO: Record<ClassId, ClassInfo> = {
     name: 'Wizard',
     affinities: { puzzle: STRONG, trap: STRONG, combat: WEAK },
     abilities: { str: 8, dex: 12, con: 10, int: 16, wis: 14, cha: 10 },
-    signature: 'Curses one enemy per floor, lowering its difficulty.',
+    signature: 'Once per floor, curses a foe to ease the next strike.',
   },
   healer: {
     id: 'healer',

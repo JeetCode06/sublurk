@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  classForSubreddit,
-  themeForSubreddit,
-} from '../src/server/game/theming';
+import { classForSubreddit } from '../src/server/game/theming';
 
 describe('classForSubreddit', () => {
   it('is deterministic for the same subreddit', () => {
@@ -19,11 +16,5 @@ describe('classForSubreddit', () => {
       ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(classForSubreddit)
     );
     expect(classes.size).toBeGreaterThan(1);
-  });
-});
-
-describe('themeForSubreddit', () => {
-  it('includes the subreddit name', () => {
-    expect(themeForSubreddit('witchcraft')).toContain('witchcraft');
   });
 });

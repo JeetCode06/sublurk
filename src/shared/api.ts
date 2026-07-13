@@ -37,10 +37,6 @@ export type ProposalsResponse = {
   state: GameState | null;
 };
 
-export type ActionRequest = {
-  action: string;
-};
-
 export type ErrorResponse = {
   status: 'error';
   message: string;

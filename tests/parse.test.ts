@@ -20,7 +20,6 @@ const valid = JSON.stringify({
   statusAdd: ['lit'],
   statusRemove: ['blinded'],
   roomResolved: true,
-  nextRoomHint: 'a damp corridor',
   death: false,
 });
 
@@ -32,7 +31,6 @@ describe('parseResolveResult', () => {
     expect(result.hpDelta).toBe(-3);
     expect(result.inventoryAdd).toEqual(['torch']);
     expect(result.roomResolved).toBe(true);
-    expect(result.nextRoomHint).toBe('a damp corridor');
   });
 
   it('strips markdown code fences', () => {
@@ -52,7 +50,6 @@ describe('parseResolveResult', () => {
     expect(result.inventoryAdd).toEqual([]);
     expect(result.roomResolved).toBe(false);
     expect(result.death).toBe(false);
-    expect(result.nextRoomHint).toBeNull();
   });
 
   it('coerces wrong-typed fields to defaults', () => {

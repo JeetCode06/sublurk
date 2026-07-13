@@ -2,6 +2,7 @@ import type {
   AbilityCheck,
   Advantage,
   GameState,
+  Outcome,
   Party,
   ResolveResult,
 } from '../../shared/game';
@@ -105,7 +106,11 @@ export function applyTurn(
   result: ResolveResult,
   rand: RandFn = Math.random,
   effects: TurnEffects | null = null,
-  signatureNote: string | null = null
+  signatureNote: string | null = null,
+  // The server's own dice outcome for this turn. When given, it drives the
+  // stuck-limit counter instead of the model's claimed outcome, so a lying or
+  // fallback reply can't stall (or reset) the escalation valve.
+  diceOutcome: Outcome | null = null
 ): GameState {
   // The server can override the party's HP and embers for this turn — combat
   // damage, rest healing, or a shrine offering's cost — in which case the model's
@@ -142,7 +147,9 @@ export function applyTurn(
 
   // Track consecutive failures in this room. Once they hit the limit the party
   // is forced onward even on a failed roll, so the room cannot loop forever.
-  const failures = result.outcome === 'fail' ? state.roomFailures + 1 : 0;
+  // The dice decide what counts as a failure, not the model's account of it.
+  const failures =
+    (diceOutcome ?? result.outcome) === 'fail' ? state.roomFailures + 1 : 0;
   // A room ends when the model resolves it or the server forces it (every foe
   // fell, or a rest completed); the stuck-limit still forces a way out.
   const forced = effects?.resolve ?? false;

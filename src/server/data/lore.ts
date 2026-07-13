@@ -4,9 +4,10 @@ import { EMPTY_LORE, type Lore, type RunRecord } from '../game/lore';
 const MAX_RUNS = 12;
 
 // Community lore is shared per subreddit; solo lore is private per user. Both
-// survive a restart, so a nemesis remembers across runs.
+// survive a restart, so a nemesis remembers across runs. The `lore:` prefix
+// (rather than `crawl:`) is legacy — changing it would orphan live records.
 function loreKey(userId?: string): string {
-  const sub = context.subredditName ?? 'unknown';
+  const sub = context.subredditName;
   return userId ? `lore:${sub}:${userId}` : `lore:${sub}`;
 }
 

@@ -39,6 +39,9 @@ const INITIAL: GameHookState = {
 
 const GENERIC_ERROR = 'The dungeon did not respond. Try again.';
 const POLL_INTERVAL_MS = 5000;
+// The leaderboard changes once per turn at most, so it refreshes far less
+// often than the live proposals.
+const LEADERBOARD_POLL_INTERVAL_MS = 30_000;
 
 // Fetches the leaderboard without touching React state, so callers decide when
 // to apply it. This keeps setState out of an effect body directly.
@@ -84,8 +87,8 @@ export const useGame = (active: boolean) => {
     void load();
   }, [active]);
 
-  // Poll for live state. Votes change outside our app and the scheduler resolves
-  // turns on its own, so we re-read the game, proposals, and leaderboard on an
+  // Poll for live state. Votes change outside our app and the scheduler
+  // resolves turns on its own, so we re-read the game and proposals on an
   // interval (Devvit has no websockets).
   useEffect(() => {
     if (!active) return;
@@ -107,13 +110,27 @@ export const useGame = (active: boolean) => {
       } catch {
         // A failed poll keeps the last known state rather than blanking it.
       }
+    };
+    void poll();
+    const id = setInterval(() => void poll(), POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [active]);
+
+  // The leaderboard on its own, slower cadence.
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    const poll = async () => {
       const entries = await fetchLeaderboard();
       if (!cancelled && entries) {
         setState((prev) => ({ ...prev, leaderboard: entries }));
       }
     };
     void poll();
-    const id = setInterval(() => void poll(), POLL_INTERVAL_MS);
+    const id = setInterval(() => void poll(), LEADERBOARD_POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -147,14 +164,10 @@ export const useGame = (active: boolean) => {
     }
   }, []);
 
-  const submitAction = useCallback(
-    (action: string) => post('/api/action', { action }),
-    [post]
-  );
   const resolveVotes = useCallback(() => post('/api/resolve'), [post]);
   const restart = useCallback(() => post('/api/restart'), [post]);
 
-  return { ...state, submitAction, resolveVotes, restart } as const;
+  return { ...state, resolveVotes, restart } as const;
 };
 
 // One beat in the solo run's running transcript. Solo state is replaced whole
@@ -210,12 +223,14 @@ function toTranscript(game: GameState): TranscriptEntry[] {
 
 // A private, real-time solo run. Unlike useGame there is no polling: each action
 // returns the next state directly, since only the player changes the run.
-export const useSolo = () => {
+// Only fetches once activated, so a community post never loads a solo run.
+export const useSolo = (enabled: boolean) => {
   const [state, setState] = useState<SoloHookState>(SOLO_INITIAL);
 
-  // On mount, look for a saved run to resume. A missing run just clears the
-  // loading state, and the app then offers character select.
+  // On activation, look for a saved run to resume. A missing run just clears
+  // the loading state, and the app then offers character select.
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     void (async () => {
       try {
@@ -246,7 +261,7 @@ export const useSolo = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
 
   // A finished run earns a place on the board, so load it once the run ends.
   const phase = state.game?.phase ?? null;

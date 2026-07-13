@@ -4,7 +4,6 @@ import {
   dcForBand,
   bandForRoom,
   bandForDC,
-  nextBand,
 } from '../src/server/game/difficulty';
 
 describe('dcForBand', () => {
@@ -31,16 +30,6 @@ describe('bandForRoom', () => {
 
   it('caps at the hardest band', () => {
     expect(bandForRoom('boss', 99)).toBe('hard');
-  });
-});
-
-describe('nextBand', () => {
-  it('returns the next harder band', () => {
-    expect(nextBand('hard')).toBe('very_hard');
-  });
-
-  it('caps at the top', () => {
-    expect(nextBand('formidable')).toBe('formidable');
   });
 });
 

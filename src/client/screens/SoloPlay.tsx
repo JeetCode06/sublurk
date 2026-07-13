@@ -2,32 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Outcome } from '../../shared/game';
 import { useSolo, COOLDOWN_MS, type TranscriptEntry } from '../hooks/useGame';
 import {
-  CampaignMap,
   HealthBar,
+  PartyVitals,
   SceneEntities,
   StatBlock,
   ThreatStrip,
 } from '../components';
+import { MapButton, MapModal } from '../CampaignMap';
 import { RunSummary } from './RunSummary';
 import { DiceOverlay } from '../DiceOverlay';
-
-// A folded-map glyph for the button that opens the campaign map.
-function MapIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-3.5 w-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M9 4 3 6.2v13.8l6-2.2 6 2.2 6-2.2V3.8l-6 2.2-6-2.2Z" />
-      <path d="M9 4v13.8M15 6.2V20" />
-    </svg>
-  );
-}
 
 const OUTCOME_LABEL: Record<Outcome, string> = {
   success: 'Success',
@@ -67,8 +50,8 @@ function TranscriptBeat({ entry }: Readonly<{ entry: TranscriptEntry }>) {
             className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-[#2f2722] bg-[#160f0a] px-2 py-0.5 font-label text-[11px] tracking-wide"
             style={{ color: OUTCOME_COLOR[entry.outcome] }}
           >
-            <span aria-hidden="true">⚄</span> {entry.roll.total} ·{' '}
-            {OUTCOME_LABEL[entry.outcome]}
+            <span aria-hidden="true">⚄</span> d20 {entry.roll.die} · total{' '}
+            {entry.roll.total} · {OUTCOME_LABEL[entry.outcome]}
           </div>
         )}
       </div>
@@ -135,8 +118,10 @@ export function SoloPlay({
     );
   }
 
-  const submit = () => {
-    const action = draft.trim();
+  // Submits an action — from the input, or straight from a tapped suggestion
+  // chip, so the common case is one tap instead of fill-then-Act.
+  const submit = (text: string) => {
+    const action = text.trim();
     if (action.length === 0 || resolving || onCooldown) return;
     setRollActive(true);
     void solo.act(action);
@@ -171,13 +156,7 @@ export function SoloPlay({
               <span className="font-label text-[10px] uppercase tracking-[0.18em] text-faint">
                 Depth {game.party.depth}
               </span>
-              <button
-                type="button"
-                onClick={() => setMapOpen(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.12em] text-ember-glow transition hover:brightness-110"
-              >
-                <MapIcon /> Map
-              </button>
+              <MapButton onClick={() => setMapOpen(true)} />
             </div>
           </div>
           <h1 className="font-display text-[22px] font-bold leading-none text-[#f6b063]">
@@ -186,16 +165,8 @@ export function SoloPlay({
           <div className="mt-2">
             <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-label text-[12px] text-muted">
-            <span>◈ {game.party.embers} embers</span>
-            {game.party.inventory.length > 0 && (
-              <span>⚸ {game.party.inventory.join(', ')}</span>
-            )}
-            {game.party.conditions.length > 0 && (
-              <span className="capitalize text-[#f0594e]">
-                {game.party.conditions.join(', ')}
-              </span>
-            )}
+          <div className="mt-2">
+            <PartyVitals party={game.party} />
           </div>
           <div className="mt-2">
             <StatBlock abilities={game.party.abilities} />
@@ -246,7 +217,7 @@ export function SoloPlay({
                   {game.room.suggestions.map((suggestion) => (
                     <button
                       key={suggestion}
-                      onClick={() => setDraft(suggestion)}
+                      onClick={() => submit(suggestion)}
                       disabled={resolving}
                       className="rounded-full border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-ember hover:text-ink disabled:opacity-50"
                     >
@@ -260,14 +231,15 @@ export function SoloPlay({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') submit();
+                    if (e.key === 'Enter') submit(draft);
                   }}
                   disabled={resolving}
+                  maxLength={300}
                   placeholder="Search the altar, draw a blade, light a torch…"
                   className="flex-1 rounded-xl border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
                 />
                 <button
-                  onClick={submit}
+                  onClick={() => submit(draft)}
                   disabled={resolving || draft.trim().length === 0}
                   className="rounded-xl bg-ember px-5 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#150d06] transition hover:brightness-110 disabled:opacity-40"
                 >
@@ -280,29 +252,11 @@ export function SoloPlay({
       </div>
 
       {mapOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0705]/90 p-6"
-          onClick={() => setMapOpen(false)}
-        >
-          <div
-            className="w-full max-w-[440px] rounded-2xl border border-[#2a2118] bg-[#120d09] p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="font-display text-[16px] font-semibold text-ember">
-                The Descent
-              </span>
-              <button
-                type="button"
-                onClick={() => setMapOpen(false)}
-                className="font-label text-[11px] uppercase tracking-wide text-faint transition hover:text-ember"
-              >
-                Close
-              </button>
-            </div>
-            <CampaignMap map={game.map} />
-          </div>
-        </div>
+        <MapModal
+          map={game.map}
+          title="The Descent"
+          onClose={() => setMapOpen(false)}
+        />
       )}
 
       {rollActive && (

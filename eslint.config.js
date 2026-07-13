@@ -5,11 +5,22 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 
+// Rules that need type information; every linted area supplies a tsconfig
+// project. Unused-variable checking is left to tsc (noUnusedLocals).
+const typedRules = {
+  '@typescript-eslint/no-floating-promises': 'error',
+  '@typescript-eslint/no-unused-vars': 'off',
+  'no-unused-vars': 'off',
+};
+
 export default defineConfig([
-  tseslint.configs.recommended,
+  // Global ignores: an object with only `ignores` applies to every config.
+  {
+    ignores: ['node_modules/**', 'dist/**', 'build/**'],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['src/server/**/*.{ts,tsx,mjs,cjs,js}'],
+    files: ['src/server/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2023,
       globals: globals.node,
@@ -18,10 +29,11 @@ export default defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: typedRules,
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['src/shared/**/*.{ts,tsx,mjs,cjs,js}'],
+    files: ['src/shared/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2023,
       globals: globals.browser,
@@ -30,11 +42,11 @@ export default defineConfig([
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: typedRules,
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['src/client/**/*.{ts,tsx}'],
-    ignores: ['src/server/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2023,
       globals: globals.browser,
@@ -53,29 +65,20 @@ export default defineConfig([
         'warn',
         { allowConstantExport: true },
       ],
+      ...typedRules,
     },
   },
   {
-    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
-    rules: {
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-unused-vars': ['off'],
-      'no-unused-vars': ['off'],
-    },
-    ignores: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/build/**',
-      'eslint.config.js',
-      '**/vite.config.ts',
-      'devvit.config.ts',
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['tests/**/*.ts'],
     languageOptions: {
+      ecmaVersion: 2023,
+      globals: globals.node,
       parserOptions: {
+        project: ['./tests/tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { js },
-    extends: ['js/recommended'],
+    rules: typedRules,
   },
 ]);

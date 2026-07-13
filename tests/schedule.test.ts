@@ -11,7 +11,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     runNumber: 1,
     phase: 'awaiting_actions',
     postId: 't3_test',
-    theme: 'catacombs',
     nemesisLine: '',
     party: {
       hp: 50,
@@ -31,7 +30,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
       entities: [],
       threats: [],
       suggestions: [],
-      situation: {},
     },
     map: {
       nodes: [
@@ -45,7 +43,6 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     intro: '',
     recentEvents: [],
     nextResolveAt: 0,
-    voteThreshold: 20,
     roomFailures: 0,
     ...overrides,
   };
@@ -62,7 +59,6 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     statusAdd: [],
     statusRemove: [],
     roomResolved: false,
-    nextRoomHint: null,
     death: false,
     suggestions: [],
     ...overrides,

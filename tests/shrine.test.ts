@@ -29,7 +29,6 @@ function makeState(
     runNumber: 1,
     phase: 'awaiting_actions',
     postId: 't3_test',
-    theme: 'catacombs',
     nemesisLine: '',
     party: {
       hp,
@@ -49,7 +48,6 @@ function makeState(
       entities: [],
       threats: [],
       suggestions,
-      situation: {},
     },
     map: {
       nodes: [{ id: 'n1', name: 'One', themeTag: 'first', cleared: false }],
@@ -59,7 +57,6 @@ function makeState(
     intro: '',
     recentEvents: [],
     nextResolveAt: 0,
-    voteThreshold: 20,
     roomFailures: 0,
   };
 }
@@ -75,7 +72,6 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     statusAdd: [],
     statusRemove: [],
     roomResolved: false,
-    nextRoomHint: null,
     death: false,
     suggestions: [],
     ...overrides,

@@ -28,7 +28,6 @@ function makeResult(overrides: Partial<ResolveResult> = {}): ResolveResult {
     statusAdd: [],
     statusRemove: [],
     roomResolved: false,
-    nextRoomHint: null,
     death: false,
     suggestions: [],
     ...overrides,

@@ -41,7 +41,6 @@ function makeState(
     runNumber: 1,
     phase: 'awaiting_actions',
     postId: 't3_test',
-    theme: 'catacombs',
     nemesisLine: '',
     party: {
       hp: 50,
@@ -61,7 +60,6 @@ function makeState(
       entities,
       threats: [],
       suggestions: [],
-      situation: {},
     },
     map: {
       nodes: [{ id: 'n1', name: 'One', themeTag: 'first', cleared: false }],
@@ -71,7 +69,6 @@ function makeState(
     intro: '',
     recentEvents: [],
     nextResolveAt: 0,
-    voteThreshold: 20,
     roomFailures: 0,
   };
 }

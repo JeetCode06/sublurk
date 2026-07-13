@@ -6,14 +6,6 @@ import type {
 } from '../../shared/game';
 import { abilityModifier } from './abilities';
 
-export type DiceRoll = {
-  die: number;
-  modifier: number;
-  total: number;
-  difficulty: number;
-  outcome: Outcome;
-};
-
 export type RandFn = () => number;
 
 const DIE_SIDES = 20;
@@ -43,22 +35,6 @@ export function combineAdvantage(a: Advantage, b: Advantage): Advantage {
   if (hasAdvantage) return 'advantage';
   if (hasDisadvantage) return 'disadvantage';
   return 'normal';
-}
-
-export function rollAction(
-  difficulty: number,
-  modifier: number,
-  rand: RandFn = Math.random
-): DiceRoll {
-  const die = rollDie(rand);
-  const total = die + modifier;
-  return {
-    die,
-    modifier,
-    total,
-    difficulty,
-    outcome: outcomeFor(die, total, difficulty),
-  };
 }
 
 // A full ability check: rolls a d20 (two, keeping the better or worse for

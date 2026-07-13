@@ -6,7 +6,6 @@ const input = {
   postId: 't3_abc',
   subredditName: 'r/witchcraft',
   classId: 'witch' as const,
-  theme: 'mossy catacombs',
 };
 
 function deadState(): GameState {
@@ -40,16 +39,14 @@ describe('createInitialState', () => {
     expect(state.party.name).toBe('The r/witchcraft Wizard');
   });
 
-  it('carries the postId and theme through', () => {
+  it('carries the postId through', () => {
     const state = createInitialState(input, () => 0);
     expect(state.postId).toBe('t3_abc');
-    expect(state.theme).toBe('mossy catacombs');
   });
 
-  it('starts with a room and a non-zero vote threshold', () => {
+  it('starts with an undescribed room, to be filled by the first scene', () => {
     const state = createInitialState(input, () => 0);
     expect(state.room.description).toBe('');
-    expect(state.voteThreshold).toBeGreaterThan(0);
   });
 
   it('starts with an empty intro, to be filled at run start', () => {
@@ -75,7 +72,23 @@ describe('startNewRun', () => {
     expect(next.party.classId).toBe('witch');
     expect(next.party.name).toBe('The r/witchcraft Wizard');
     expect(next.postId).toBe('t3_abc');
-    expect(next.theme).toBe('mossy catacombs');
+  });
+
+  it('clears the previous run’s last roll from the fresh board', () => {
+    const prior: GameState = {
+      ...deadState(),
+      lastCheck: {
+        ability: 'str',
+        advantage: 'normal',
+        rolls: [3],
+        die: 3,
+        modifier: 1,
+        total: 4,
+        difficulty: 12,
+        outcome: 'fail',
+      },
+    };
+    expect(startNewRun(prior, () => 0).lastCheck).toBeUndefined();
   });
 
   it('clears the recent-events log', () => {

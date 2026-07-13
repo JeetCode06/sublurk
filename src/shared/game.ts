@@ -17,12 +17,7 @@ export type ClassId =
   | 'trickster'
   | 'adventurer';
 
-export type GamePhase =
-  | 'awaiting_actions'
-  | 'resolving'
-  | 'dead'
-  | 'won'
-  | 'intermission';
+export type GamePhase = 'awaiting_actions' | 'dead' | 'won';
 
 export type Outcome = 'success' | 'partial' | 'fail';
 
@@ -106,8 +101,6 @@ export type Room = {
   // 2-3 concrete actions the party could try right now, offered to the players
   // so a turn never starts from a blank prompt. Refreshed each turn.
   suggestions: string[];
-  // Per-room server-only state, e.g. a monster's remaining hp. Shape varies by room type.
-  situation: Record<string, unknown>;
 };
 
 // The narrative slice of a room the AI authors for a new scene: the prose plus
@@ -142,14 +135,12 @@ export type GameState = {
   runNumber: number;
   phase: GamePhase;
   postId: string;
-  theme: string;
   party: Party;
   room: Room;
   map: MapState;
   intro: string;
   recentEvents: string[];
   nextResolveAt: number; // unix ms
-  voteThreshold: number;
   // Consecutive failed turns in the current room. Drives escalation and a hard
   // forced exit so a room can never become an infinite loop.
   roomFailures: number;
@@ -177,7 +168,9 @@ export type ResolveResult = {
   statusAdd: string[];
   statusRemove: string[];
   roomResolved: boolean;
-  nextRoomHint: string | null;
+  // Deliberate decoy: gives the model a place to express "death" so it doesn't
+  // try to force it through hpDelta. The server ignores it — death is derived
+  // from HP in applyResolveResult, never taken from the AI.
   death: boolean;
   // Fresh suggestions for what to try next, given how this turn went.
   suggestions: string[];

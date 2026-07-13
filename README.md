@@ -46,9 +46,11 @@ campaign map that ends at a final boss. r/coffee crawls a different dungeon than
 
 - `npm run dev` — start a live development server on Reddit
 - `npm run build` — build the client and server
-- `npm run deploy` — upload a new version
+- `npm run deploy` — type-check, lint, and upload a new version
 - `npm run launch` — publish for review
-- `npm run type-check` — type-check (now including tests), lint, and format
+- `npm run type-check` — type-check the source projects and the tests
+- `npm run lint` — lint `src` and `tests`
+- `npm test` — run the Vitest suite
 
 ## Credits & licensing
 

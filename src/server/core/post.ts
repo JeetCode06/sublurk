@@ -1,4 +1,5 @@
 import { reddit, redis, context } from '@devvit/web/server';
+import { loadGame, saveGame } from '../data/games';
 
 type PostKind = 'community' | 'solo';
 
@@ -10,6 +11,15 @@ const postKindKey = (postId: string): string => `crawl:post:${postId}:kind`;
 export const createPost = async (kind: PostKind) => {
   const post = await reddit.submitCustomPost({ title: 'Sublurk' });
   await redis.set(postKindKey(post.id), kind);
+  // A sub has one shared community game, keyed by subreddit, but proposals are
+  // read from the post the game points at. Re-point an existing game at the
+  // newest community post so comments there are the ones that count.
+  if (kind === 'community') {
+    const game = await loadGame();
+    if (game) {
+      await saveGame({ ...game, postId: post.id });
+    }
+  }
   return post;
 };
 

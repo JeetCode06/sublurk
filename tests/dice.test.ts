@@ -1,54 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import {
-  rollAction,
-  rollCheck,
-  combineAdvantage,
-} from '../src/server/game/dice';
+import { rollCheck, combineAdvantage } from '../src/server/game/dice';
 
 function seq(values: number[]): () => number {
   let i = 0;
   return () => values[i++ % values.length] ?? 0;
 }
 
-describe('rollAction', () => {
-  it('treats a natural 20 as success even against an impossible difficulty', () => {
-    const roll = rollAction(99, 0, () => 0.999);
-    expect(roll.die).toBe(20);
-    expect(roll.outcome).toBe('success');
-  });
-
-  it('treats a natural 1 as failure even with a huge modifier', () => {
-    const roll = rollAction(1, 50, () => 0);
-    expect(roll.die).toBe(1);
-    expect(roll.outcome).toBe('fail');
-  });
-
-  it('succeeds when the total meets or beats the difficulty', () => {
-    const roll = rollAction(10, 5, () => 0.5);
-    expect(roll.die).toBe(11);
-    expect(roll.total).toBe(16);
-    expect(roll.outcome).toBe('success');
-  });
-
+describe('rollCheck', () => {
   it('returns a partial when the total just misses the difficulty', () => {
-    const roll = rollAction(12, 0, () => 0.45);
-    expect(roll.die).toBe(10);
-    expect(roll.outcome).toBe('partial');
+    const check = rollCheck('str', 10, 12, 'normal', () => 0.45);
+    expect(check.die).toBe(10);
+    expect(check.outcome).toBe('partial');
   });
 
   it('fails when the total misses the difficulty badly', () => {
-    const roll = rollAction(15, 0, () => 0.05);
-    expect(roll.die).toBe(2);
-    expect(roll.outcome).toBe('fail');
+    const check = rollCheck('str', 10, 15, 'normal', () => 0.05);
+    expect(check.die).toBe(2);
+    expect(check.outcome).toBe('fail');
   });
 
-  it('applies the modifier to the total', () => {
-    const roll = rollAction(10, 3, () => 0.5);
-    expect(roll.total).toBe(14);
-  });
-});
-
-describe('rollCheck', () => {
   it('adds the ability modifier to the die', () => {
     const check = rollCheck('str', 16, 10, 'normal', () => 0.5);
     expect(check.die).toBe(11);

@@ -9,10 +9,11 @@
     "deploy": "npm run type-check && npm run lint && devvit upload",
     "dev": "devvit playtest",
     "launch": "npm run deploy && devvit publish",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint": "eslint src tests",
     "login": "devvit login",
     "prettier": "prettier --write .",
-    "type-check": "tsc --build"
+    "test": "vitest run",
+    "type-check": "tsc --build && tsc -p tests --noEmit"
   },
   "engines": {
     "node": ">=22.2.0"

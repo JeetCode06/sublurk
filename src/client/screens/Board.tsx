@@ -1,34 +1,17 @@
 import { useState } from 'react';
 import type { GameState, LeaderboardEntry, Proposal } from '../../shared/game';
 import {
-  CampaignMap,
   CandidateActions,
   HealthBar,
   LastCheck,
+  PartyVitals,
   RestartButton,
   SceneEntities,
   StatBlock,
   ThreatStrip,
 } from '../components';
+import { MapButton, MapModal } from '../CampaignMap';
 import { RunSummary } from './RunSummary';
-
-// A folded-map glyph for the button that opens the campaign map.
-function MapIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-3.5 w-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M9 4 3 6.2v13.8l6-2.2 6 2.2 6-2.2V3.8l-6 2.2-6-2.2Z" />
-      <path d="M9 4v13.8M15 6.2V20" />
-    </svg>
-  );
-}
 
 export function Board({
   game,
@@ -85,13 +68,7 @@ export function Board({
               Community · Run {game.runNumber}
             </span>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setMapOpen(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.12em] text-ember-glow transition hover:brightness-110"
-              >
-                <MapIcon /> Map
-              </button>
+              <MapButton onClick={() => setMapOpen(true)} />
               {isMod && (
                 <RestartButton resolving={resolving} onRestart={onRestart} />
               )}
@@ -106,17 +83,13 @@ export function Board({
             </span>
           </div>
           <HealthBar hp={game.party.hp} maxHp={game.party.maxHp} />
-          <div className="flex flex-wrap gap-x-4 gap-y-1 font-label text-[12px] text-muted">
-            <span>◈ {game.party.embers} embers</span>
-            {game.party.inventory.length > 0 && (
-              <span>⚸ {game.party.inventory.join(', ')}</span>
-            )}
-            {game.party.conditions.length > 0 && (
-              <span className="capitalize text-[#f0594e]">
-                {game.party.conditions.join(', ')}
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+            <PartyVitals party={game.party} />
+            {record !== null && (
+              <span className="font-label text-[12px] text-muted">
+                🏆 record depth {record}
               </span>
             )}
-            {record !== null && <span>🏆 record depth {record}</span>}
           </div>
           <StatBlock abilities={game.party.abilities} />
           <div className="h-px w-full bg-edge" />
@@ -148,9 +121,9 @@ export function Board({
             <ThreatStrip threats={game.room.threats} />
             {log.length > 0 && (
               <div className="flex flex-col gap-1.5 border-l-2 border-[#2f2722] pl-3.5">
-                {log.map((event) => (
+                {log.map((event, i) => (
                   <p
-                    key={event}
+                    key={`${i}-${event.slice(0, 24)}`}
                     className="font-body text-[13px] italic leading-snug text-muted"
                   >
                     {event}
@@ -205,29 +178,11 @@ export function Board({
       </div>
 
       {mapOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0705]/90 p-6"
-          onClick={() => setMapOpen(false)}
-        >
-          <div
-            className="w-full max-w-[440px] rounded-2xl border border-edge bg-[#100b08] p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="font-label text-[11px] uppercase tracking-[0.2em] text-muted">
-                The descent
-              </span>
-              <button
-                type="button"
-                onClick={() => setMapOpen(false)}
-                className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
-              >
-                Close
-              </button>
-            </div>
-            <CampaignMap map={game.map} />
-          </div>
-        </div>
+        <MapModal
+          map={game.map}
+          title="The descent"
+          onClose={() => setMapOpen(false)}
+        />
       )}
     </div>
   );

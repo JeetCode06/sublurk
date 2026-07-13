@@ -39,7 +39,6 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
       entities: [],
       threats: [],
       suggestions: [],
-      situation: {},
     };
   }
 
@@ -51,12 +50,13 @@ export function createRoom(depth: number, rand: RandFn = Math.random): Room {
     entities: [],
     threats: [],
     suggestions: [],
-    situation: {},
   };
 }
 
-// The campaign's climactic encounter at the final location. A band tougher than
-// the ordinary bosses sprinkled through the run; resolving it wins the campaign.
+// The campaign's climactic encounter at the final location. Its DC sits at the
+// same capped ceiling as ordinary bosses (see MAX_BAND in difficulty.ts — a
+// higher DC would turn the climax into a natural-20 lottery); what makes it the
+// end is that resolving it wins the campaign.
 export function createFinalBossRoom(depth: number): Room {
   return {
     type: 'boss',
@@ -65,6 +65,5 @@ export function createFinalBossRoom(depth: number): Room {
     entities: [],
     threats: [],
     suggestions: [],
-    situation: {},
   };
 }

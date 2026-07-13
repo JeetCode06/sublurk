@@ -1,26 +1,12 @@
-import type { AbilityCheck, AbilityId } from '../shared/game';
+import type { AbilityCheck } from '../shared/game';
 
-export const ABILITY_ORDER: AbilityId[] = [
-  'str',
-  'dex',
-  'con',
-  'int',
-  'wis',
-  'cha',
-];
-
-export const ABILITY_SHORT: Record<AbilityId, string> = {
-  str: 'STR',
-  dex: 'DEX',
-  con: 'CON',
-  int: 'INT',
-  wis: 'WIS',
-  cha: 'CHA',
-};
-
-export function abilityMod(score: number): number {
-  return Math.floor((score - 10) / 2);
-}
+// One source of truth with the server engine for ability order, labels, and
+// the modifier math.
+export {
+  ABILITY_IDS as ABILITY_ORDER,
+  ABILITY_SHORT,
+  abilityModifier as abilityMod,
+} from '../shared/abilities';
 
 export function signed(n: number): string {
   return n >= 0 ? `+${n}` : `${n}`;

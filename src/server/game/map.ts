@@ -1,4 +1,5 @@
 import type { MapNode, MapState } from '../../shared/game';
+import { asRecord, cleanString } from '../lib/coerce';
 
 // A campaign needs a few stops but not an endless trek; these bounds keep an
 // AI-authored journey to a readable length.
@@ -55,18 +56,6 @@ export const DEFAULT_MAP: MapState = {
   currentNodeIndex: 0,
   finalBoss: { name: 'the Hollow King', defeated: false },
 };
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-    ? (value as Record<string, unknown>)
-    : {};
-}
-
-function cleanString(value: unknown, fallback: string): string {
-  if (typeof value !== 'string') return fallback;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : fallback;
-}
 
 function asBoolean(value: unknown): boolean {
   return value === true;

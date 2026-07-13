@@ -61,12 +61,6 @@ function shiftBand(band: DifficultyBand, steps: number): DifficultyBand {
   return BANDS_ASCENDING[next]!;
 }
 
-// The next harder band, capped at the top — used to set the final boss a notch
-// above the ordinary bosses of the run.
-export function nextBand(band: DifficultyBand): DifficultyBand {
-  return shiftBand(band, 1);
-}
-
 // Difficulty never rises past this. A party's best possible total is about 23
 // (a 20 on the die plus a +3 modifier), so a DC above ~20 would make even a
 // great roll deal nothing on a check — turning fights into a natural-20 lottery

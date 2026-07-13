@@ -54,7 +54,6 @@ describe('recordFromState', () => {
       postId: 't3_x',
       subredditName: 'coffee',
       classId: 'warrior',
-      theme: 'a roastery dungeon',
     });
     const record = recordFromState({
       ...state,

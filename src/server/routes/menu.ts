@@ -17,8 +17,12 @@ function resolveToast(outcome: ResolveOutcome): string {
       return 'No active game on this post yet.';
     case 'dead':
       return 'The party has fallen. Start a new run first.';
+    case 'won':
+      return 'The campaign is already won. Start a new run first.';
     case 'no_proposals':
       return 'No actions proposed yet — comment one, then resolve.';
+    case 'ai_unavailable':
+      return 'The Warden is silent right now — try again shortly.';
   }
 }
 

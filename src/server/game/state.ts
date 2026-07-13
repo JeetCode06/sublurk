@@ -6,13 +6,11 @@ import { DEFAULT_MAP, freshMap } from './map';
 
 const STARTING_HP = 50;
 const STARTING_EMBERS = 0;
-const DEFAULT_VOTE_THRESHOLD = 20;
 
 export type NewGameInput = {
   postId: string;
   subredditName: string;
   classId: ClassId;
-  theme: string;
 };
 
 function freshParty(classId: ClassId, name: string): Party {
@@ -41,14 +39,12 @@ export function createInitialState(
     runNumber: 1,
     phase: 'awaiting_actions',
     postId: input.postId,
-    theme: input.theme,
     party: freshParty(input.classId, name),
     room: createRoom(0, rand),
     map: freshMap(DEFAULT_MAP),
     intro: '',
     recentEvents: [],
     nextResolveAt: 0,
-    voteThreshold: DEFAULT_VOTE_THRESHOLD,
     roomFailures: 0,
     nemesisLine: '',
     history: [],
@@ -75,5 +71,7 @@ export function startNewRun(
     nemesisLine: '',
     history: [],
     rolls: 0,
+    // The previous run's final roll must not show on the fresh board.
+    lastCheck: undefined,
   };
 }

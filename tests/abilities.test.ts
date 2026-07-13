@@ -1,14 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import {
   ABILITY_IDS,
-  DEFAULT_ABILITIES,
   abilityModifier,
   abilityForRoomType,
   combatAbility,
   coerceAbilities,
 } from '../src/server/game/abilities';
 import { CLASSES } from '../src/server/game/classes';
-import type { ClassId } from '../src/shared/game';
+import type { Abilities, ClassId } from '../src/shared/game';
+
+const AVERAGE: Abilities = {
+  str: 10,
+  dex: 10,
+  con: 10,
+  int: 10,
+  wis: 10,
+  cha: 10,
+};
 
 describe('abilityModifier', () => {
   it('matches the standard tabletop curve', () => {
@@ -24,7 +32,7 @@ describe('abilityModifier', () => {
 describe('coerceAbilities', () => {
   it('keeps a complete, valid set unchanged', () => {
     const scores = { str: 16, dex: 12, con: 14, int: 8, wis: 10, cha: 10 };
-    expect(coerceAbilities(scores, DEFAULT_ABILITIES)).toEqual(scores);
+    expect(coerceAbilities(scores, AVERAGE)).toEqual(scores);
   });
 
   it('fills missing or non-numeric scores from the fallback', () => {
@@ -36,7 +44,7 @@ describe('coerceAbilities', () => {
   });
 
   it('returns the fallback for non-object input', () => {
-    expect(coerceAbilities(null, DEFAULT_ABILITIES)).toEqual(DEFAULT_ABILITIES);
+    expect(coerceAbilities(null, AVERAGE)).toEqual(AVERAGE);
   });
 });
 

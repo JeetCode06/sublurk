@@ -9,6 +9,7 @@ import type {
 } from '../../shared/game';
 import { coerceWorldBible } from '../game/bible';
 import { coerceMap } from '../game/map';
+import { cleanStringList } from '../lib/coerce';
 
 function asString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback;
@@ -34,10 +35,6 @@ function asOutcome(value: unknown): Outcome {
   return 'partial';
 }
 
-function asNullableString(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
-}
-
 // Offered whenever no scene- or turn-specific suggestions are available, so the
 // player is never left without a next move to reach for. Kept generic and
 // in-voice, reading as the dungeon's own quiet prompting.
@@ -57,7 +54,6 @@ const FALLBACK_RESULT: ResolveResult = {
   statusAdd: [],
   statusRemove: [],
   roomResolved: false,
-  nextRoomHint: null,
   death: false,
   suggestions: [...DEFAULT_SUGGESTIONS],
 };
@@ -92,7 +88,6 @@ export function parseResolveResult(raw: string): ResolveResult {
     statusAdd: asStringArray(value.statusAdd),
     statusRemove: asStringArray(value.statusRemove),
     roomResolved: asBoolean(value.roomResolved, false),
-    nextRoomHint: asNullableString(value.nextRoomHint),
     death: asBoolean(value.death, false),
     suggestions: suggestionsOrDefault(value.suggestions),
   };
@@ -169,42 +164,13 @@ function asEntities(value: unknown): SceneEntity[] {
 }
 
 function asThreats(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const item of value) {
-    if (typeof item !== 'string') continue;
-    const trimmed = item.trim();
-    if (trimmed.length === 0 || seen.has(trimmed)) continue;
-    seen.add(trimmed);
-    out.push(trimmed);
-    if (out.length >= MAX_THREATS) break;
-  }
-  return out;
-}
-
-// Trims, de-duplicates, and caps the AI's suggested actions so the player is
-// offered a short, clean list.
-function asSuggestions(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const item of value) {
-    if (typeof item !== 'string') continue;
-    const trimmed = item.trim();
-    if (trimmed.length === 0 || seen.has(trimmed)) continue;
-    seen.add(trimmed);
-    out.push(trimmed);
-    if (out.length >= MAX_SUGGESTIONS) break;
-  }
-  return out;
+  return cleanStringList(value, [], MAX_THREATS);
 }
 
 // The parsed suggestions when the model offered any, else the shared defaults —
 // the action chips must never be empty, whether the reply was thin or unparsed.
 function suggestionsOrDefault(value: unknown): string[] {
-  const parsed = asSuggestions(value);
-  return parsed.length > 0 ? parsed : [...DEFAULT_SUGGESTIONS];
+  return cleanStringList(value, [...DEFAULT_SUGGESTIONS], MAX_SUGGESTIONS);
 }
 
 // Used when a scene can't be generated, so a room is never left blank. Written

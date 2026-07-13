@@ -52,6 +52,3 @@ export const SOLO_WORLD_BIBLE: WorldBible = {
 // The fixed map for solo runs: the canonical four-location descent to the
 // Hollow King. Community runs generate their own map from the subreddit instead.
 export const SOLO_MAP: MapState = DEFAULT_MAP;
-
-// The theme label stored on a solo run's state.
-export const SOLO_THEME = "the Hollow King's dungeon";

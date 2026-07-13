@@ -8,56 +8,34 @@ import { InstallScreen } from './screens/InstallScreen';
 import { SoloPlay } from './screens/SoloPlay';
 import { CommunityIntro } from './screens/CommunityIntro';
 
-export const SOLO_DEFAULT_CLASS = 'adventurer';
-
-export type View =
-  | 'intro'
-  | 'mode_select'
-  | 'character_select'
-  | 'install'
-  | 'play';
+type View = 'intro' | 'mode_select' | 'character_select' | 'install' | 'play';
 
 type PostKind = 'community' | 'solo';
 
-const INTRO_SEEN_KEY = 'sublurk:intro-seen';
-const COMMUNITY_INTRO_SEEN_KEY = 'sublurk:community-intro-seen';
-
-// Whether this visitor has already seen the how-it-works intro. Storage can be
-// unavailable in some embedded contexts, so any failure is treated as "not
-// seen" — at worst the intro shows again, which is harmless.
-function introSeen(): boolean {
-  try {
-    return localStorage.getItem(INTRO_SEEN_KEY) === '1';
-  } catch {
-    return false;
-  }
+// A persisted has-this-visitor-seen-it flag. Storage can be unavailable in
+// some embedded contexts, so any failure is treated as "not seen" — at worst
+// the screen shows again, which is harmless.
+function seenFlag(key: string): { seen: () => boolean; mark: () => void } {
+  return {
+    seen: () => {
+      try {
+        return localStorage.getItem(key) === '1';
+      } catch {
+        return false;
+      }
+    },
+    mark: () => {
+      try {
+        localStorage.setItem(key, '1');
+      } catch {
+        // Ignore: the screen will simply show again next time.
+      }
+    },
+  };
 }
 
-function markIntroSeen(): void {
-  try {
-    localStorage.setItem(INTRO_SEEN_KEY, '1');
-  } catch {
-    // Ignore: the intro will simply show again next time.
-  }
-}
-
-// Whether this visitor has seen the community briefing. Same storage caveat as
-// the solo intro: any failure just shows it again, which is harmless.
-function communityIntroSeen(): boolean {
-  try {
-    return localStorage.getItem(COMMUNITY_INTRO_SEEN_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function markCommunityIntroSeen(): void {
-  try {
-    localStorage.setItem(COMMUNITY_INTRO_SEEN_KEY, '1');
-  } catch {
-    // Ignore: the briefing will simply show again next time.
-  }
-}
+const soloIntro = seenFlag('sublurk:intro-seen');
+const communityIntro = seenFlag('sublurk:community-intro-seen');
 
 function Loader({ text }: Readonly<{ text: string }>) {
   return (
@@ -71,13 +49,13 @@ export const App = () => {
   const [postKind, setPostKind] = useState<PostKind | null>(null);
   const [isMod, setIsMod] = useState(false);
   const [showCommunityIntro, setShowCommunityIntro] = useState(
-    () => !communityIntroSeen()
+    () => !communityIntro.seen()
   );
   const [view, setView] = useState<View>(() =>
-    introSeen() ? 'mode_select' : 'intro'
+    soloIntro.seen() ? 'mode_select' : 'intro'
   );
   const community = useGame(postKind === 'community');
-  const solo = useSolo();
+  const solo = useSolo(postKind === 'solo');
 
   // Discover what kind of post this is: a community post opens straight to the
   // shared board, a discovery post starts the solo flow.
@@ -113,7 +91,7 @@ export const App = () => {
       return (
         <CommunityIntro
           onEnter={() => {
-            markCommunityIntroSeen();
+            communityIntro.mark();
             setShowCommunityIntro(false);
           }}
         />
@@ -151,7 +129,7 @@ export const App = () => {
     return (
       <IntroScreen
         onEnter={() => {
-          markIntroSeen();
+          soloIntro.mark();
           setView('mode_select');
         }}
       />
