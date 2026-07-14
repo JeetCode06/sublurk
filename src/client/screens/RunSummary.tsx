@@ -157,10 +157,20 @@ export function RunSummary({
                       {i + 1}
                     </span>
                     <span className="flex-1 truncate">
+                      {entry.won && (
+                        <span
+                          className="text-ember"
+                          title="Escaped the dungeon"
+                          aria-label="beat the boss"
+                        >
+                          ♛{' '}
+                        </span>
+                      )}
                       {isYou ? 'You' : entry.username}
                     </span>
                     <span className="font-label text-[11px] tabular-nums text-muted">
-                      depth {entry.depth} · {entry.rolls} rolls
+                      {entry.className ? `${entry.className} · ` : ''}depth{' '}
+                      {entry.depth} · {entry.rolls} rolls
                     </span>
                   </li>
                 );

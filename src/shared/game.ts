@@ -208,6 +208,10 @@ export type SoloEntry = {
   username: string;
   depth: number;
   rolls: number;
+  // The fixed-world name of the crawler used on this best run, and whether that
+  // run beat the Hollow King.
+  className: string;
+  won: boolean;
 };
 
 // --- v2: campaign world ---

@@ -1,5 +1,11 @@
 import { context, redis } from '@devvit/web/server';
-import type { GameState, LeaderboardEntry, SoloEntry } from '../../shared/game';
+import type {
+  ClassId,
+  GameState,
+  LeaderboardEntry,
+  SoloEntry,
+} from '../../shared/game';
+import { SOLO_WORLD_BIBLE } from '../soloworld';
 
 const leaderboardKey = (subredditName: string): string =>
   `crawl:${subredditName}:leaderboard`;
@@ -32,6 +38,14 @@ export async function topRuns(limit: number): Promise<LeaderboardEntry[]> {
 const soloKey = (subredditName: string): string =>
   `crawl:${subredditName}:solo:leaderboard`;
 
+// Per-player metadata for the solo board, keyed by username: the crawler class
+// and whether their best run won. Kept beside the ranked set (which can only
+// hold a score) so the board can show who they played and mark the escapees.
+const soloMetaKey = (subredditName: string): string =>
+  `crawl:${subredditName}:solo:meta`;
+
+type SoloMeta = { c: string; w: boolean };
+
 // Rolls are packed into the low digits of the score so one number can rank by
 // depth first and by fewer rolls second. Fewer rolls yields a larger remainder,
 // so a plain descending sort orders both at once.
@@ -56,7 +70,9 @@ export function decodeSoloScore(score: number): {
 export async function recordSoloBest(
   username: string,
   depth: number,
-  rolls: number
+  rolls: number,
+  classId: string,
+  won: boolean
 ): Promise<void> {
   const key = soloKey(context.subredditName);
   const score = encodeSoloScore(depth, rolls);
@@ -67,10 +83,15 @@ export async function recordSoloBest(
     // No existing entry, or the read failed: fall through and write this run.
   }
   await redis.zAdd(key, { member: username, score });
+  const meta: SoloMeta = { c: classId, w: won };
+  await redis.hSet(soloMetaKey(context.subredditName), {
+    [username]: JSON.stringify(meta),
+  });
 }
 
 // The best solo descents across every player, best first.
 export async function topSoloRuns(limit: number): Promise<SoloEntry[]> {
+  const metaKey = soloMetaKey(context.subredditName);
   const rows = await redis.zRange(
     soloKey(context.subredditName),
     0,
@@ -80,8 +101,25 @@ export async function topSoloRuns(limit: number): Promise<SoloEntry[]> {
       reverse: true,
     }
   );
-  return rows.map((row) => ({
-    username: row.member,
-    ...decodeSoloScore(row.score),
-  }));
+  return Promise.all(
+    rows.map(async (row) => {
+      const { depth, rolls } = decodeSoloScore(row.score);
+      let className = '';
+      let won = false;
+      try {
+        const raw = await redis.hGet(metaKey, row.member);
+        if (raw) {
+          const meta = JSON.parse(raw) as Partial<SoloMeta>;
+          const classId = meta.c;
+          if (classId && classId in SOLO_WORLD_BIBLE.classNames) {
+            className = SOLO_WORLD_BIBLE.classNames[classId as ClassId];
+          }
+          won = meta.w === true;
+        }
+      } catch {
+        // Missing or unreadable meta (e.g. a pre-existing entry): keep defaults.
+      }
+      return { username: row.member, depth, rolls, className, won };
+    })
+  );
 }

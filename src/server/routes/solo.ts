@@ -163,7 +163,9 @@ solo.post('/action', async (c) => {
         await recordSoloBest(
           username,
           nextState.party.depth,
-          nextState.rolls ?? 0
+          nextState.rolls ?? 0,
+          nextState.party.classId,
+          nextState.phase === 'won'
         );
       }
     }
