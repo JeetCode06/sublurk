@@ -157,7 +157,7 @@ export function CharacterSelect({
   return (
     <TorchlitScreen>
       <header className="text-center">
-        <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
+        <div className="font-label text-[12px] font-semibold tracking-[0.06em] text-ember">
           Pick 1 of {CLASS_ORDER.length}
         </div>
         <h1 className="mt-3 font-display text-[28px] font-bold leading-tight text-ink">
@@ -180,18 +180,17 @@ export function CharacterSelect({
               key={id}
               type="button"
               onClick={() => setSelected(id)}
-              className="flex flex-col items-center gap-2 rounded-xl border p-3 text-center transition duration-200"
+              className="flex flex-col items-center gap-2 rounded-none border p-3 text-center transition duration-200"
               style={{
                 borderColor: isSelected ? a.main : '#2c241e',
                 background: isSelected ? a.bg : '#161009',
               }}
             >
               <span
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
+                className="flex h-10 w-10 items-center justify-center rounded-none"
                 style={{
                   color: isSelected ? a.light : '#6f6358',
                   background: isSelected ? 'rgba(0,0,0,0.25)' : '#1d160f',
-                  boxShadow: isSelected ? `0 0 14px ${a.dim}` : 'none',
                 }}
               >
                 {classSigil(id)}
@@ -202,7 +201,7 @@ export function CharacterSelect({
               >
                 {display}
               </span>
-              <span className="font-label text-[9.5px] uppercase tracking-[0.16em] text-faint">
+              <span className="font-label text-[9.5px] tracking-[0.06em] text-faint">
                 {CLASS_ROLE[id]}
               </span>
             </button>
@@ -212,16 +211,15 @@ export function CharacterSelect({
 
       {/* Selected crawler dossier */}
       <div
-        className="anim-pop mt-4 rounded-2xl border p-4"
+        className="anim-pop mt-4 rounded-none border p-4"
         style={{ borderColor: accent.dim, background: accent.bg }}
       >
         <div className="flex items-center gap-3">
           <span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-none"
             style={{
               color: '#150d06',
-              background: `linear-gradient(150deg, ${accent.light}, ${accent.main})`,
-              boxShadow: `0 0 18px ${accent.dim}`,
+              background: accent.main,
             }}
           >
             {classSigil(selected)}
@@ -234,7 +232,7 @@ export function CharacterSelect({
               {selectedName}
             </h2>
             <span
-              className="mt-1 inline-block rounded-full px-2 py-0.5 font-label text-[10px] font-medium uppercase tracking-[0.18em]"
+              className="mt-1 inline-block rounded-none px-2 py-0.5 font-label text-[10px] font-medium tracking-[0.06em]"
               style={{
                 color: accent.light,
                 background: 'rgba(0,0,0,0.28)',
@@ -254,7 +252,7 @@ export function CharacterSelect({
             return (
               <div
                 key={ability}
-                className="rounded-lg py-1.5"
+                className="rounded-none py-1.5"
                 style={{
                   background: isPeak ? 'rgba(0,0,0,0.3)' : 'transparent',
                   border: isPeak
@@ -262,7 +260,7 @@ export function CharacterSelect({
                     : '1px solid transparent',
                 }}
               >
-                <div className="font-label text-[9px] uppercase tracking-[0.1em] text-muted">
+                <div className="font-label text-[9px] tracking-[0.06em] text-muted">
                   {ABILITY_SHORT[ability]}
                 </div>
                 <div
@@ -286,7 +284,7 @@ export function CharacterSelect({
           {strong.map((room) => (
             <span
               key={room}
-              className="rounded-full px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide"
+              className="rounded-none px-2.5 py-1 font-label text-[10.5px] tracking-wide"
               style={{
                 color: accent.light,
                 border: `1px solid ${accent.dim}`,
@@ -299,13 +297,13 @@ export function CharacterSelect({
           {weak.map((room) => (
             <span
               key={room}
-              className="rounded-full border border-[#6a3a30] bg-[#241312] px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide text-[#d08a78]"
+              className="rounded-none border border-[#6a3a30] bg-[#241312] px-2.5 py-1 font-label text-[10.5px] tracking-wide text-[#d08a78]"
             >
               ▽ {room}
             </span>
           ))}
           {strong.length === 0 && weak.length === 0 && (
-            <span className="rounded-full border border-edge bg-[#1a140f] px-2.5 py-1 font-label text-[10.5px] uppercase tracking-wide text-muted">
+            <span className="rounded-none border border-edge bg-[#1a140f] px-2.5 py-1 font-label text-[10.5px] tracking-wide text-muted">
               No weaknesses
             </span>
           )}
@@ -324,7 +322,7 @@ export function CharacterSelect({
             if (hasActiveRun) setConfirming(true);
             else onBegin(selected);
           }}
-          className="w-full rounded-xl px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] transition hover:brightness-110"
+          className="w-full rounded-none px-5 py-3.5 font-label text-[14px] font-semibold tracking-[0.06em] transition hover:brightness-110"
           style={{ background: accent.main, color: '#150d06' }}
         >
           Descend as {selectedName}
@@ -332,7 +330,7 @@ export function CharacterSelect({
         <button
           type="button"
           onClick={onBack}
-          className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+          className="font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-muted"
         >
           {hasActiveRun ? '‹ Back to your run' : '‹ Back to modes'}
         </button>
@@ -340,7 +338,7 @@ export function CharacterSelect({
 
       {confirming && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0a0705]/85 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-[360px] rounded-2xl border border-edge bg-[#140f0b] p-6">
+          <div className="w-full max-w-[360px] rounded-none border border-edge bg-[#140f0b] p-6">
             <p className="font-body text-[15px] italic leading-relaxed text-parchment">
               A soul already wanders below. Choose another and the first stays
               with me, their descent ended where it stands.
@@ -352,7 +350,7 @@ export function CharacterSelect({
                   setConfirming(false);
                   onBegin(selected);
                 }}
-                className="w-full rounded-xl px-5 py-3 font-label text-[13px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110"
+                className="w-full rounded-none px-5 py-3 font-label text-[13px] font-semibold tracking-[0.06em] text-[#f2e6d4] transition hover:brightness-110"
                 style={{ background: accent.main }}
               >
                 Leave them behind
@@ -360,7 +358,7 @@ export function CharacterSelect({
               <button
                 type="button"
                 onClick={() => setConfirming(false)}
-                className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+                className="font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-muted"
               >
                 Never mind
               </button>

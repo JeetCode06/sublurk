@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { context, reddit } from '@devvit/web/server';
-import type { ErrorResponse, GameResponse } from '../../shared/api';
-import type { SoloLeaderboardResponse } from '../../shared/api';
+import type { ErrorResponse, GameResponse, SoloLeaderboardResponse } from '../../shared/api';
 import type { ClassId } from '../../shared/game';
 import { loadSoloGame, saveSoloGame } from '../data/games';
 import { recordSoloBest, topSoloRuns } from '../data/leaderboard';

@@ -64,7 +64,7 @@ export function Board({
       <div className="relative mx-auto flex w-full max-w-[470px] flex-col gap-5 px-5 py-6">
         <header className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
-            <span className="font-label text-[10px] uppercase tracking-[0.18em] text-muted">
+            <span className="font-label text-[10px] tracking-[0.06em] text-muted">
               Community · Run {game.runNumber}
             </span>
             <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function Board({
             <h1 className="font-display text-[24px] font-bold leading-none text-[#f6b063]">
               {game.party.name}
             </h1>
-            <span className="shrink-0 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.14em] text-ember-glow">
+            <span className="shrink-0 rounded-none border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] tracking-[0.06em] text-parchment">
               Depth {game.party.depth}
             </span>
           </div>
@@ -87,7 +87,7 @@ export function Board({
             <PartyVitals party={game.party} />
             {record !== null && (
               <span className="font-label text-[12px] text-muted">
-                🏆 record depth {record}
+                record depth {record}
               </span>
             )}
           </div>
@@ -97,8 +97,8 @@ export function Board({
 
         <main className="flex flex-1 flex-col gap-5">
           {game.intro.length > 0 && (
-            <section className="rounded-2xl border border-[#2f2722] bg-[#130d0a] px-4 py-3">
-              <p className="mb-1.5 font-label text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+            <section className="rounded-none border border-[#2f2722] bg-[#130d0a] px-4 py-3">
+              <p className="mb-1.5 font-label text-[10px] font-semibold tracking-[0.06em] text-muted">
                 Prologue
               </p>
               <p className="font-body text-[14px] italic leading-relaxed text-parchment">
@@ -107,11 +107,11 @@ export function Board({
             </section>
           )}
           <section className="flex flex-col gap-3">
-            <p className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-ember">
+            <p className="font-label text-[11px] font-semibold tracking-[0.06em] text-ember">
               <span className="capitalize">{game.room.type}</span> · depth{' '}
               {game.party.depth}
             </p>
-            <div className="rounded-2xl border border-[#2a2018] bg-[#120d09] px-4 py-3.5">
+            <div className="rounded-none border border-[#2a2018] bg-[#120d09] px-4 py-3.5">
               <p className="font-body text-[16px] leading-relaxed text-ink">
                 {scene}
               </p>
@@ -157,7 +157,7 @@ export function Board({
           <button
             type="button"
             onClick={onHowItWorks}
-            className="self-center font-label text-[10px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
+            className="self-center font-label text-[10px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
           >
             How it works
           </button>

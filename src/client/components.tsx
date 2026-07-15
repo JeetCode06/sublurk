@@ -17,6 +17,22 @@ import {
   signed,
 } from './lib';
 
+// The spindle rule: the tapered red divider that separates a stat block's
+// sections in the game books this engine is built on. The one decorative
+// element the interface allows itself.
+export function Rule({ className = '' }: Readonly<{ className?: string }>) {
+  return (
+    <svg
+      viewBox="0 0 400 6"
+      preserveAspectRatio="none"
+      className={`h-[5px] ${className}`}
+      aria-hidden="true"
+    >
+      <path d="M0 0 L400 3 L0 6 Z" fill="#a13327" />
+    </svg>
+  );
+}
+
 export function HealthBar({
   hp,
   maxHp,
@@ -27,16 +43,16 @@ export function HealthBar({
     <div className="flex items-center gap-2.5">
       <span className="text-[15px] text-blood">♥</span>
       <div
-        className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#2a1512]"
+        className="h-2.5 flex-1 overflow-hidden rounded-none bg-[#2a1512]"
         style={
           low ? { animation: 'hppulse 1.4s ease-in-out infinite' } : undefined
         }
       >
         <div
-          className="h-full rounded-full transition-all duration-500"
+          className="h-full rounded-none transition-all duration-500"
           style={{
             width: `${pct}%`,
-            background: 'linear-gradient(90deg, #b3302b, #f0594e)',
+            background: '#a83430',
           }}
         />
       </div>
@@ -76,7 +92,7 @@ export function RestartButton({
   const [confirming, setConfirming] = useState(false);
   if (confirming) {
     return (
-      <span className="flex items-center gap-2 font-label text-[11px] uppercase tracking-wide">
+      <span className="flex items-center gap-2 font-label text-[11px] tracking-wide">
         <span className="text-muted">abandon run?</span>
         <button
           onClick={() => {
@@ -100,7 +116,7 @@ export function RestartButton({
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="font-label text-[11px] uppercase tracking-wide text-faint transition-colors hover:text-ember"
+      className="font-label text-[11px] tracking-wide text-faint transition-colors hover:text-rubric-bright"
     >
       ↻ new run
     </button>
@@ -126,7 +142,7 @@ function Countdown({
   const remainingMs = deadline - (now + serverOffset);
   if (remainingMs <= 0) {
     return (
-      <span className="font-label text-[10px] uppercase tracking-[0.18em] text-ember">
+      <span className="font-label text-[10px] tracking-[0.06em] text-ember">
         resolving soon…
       </span>
     );
@@ -136,7 +152,7 @@ function Countdown({
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = (totalSeconds % 60).toString().padStart(2, '0');
   return (
-    <span className="font-label text-[10px] uppercase tracking-[0.18em] text-muted">
+    <span className="font-label text-[10px] tracking-[0.06em] text-muted">
       resolves in {minutes}:{seconds}
     </span>
   );
@@ -160,14 +176,14 @@ export function CandidateActions({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-parchment">
+        <h2 className="font-label text-[11px] font-semibold tracking-[0.06em] text-parchment">
           Vote the next move
         </h2>
         <Countdown deadline={deadline} serverOffset={serverOffset} />
       </div>
 
       {proposals.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-edge px-4 py-6 text-center font-body text-[13.5px] italic leading-snug text-muted">
+        <p className="rounded-none border border-dashed border-edge px-4 py-6 text-center font-body text-[13.5px] italic leading-snug text-muted">
           No actions proposed yet. Reply to this post with what the party should
           do — it appears here for the hive to vote on.
         </p>
@@ -178,7 +194,7 @@ export function CandidateActions({
             return (
               <li
                 key={proposal.id}
-                className="flex items-start gap-3 rounded-xl border px-3 py-2.5"
+                className="flex items-start gap-3 rounded-none border px-3 py-2.5"
                 style={{
                   borderColor: leading ? '#e8893f' : '#2f2722',
                   background: leading
@@ -195,7 +211,7 @@ export function CandidateActions({
                     ▲ {proposal.score}
                   </span>
                   {leading && (
-                    <span className="text-[9px] uppercase tracking-[0.14em]">
+                    <span className="text-[9px] tracking-[0.06em]">
                       leading
                     </span>
                   )}
@@ -213,7 +229,7 @@ export function CandidateActions({
         <button
           onClick={onResolveVotes}
           disabled={resolving || proposals.length === 0}
-          className="self-start rounded-lg border border-[#5a3a1e] px-4 py-2 font-label text-[11px] font-semibold uppercase tracking-[0.16em] text-ember transition-colors hover:border-ember hover:bg-[#1d130b] disabled:opacity-40"
+          className="self-start rounded-none border border-[#5a3a1e] px-4 py-2 font-label text-[11px] font-semibold tracking-[0.06em] text-rubric-bright transition-colors hover:border-rubric-bright hover:bg-[#1d130b] disabled:opacity-40"
         >
           {resolving ? 'resolving…' : '⚄ Resolve top action now'}
         </button>
@@ -232,7 +248,7 @@ export function Leaderboard({
   if (entries.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+      <h2 className="font-label text-[11px] font-semibold tracking-[0.06em] text-muted">
         Deepest runs
       </h2>
       <ol className="flex flex-col gap-1">
@@ -241,7 +257,7 @@ export function Leaderboard({
           return (
             <li
               key={entry.runNumber}
-              className="flex items-baseline justify-between gap-3 rounded-lg px-3 py-1.5 font-label text-[13px]"
+              className="flex items-baseline justify-between gap-3 rounded-none px-3 py-1.5 font-label text-[13px]"
               style={{
                 background: current ? 'rgba(232,137,63,0.1)' : 'transparent',
                 color: current ? '#f6b063' : '#a89880',
@@ -307,7 +323,7 @@ function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
     (entity.threat !== undefined || entity.hp !== undefined);
   return (
     <div
-      className="flex flex-col gap-1.5 rounded-xl border px-3 py-2.5"
+      className="flex flex-col gap-1.5 rounded-none border px-3 py-2.5"
       style={{
         borderColor: glyph.border,
         background: glyph.bg,
@@ -319,7 +335,7 @@ function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
         <span className="flex-1 font-display text-[14px] font-semibold leading-tight text-ink">
           {entity.name}
         </span>
-        <span className="font-label text-[9px] uppercase tracking-[0.14em] text-faint">
+        <span className="font-label text-[9px] tracking-[0.06em] text-faint">
           {entity.kind}
         </span>
       </div>
@@ -343,9 +359,9 @@ function EntityCard({ entity }: Readonly<{ entity: SceneEntity }>) {
           {entity.hp !== undefined &&
             entity.maxHp !== undefined &&
             entity.maxHp > 0 && (
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#2a1512]">
+              <div className="h-1.5 overflow-hidden rounded-none bg-[#2a1512]">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#b3302b] to-[#f0594e] transition-[width] duration-500"
+                  className="h-full rounded-none bg-[#a83430] transition-[width] duration-500"
                   style={{
                     width: `${Math.max(0, Math.min(100, (entity.hp / entity.maxHp) * 100))}%`,
                   }}
@@ -364,7 +380,7 @@ export function SceneEntities({
   if (entities.length === 0) return null;
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+      <h2 className="font-label text-[11px] font-semibold tracking-[0.06em] text-muted">
         In the room
       </h2>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -380,13 +396,13 @@ export function ThreatStrip({ threats }: Readonly<{ threats: string[] }>) {
   if (threats.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="font-label text-[10px] font-semibold uppercase tracking-[0.18em] text-[#f0594e]">
+      <span className="font-label text-[10px] font-semibold tracking-[0.06em] text-[#f0594e]">
         ⚠ dangers
       </span>
       {threats.map((threat) => (
         <span
           key={threat}
-          className="rounded-full border border-[#5a2a25] bg-[#241312] px-2.5 py-0.5 font-body text-[12px] text-[#d98a80]"
+          className="rounded-none border border-[#5a2a25] bg-[#241312] px-2.5 py-0.5 font-body text-[12px] text-[#d98a80]"
         >
           {threat}
         </span>
@@ -400,9 +416,7 @@ export function StatBlock({ abilities }: Readonly<{ abilities: Abilities }>) {
     <div className="flex flex-wrap gap-x-3 gap-y-1 font-label text-[12px]">
       {ABILITY_ORDER.map((id) => (
         <span key={id} className="tabular-nums">
-          <span className="uppercase tracking-wide text-muted">
-            {ABILITY_SHORT[id]}
-          </span>{' '}
+          <span className="tracking-wide text-muted">{ABILITY_SHORT[id]}</span>{' '}
           <span className="text-ink">{abilities[id]}</span>{' '}
           <span className="text-faint">
             {signed(abilityMod(abilities[id]))}
@@ -423,9 +437,9 @@ export function LastCheck({ check }: Readonly<{ check: AbilityCheck }>) {
       ? `rolled ${check.rolls.join(' & ')}, kept ${check.die}`
       : `rolled ${check.die}`;
   return (
-    <p className="flex flex-wrap items-center gap-1.5 rounded-lg border border-[#2f2722] bg-[#140f0b] px-3 py-2 font-label text-[12px] text-muted">
+    <p className="flex flex-wrap items-center gap-1.5 rounded-none border border-[#2f2722] bg-[#140f0b] px-3 py-2 font-label text-[12px] text-muted">
       <span className="text-[13px] text-ember-glow">⚄</span>
-      <span className="uppercase tracking-wide text-parchment">
+      <span className="tracking-wide text-parchment">
         {ABILITY_SHORT[check.ability]} check{advantage}
       </span>
       <span className="text-faint">·</span>
@@ -433,7 +447,7 @@ export function LastCheck({ check }: Readonly<{ check: AbilityCheck }>) {
         {dice} {signed(check.modifier)} = {check.total} vs DC {check.difficulty}
       </span>
       <span className="text-faint">·</span>
-      <span className={`font-semibold uppercase ${tone}`}>{check.outcome}</span>
+      <span className={`font-semibold ${tone}`}>{check.outcome}</span>
     </p>
   );
 }

@@ -84,7 +84,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
       </header>
 
       {/* Moderator path */}
-      <section className="mt-7 rounded-2xl border border-[#5a3a1e] bg-[#1d130b] p-4">
+      <section className="mt-7 rounded-none border border-[#5a3a1e] bg-[#1d130b] p-4">
         <h2 className="font-display text-[18px] font-bold text-[#f6b063]">
           You moderate a sub
         </h2>
@@ -111,7 +111,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
           href={INSTALL_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 flex items-center justify-center rounded-lg bg-ember px-4 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#1a1006] transition hover:brightness-110"
+          className="mt-4 flex items-center justify-center rounded-none bg-rubric px-4 py-2.5 font-label text-[13px] font-semibold tracking-wide text-[#f2e6d4] transition hover:brightness-110"
         >
           Open the app page ↗
         </a>
@@ -121,7 +121,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
       </section>
 
       {/* Non-moderator path */}
-      <section className="mt-4 rounded-2xl border border-[#1d4a55] bg-[#07191e] p-4">
+      <section className="mt-4 rounded-none border border-[#1d4a55] bg-[#07191e] p-4">
         <h2 className="font-display text-[18px] font-bold text-teal-bright">
           Not a mod? Ask them.
         </h2>
@@ -130,7 +130,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
           one-time modmail with the install link, from you.
         </p>
         <div className="mt-3 flex gap-2">
-          <div className="flex flex-1 items-center rounded-xl border border-[#1d4a55] bg-[#0a2128] px-3">
+          <div className="flex flex-1 items-center rounded-none border border-[#1d4a55] bg-[#0a2128] px-3">
             <span className="font-label text-[13px] text-[#4f8f9c]">r/</span>
             <input
               value={sub}
@@ -146,7 +146,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
           <button
             onClick={() => void sendRequest()}
             disabled={sending || sub.trim().length === 0}
-            className="shrink-0 rounded-xl bg-teal px-4 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#04181d] transition hover:brightness-110 disabled:opacity-40"
+            className="shrink-0 rounded-none bg-teal px-4 py-2.5 font-label text-[13px] font-semibold tracking-wide text-[#04181d] transition hover:brightness-110 disabled:opacity-40"
           >
             {sending ? '…' : 'Send'}
           </button>
@@ -163,7 +163,7 @@ export function InstallScreen({ onBack }: Readonly<{ onBack: () => void }>) {
       <button
         type="button"
         onClick={onBack}
-        className="mt-6 self-center font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
+        className="mt-6 self-center font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
       >
         ‹ Back to modes
       </button>

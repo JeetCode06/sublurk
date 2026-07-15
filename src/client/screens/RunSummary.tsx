@@ -1,5 +1,5 @@
 import type { GameState, LeaderboardEntry, SoloEntry } from '../../shared/game';
-import { Leaderboard } from '../components';
+import { Leaderboard, Rule } from '../components';
 
 function villainMark(color: string) {
   return (
@@ -101,7 +101,8 @@ export function RunSummary({
           >
             {won ? 'VICTORIOUS' : 'VANQUISHED'}
           </h1>
-          <p className="mt-2 font-label text-[11px] uppercase tracking-[0.24em] text-muted">
+          <Rule className="mx-auto mt-3 w-40" />
+          <p className="mt-2 font-label text-[11px] tracking-[0.06em] text-muted">
             {won ? 'The campaign is won' : 'The run ends here'}
           </p>
         </div>
@@ -113,7 +114,7 @@ export function RunSummary({
           >
             {boss}
           </p>
-          <p className="mt-0.5 font-label text-[10px] uppercase tracking-[0.2em] text-faint">
+          <p className="mt-0.5 font-label text-[10px] tracking-[0.06em] text-faint">
             {won ? 'lies defeated' : 'still waits below'}
           </p>
         </div>
@@ -126,12 +127,12 @@ export function RunSummary({
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border border-[#2f2722] bg-[#140f0b] px-2 py-3"
+              className="rounded-none border border-[#2f2722] bg-[#140f0b] px-2 py-3"
             >
               <div className="font-display text-[18px] font-bold text-ink">
                 {stat.value}
               </div>
-              <div className="mt-0.5 font-label text-[9px] uppercase tracking-[0.12em] text-muted">
+              <div className="mt-0.5 font-label text-[9px] tracking-[0.06em] text-muted">
                 {stat.label}
               </div>
             </div>
@@ -140,7 +141,7 @@ export function RunSummary({
 
         {soloLeaderboard && soloLeaderboard.length > 0 && (
           <div className="w-full text-left">
-            <p className="mb-2 font-label text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+            <p className="mb-2 font-label text-[10px] font-semibold tracking-[0.06em] text-muted">
               Deepest descents
             </p>
             <ol className="flex flex-col gap-1">
@@ -149,7 +150,7 @@ export function RunSummary({
                 return (
                   <li
                     key={entry.username}
-                    className={`flex items-baseline gap-2 rounded-lg px-2.5 py-1.5 font-body text-[13px] ${
+                    className={`flex items-baseline gap-2 rounded-none px-2.5 py-1.5 font-body text-[13px] ${
                       isYou ? 'bg-[#1d130b] text-ember-glow' : 'text-parchment'
                     }`}
                   >
@@ -194,12 +195,12 @@ export function RunSummary({
               type="button"
               onClick={onRestart}
               disabled={restarting}
-              className="w-full rounded-xl bg-ember px-5 py-3.5 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#150d06] transition hover:brightness-110 disabled:opacity-50"
+              className="w-full rounded-none bg-rubric px-5 py-3.5 font-label text-[14px] font-semibold tracking-[0.06em] text-[#f2e6d4] transition hover:brightness-110 disabled:opacity-50"
             >
               {restartLabel}
             </button>
           ) : (
-            <p className="rounded-xl border border-[#2f2722] bg-[#140f0b] px-4 py-3.5 font-body text-[13.5px] italic leading-snug text-muted">
+            <p className="rounded-none border border-[#2f2722] bg-[#140f0b] px-4 py-3.5 font-body text-[13.5px] italic leading-snug text-muted">
               {won
                 ? 'The campaign is won. A moderator can send a new party down when the sub is ready.'
                 : 'The run is over. The dungeon waits for a moderator to send the next soul down.'}
@@ -209,7 +210,7 @@ export function RunSummary({
             <button
               type="button"
               onClick={onExit}
-              className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
+              className="font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
             >
               ‹ Back to modes
             </button>

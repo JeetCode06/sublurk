@@ -1,4 +1,5 @@
 import { TorchlitScreen } from '../Embers';
+import { Rule } from '../components';
 
 function SoloGlyph() {
   return (
@@ -31,18 +32,19 @@ export function ModeSelect({
       <button
         type="button"
         onClick={onBack}
-        className="mb-4 self-start font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-muted"
+        className="mb-4 self-start font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-muted"
       >
         ‹ Back
       </button>
       <header className="text-center">
-        <div className="font-label text-[12px] font-semibold uppercase tracking-[0.34em] text-ember">
+        <div className="font-label text-[12px] font-semibold tracking-[0.06em] text-rubric-bright">
           Two ways in
         </div>
         <h1 className="mt-3 font-display text-[30px] font-bold leading-tight text-ink">
           How will you play?
         </h1>
-        <p className="mt-2 font-body text-[15px] italic text-muted">
+        <Rule className="mx-auto mt-3 w-32" />
+        <p className="mt-2 font-body text-[15px] text-muted">
           Descend yourself, or bring it to a sub you moderate.
         </p>
       </header>
@@ -52,14 +54,13 @@ export function ModeSelect({
         <button
           type="button"
           onClick={onSolo}
-          className="group rounded-2xl border border-[#5a3a1e] bg-[#1d130b] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-ember hover:bg-[#241710] focus:outline-none focus-visible:border-ember"
+          className="group rounded-none border border-[#5a3a1e] bg-[#1d130b] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-rubric-bright hover:bg-[#241710] focus:outline-none focus-visible:border-rubric-bright"
         >
           <div className="flex items-center gap-3.5">
             <span
-              className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full"
+              className="flex h-13 w-13 shrink-0 items-center justify-center rounded-none"
               style={{
-                background: 'linear-gradient(150deg, #f7b061, #d8742a)',
-                boxShadow: '0 0 18px rgba(232,137,63,.28)',
+                background: '#d8742a',
               }}
             >
               <SoloGlyph />
@@ -68,7 +69,7 @@ export function ModeSelect({
               <span className="block font-display text-[22px] font-bold leading-none text-[#f6b878]">
                 SOLO
               </span>
-              <span className="mt-1 block font-label text-[11px] font-medium uppercase tracking-[0.22em] text-ember">
+              <span className="mt-1 block font-label text-[11px] font-medium tracking-[0.06em] text-ember">
                 Real-time · 1 player
               </span>
             </span>
@@ -79,15 +80,15 @@ export function ModeSelect({
           </p>
           <div className="mt-3.5 flex items-center gap-2.5">
             <span className="text-blood">♥</span>
-            <span className="h-2 flex-1 overflow-hidden rounded-full bg-[#3a1f14]">
+            <span className="h-2 flex-1 overflow-hidden rounded-none bg-[#3a1f14]">
               <span
-                className="block h-full w-3/4 rounded-full"
+                className="block h-full w-3/4 rounded-none"
                 style={{
-                  background: 'linear-gradient(90deg, #d8742a, #f7b061)',
+                  background: '#c9762f',
                 }}
               />
             </span>
-            <span className="rounded-md border border-[#5a3a1e] px-2 py-0.5 font-label text-[11px] tracking-wide text-ember-glow">
+            <span className="rounded-none border border-[#5a3a1e] px-2 py-0.5 font-label text-[11px] tracking-wide text-ember-glow">
               ⚄ d20
             </span>
           </div>
@@ -97,14 +98,13 @@ export function ModeSelect({
         <button
           type="button"
           onClick={onInstall}
-          className="group rounded-2xl border border-[#1d4a55] bg-[#07191e] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-teal hover:bg-[#0a2128] focus:outline-none focus-visible:border-teal"
+          className="group rounded-none border border-[#1d4a55] bg-[#07191e] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-teal hover:bg-[#0a2128] focus:outline-none focus-visible:border-teal"
         >
           <div className="flex items-center gap-3.5">
             <span
-              className="flex h-13 w-13 shrink-0 items-center justify-center rounded-full"
+              className="flex h-13 w-13 shrink-0 items-center justify-center rounded-none"
               style={{
-                background: 'linear-gradient(150deg, #7fd6e4, #3aa7bd)',
-                boxShadow: '0 0 18px rgba(92,196,214,.26)',
+                background: '#3aa7bd',
               }}
             >
               <ModerateGlyph />
@@ -113,7 +113,7 @@ export function ModeSelect({
               <span className="block font-display text-[22px] font-bold leading-none text-teal-bright">
                 Moderate a sub?
               </span>
-              <span className="mt-1 block font-label text-[11px] font-medium uppercase tracking-[0.22em] text-teal">
+              <span className="mt-1 block font-label text-[11px] font-medium tracking-[0.06em] text-teal">
                 Bring it home
               </span>
             </span>
@@ -124,7 +124,7 @@ export function ModeSelect({
             about.
           </p>
           <div className="mt-3.5 flex items-center gap-2">
-            <span className="font-label text-[11px] uppercase tracking-[0.18em] text-teal">
+            <span className="font-label text-[11px] tracking-[0.06em] text-teal">
               Install →
             </span>
           </div>

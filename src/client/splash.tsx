@@ -37,16 +37,21 @@ export const Splash = () => {
       <Embers />
 
       <div className="anim-rise relative flex flex-col items-center gap-4">
-        <span className="inline-flex items-center rounded-full border border-[#5a3a1e] bg-[#1d130b] px-3.5 py-1 font-label text-[11px] font-semibold uppercase tracking-[0.3em] text-ember">
+        <span className="font-label text-[13px] font-semibold tracking-[0.08em] text-rubric-bright">
           It pulls you in
         </span>
 
-        <h1
-          className="font-display text-[46px] font-black leading-[0.92] tracking-[0.03em] text-[#f7b061]"
-          style={{ textShadow: '0 0 34px rgba(247,176,97,.34)' }}
-        >
+        <h1 className="font-display text-[44px] font-extrabold leading-[0.95] tracking-[0.04em] text-ink">
           SUBLURK
         </h1>
+        <svg
+          viewBox="0 0 400 6"
+          preserveAspectRatio="none"
+          className="h-[5px] w-44"
+          aria-hidden="true"
+        >
+          <path d="M0 0 L400 3 L0 6 Z" fill="#a13327" />
+        </svg>
 
         <p className="max-w-[350px] font-body text-[15.5px] italic leading-relaxed text-parchment">
           You tapped, and the glass gave way. The only way back is down, past
@@ -54,15 +59,14 @@ export const Splash = () => {
         </p>
 
         <button
-          className="mt-2 flex h-12 cursor-pointer items-center justify-center rounded-full bg-ember px-8 font-label text-[14px] font-semibold uppercase tracking-[0.14em] text-[#1a1006] transition hover:brightness-110"
-          style={{ boxShadow: '0 0 26px rgba(232,137,63,.4)' }}
+          className="mt-2 flex h-12 cursor-pointer items-center justify-center rounded-none bg-rubric px-8 font-label text-[14px] font-semibold tracking-[0.06em] text-[#f2e6d4] transition hover:brightness-110"
           onClick={(e) => requestExpandedMode(e.nativeEvent, 'game')}
         >
           Enter the dungeon
         </button>
 
         {/* Fixed height so the loading state doesn't shift the layout. */}
-        <div className="mt-1 flex h-4 items-center gap-2.5 font-label text-[10.5px] uppercase tracking-[0.24em]">
+        <div className="mt-1 flex h-4 items-center gap-2.5 font-label text-[10.5px] tracking-[0.06em]">
           {lane === 'both' && (
             <>
               <span className="text-ember">Solo</span>

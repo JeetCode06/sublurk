@@ -16,8 +16,8 @@ const NODE_PALETTE: Record<
 > = {
   current: {
     fill: '#2c221c',
-    ring: '#e8893f',
-    num: '#f0c050',
+    ring: '#cf4a38',
+    num: '#cdbb9c',
     name: '#f3cd7f',
     villain: '#cdbb9a',
   },
@@ -87,11 +87,11 @@ function MapNodeMark({
     <>
       {current && (
         <>
-          <circle cx={x} cy={y} r={NODE_R + 18} fill="#e8893f" opacity="0.06" />
-          <circle cx={x} cy={y} r={NODE_R + 9} fill="#e8893f" opacity="0.11" />
+          <circle cx={x} cy={y} r={NODE_R + 18} fill="#cf4a38" opacity="0.06" />
+          <circle cx={x} cy={y} r={NODE_R + 9} fill="#cf4a38" opacity="0.11" />
           <polygon
             points={`${x},${y - NODE_R - 8} ${x + 5},${y - NODE_R - 3} ${x - 5},${y - NODE_R - 3}`}
-            fill="#f0a050"
+            fill="#cf4a38"
           />
         </>
       )}
@@ -116,7 +116,7 @@ function MapNodeMark({
         x={x}
         y={y + 4}
         textAnchor="middle"
-        fontFamily="Oswald, sans-serif"
+        fontFamily="'Spectral SC', serif"
         fontSize="12"
         fontWeight="600"
         fill={num}
@@ -126,7 +126,7 @@ function MapNodeMark({
       <text
         x={MAP_LABEL_X}
         y={nameY}
-        fontFamily="Oswald, sans-serif"
+        fontFamily="'Spectral SC', serif"
         fontSize="13"
         fontWeight="500"
         fill={nameFill}
@@ -137,7 +137,7 @@ function MapNodeMark({
         <text
           x={MAP_LABEL_X}
           y={y + 14}
-          fontFamily="Oswald, sans-serif"
+          fontFamily="'Spectral SC', serif"
           fontSize="11"
           fontStyle="italic"
           fill={villainFill}
@@ -160,7 +160,7 @@ function MapBossMark({
   x: number;
   y: number;
 }>) {
-  const crown = defeated ? '#6a5d52' : '#d07a64';
+  const crown = defeated ? '#6a5d52' : '#cf4a38';
   const nameFill = defeated ? '#8a7d72' : '#ecc6ab';
   return (
     <>
@@ -173,8 +173,8 @@ function MapBossMark({
       />
       {!defeated && (
         <>
-          <circle cx={x} cy={y} r={BOSS_R + 18} fill="#c0392b" opacity="0.05" />
-          <circle cx={x} cy={y} r={BOSS_R + 9} fill="#c0392b" opacity="0.09" />
+          <circle cx={x} cy={y} r={BOSS_R + 18} fill="#a13327" opacity="0.05" />
+          <circle cx={x} cy={y} r={BOSS_R + 9} fill="#a13327" opacity="0.09" />
         </>
       )}
       <circle
@@ -182,7 +182,7 @@ function MapBossMark({
         cy={y}
         r={BOSS_R}
         fill="#2a1714"
-        stroke={defeated ? '#4a3f38' : '#c0392b'}
+        stroke={defeated ? '#4a3f38' : '#a13327'}
         strokeWidth="2"
       />
       <circle
@@ -204,7 +204,7 @@ function MapBossMark({
       <text
         x={MAP_LABEL_X}
         y={y + 4}
-        fontFamily="Oswald, sans-serif"
+        fontFamily="'Spectral SC', serif"
         fontSize="13"
         fontWeight="500"
         fill={nameFill}
@@ -240,7 +240,7 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <p className="font-label text-[11px] font-semibold uppercase tracking-[0.24em] text-muted">
+        <p className="font-label text-[11px] font-semibold tracking-[0.06em] text-muted">
           Winning
         </p>
         {boss.defeated ? (
@@ -355,7 +355,7 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
             <path
               d={traveled}
               fill="none"
-              stroke="#e8893f"
+              stroke="#cf4a38"
               strokeWidth="2.5"
               strokeLinecap="round"
             />
@@ -382,7 +382,7 @@ export function CampaignMap({ map }: Readonly<{ map: MapState }>) {
       </div>
 
       {!boss.defeated && (
-        <p className="text-center font-label text-[11px] uppercase tracking-[0.12em] text-muted">
+        <p className="text-center font-label text-[11px] tracking-[0.06em] text-muted">
           At {current?.name ?? 'the start'} · {clearedCount}/{nodes.length}{' '}
           cleared
         </p>
@@ -422,17 +422,17 @@ export function MapModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[440px] rounded-2xl border border-edge bg-[#100b08] p-4"
+        className="w-full max-w-[440px] rounded-none border border-edge bg-[#100b08] p-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-label text-[11px] uppercase tracking-[0.2em] text-muted">
+          <span className="font-label text-[11px] tracking-[0.06em] text-muted">
             {title}
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="font-label text-[11px] uppercase tracking-[0.2em] text-faint transition hover:text-ember"
+            className="font-label text-[11px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
           >
             Close
           </button>
@@ -452,7 +452,7 @@ export function MapButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-lg border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] uppercase tracking-[0.12em] text-ember-glow transition hover:brightness-110"
+      className="flex items-center gap-1.5 rounded-none border border-[#5a3a1e] bg-[#1d130b] px-2.5 py-1 font-label text-[11px] tracking-[0.06em] text-ember-glow transition hover:brightness-110"
     >
       <MapIcon /> {children}
     </button>

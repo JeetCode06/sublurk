@@ -30,7 +30,7 @@ function TranscriptBeat({ entry }: Readonly<{ entry: TranscriptEntry }>) {
   if (entry.kind === 'action') {
     return (
       <div className="border-l-2 border-[#5a3a1e] pl-3">
-        <div className="font-label text-[10px] uppercase tracking-[0.18em] text-ember">
+        <div className="font-label text-[10px] tracking-[0.06em] text-ember">
           You
         </div>
         <p className="mt-0.5 font-body text-[14.5px] italic leading-snug text-parchment">
@@ -47,7 +47,7 @@ function TranscriptBeat({ entry }: Readonly<{ entry: TranscriptEntry }>) {
         </p>
         {entry.roll && (
           <div
-            className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-[#2f2722] bg-[#160f0a] px-2 py-0.5 font-label text-[11px] tracking-wide"
+            className="mt-1.5 inline-flex items-center gap-1.5 rounded-none border border-[#2f2722] bg-[#160f0a] px-2 py-0.5 font-label text-[11px] tracking-wide"
             style={{ color: OUTCOME_COLOR[entry.outcome] }}
           >
             <span aria-hidden="true">⚄</span> d20 {entry.roll.die} · total{' '}
@@ -140,26 +140,26 @@ export function SoloPlay({
               <button
                 type="button"
                 onClick={onExit}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-faint transition hover:text-ember"
+                className="font-label text-[10px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
               >
                 ‹ Modes
               </button>
               <button
                 type="button"
                 onClick={onNewRun}
-                className="font-label text-[10px] uppercase tracking-[0.18em] text-faint transition hover:text-ember"
+                className="font-label text-[10px] tracking-[0.06em] text-faint transition hover:text-rubric-bright"
               >
                 ⟳ New run
               </button>
             </div>
             <div className="flex items-center gap-2.5">
-              <span className="font-label text-[10px] uppercase tracking-[0.18em] text-faint">
+              <span className="font-label text-[10px] tracking-[0.06em] text-faint">
                 Depth {game.party.depth}
               </span>
               <MapButton onClick={() => setMapOpen(true)} />
             </div>
           </div>
-          <h1 className="font-display text-[22px] font-bold leading-none text-[#f6b063]">
+          <h1 className="font-display text-[22px] font-bold leading-none text-ink">
             {game.party.name}
           </h1>
           <div className="mt-2">
@@ -179,7 +179,7 @@ export function SoloPlay({
           ))}
 
           {hasBoard && (
-            <section className="flex flex-col gap-3 rounded-2xl border border-[#2a2018] bg-[#100b08] p-3.5">
+            <section className="flex flex-col gap-3 rounded-none border border-[#2a2018] bg-[#100b08] p-3.5">
               <SceneEntities entities={game.room.entities} />
               <ThreatStrip threats={game.room.threats} />
             </section>
@@ -197,9 +197,9 @@ export function SoloPlay({
                 The dark has spent itself on you. Its strength gathers again.
               </p>
               <div className="mx-auto mt-2.5 flex max-w-[240px] items-center gap-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#2a1d12]">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-none bg-[#2a1d12]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#8a5a2e] to-[#f7b061] transition-[width] duration-500"
+                    className="h-full rounded-none bg-[#c9762f] transition-[width] duration-500"
                     style={{
                       width: `${((COOLDOWN_MS - cooldownLeft) / COOLDOWN_MS) * 100}%`,
                     }}
@@ -219,7 +219,7 @@ export function SoloPlay({
                       key={suggestion}
                       onClick={() => submit(suggestion)}
                       disabled={resolving}
-                      className="rounded-full border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-ember hover:text-ink disabled:opacity-50"
+                      className="rounded-none border border-[#3a302b] bg-[#1a130d] px-2.5 py-1 font-body text-[12.5px] text-parchment transition-colors hover:border-rubric-bright hover:text-ink disabled:opacity-50"
                     >
                       {suggestion}
                     </button>
@@ -236,12 +236,12 @@ export function SoloPlay({
                   disabled={resolving}
                   maxLength={300}
                   placeholder="Search the altar, draw a blade, light a torch…"
-                  className="flex-1 rounded-xl border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
+                  className="flex-1 rounded-none border border-[#3a302b] bg-[#1a130d] px-3 py-2.5 font-body text-[14px] text-ink outline-none placeholder:italic placeholder:text-faint focus:border-ember disabled:opacity-50"
                 />
                 <button
                   onClick={() => submit(draft)}
                   disabled={resolving || draft.trim().length === 0}
-                  className="rounded-xl bg-ember px-5 py-2.5 font-label text-[13px] font-semibold uppercase tracking-wide text-[#150d06] transition hover:brightness-110 disabled:opacity-40"
+                  className="rounded-none bg-rubric px-5 py-2.5 font-label text-[13px] font-semibold tracking-wide text-[#f2e6d4] transition hover:brightness-110 disabled:opacity-40"
                 >
                   {resolving ? '…' : 'Act'}
                 </button>

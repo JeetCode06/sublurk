@@ -105,11 +105,11 @@ export function DiceOverlay({
         >
           <polygon
             points="50,4 89.8,27 89.8,73 50,96 10.2,73 10.2,27"
-            fill="#170f09"
-            stroke="#f4a85c"
+            fill="#1b0d0b"
+            stroke="#cf4a38"
             strokeWidth="2.5"
           />
-          <g stroke="#7a4e28" strokeWidth="1.2" opacity="0.85">
+          <g stroke="#8f2f26" strokeWidth="1.2" opacity="0.85">
             <line x1="50" y1="26" x2="50" y2="4" />
             <line x1="50" y1="26" x2="10.2" y2="27" />
             <line x1="50" y1="26" x2="89.8" y2="27" />
@@ -120,8 +120,8 @@ export function DiceOverlay({
           </g>
           <polygon
             points="50,26 72,62 28,62"
-            fill="#22160c"
-            stroke="#c47b38"
+            fill="#221010"
+            stroke="#a13327"
             strokeWidth="1.5"
           />
           <text
@@ -129,17 +129,17 @@ export function DiceOverlay({
             y="50"
             textAnchor="middle"
             dominantBaseline="central"
-            fontFamily="Cinzel, serif"
+            fontFamily="'Spectral SC', serif"
             fontSize="28"
             fontWeight={700}
-            fill="#f7c98a"
+            fill="#ecdcc4"
           >
             {shownFace}
           </text>
         </svg>
       </div>
       <div
-        className="font-display text-[20px] font-bold uppercase tracking-[0.14em] transition-opacity duration-200"
+        className="font-display text-[20px] font-bold tracking-[0.06em] transition-opacity duration-200"
         style={{ color, opacity: landed ? 1 : 0 }}
         role="status"
         aria-live="polite"

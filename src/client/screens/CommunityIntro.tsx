@@ -31,8 +31,7 @@ export function CommunityIntro({ onEnter }: Readonly<{ onEnter: () => void }>) {
         <button
           type="button"
           onClick={onEnter}
-          className="mt-8 flex h-12 items-center justify-center rounded-full bg-ember px-8 font-label text-[14px] font-semibold uppercase tracking-[0.16em] text-[#1a1006] transition hover:brightness-110"
-          style={{ boxShadow: '0 0 24px rgba(232,137,63,.32)' }}
+          className="mt-8 flex h-12 items-center justify-center rounded-none bg-rubric px-8 font-label text-[14px] font-semibold tracking-[0.06em] text-[#f2e6d4] transition hover:brightness-110"
         >
           To the board →
         </button>
