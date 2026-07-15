@@ -1,7 +1,7 @@
 import { settings } from '@devvit/web/server';
 import { buildGeminiRequest, readGeminiText } from './gemini-format';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-flash-latest';
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 400;
